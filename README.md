@@ -19,7 +19,7 @@ Finally, we want **multiple tools** which can compile WGSL-with-imports down to 
 
 This variant is based on Rust syntax.
 
-By placing an import at the very top of a file, one can either import a whole module, or only specific functions. To import a function, one needs to use curly brackets.
+By placing an import at the very top of a file, one can either import a whole module, or only specific items, such as functions, structs or types. To import an item, one needs to use curly brackets.
 
 ```
 import bevy_ui;
@@ -52,7 +52,7 @@ import super::super::lighting::{ pbr };
 
 This variant is based on Typescript syntax.
 
-One can either import a whole module, or only specific functions. Paths can either be relative, or start with a package name. They then continue with a path to the concrete file.
+By placing an import at the very top of a file, one can either import a whole module, or only specific items, such as functions, structs or types. Paths can either be relative, or start with a package name. They then continue with a path to the concrete file.
 
 ```
 import * as bevy_ui from "bevy_ui";
@@ -109,9 +109,9 @@ import:
 | 'import' path
 
 path:
-| ident ('::' ident)* ('::' '{' ident_list '}' )?
+| ident ('::' ident)* ('::' '{' item_list '}' )?
 
-ident_list:
+item_list:
 | ident (',' ident)* (',')?
 ```
 
@@ -122,7 +122,7 @@ After parsing, the semantics is as follows:
 1. If the path starts with `super`, it is a relative path. The number of `super` determines how many directories to go up, with one `super` corresponding to the current *directory*.  
 If the path starts with a package name, it is an absolute path. The package name is looked up in the `wgsl.toml` file, and the path is appended to the package path.
 2. The other identifiers are appended to the file path. The final one gets a `.wgsl` extension.
-3. If the path has a `::{ ... }` part, the functions listed in the curly brackets are imported.  
+3. If the path has a `::{ ... }` part, the items listed in the curly brackets are imported.  
 Otherwise, the module is imported and can be used in code like `sphere::draw()`.
 
 As an example, `import super::sphere` would be
@@ -135,18 +135,24 @@ And `import my::lighting::{ pbr }` would be
 2. `lighting` is the file name. The final path is `/home/username/my-cute-project/lighting.wgsl`.
 
 
+<details>
+  <summary>Why do import items need curly brackets?</summary>
+  
+The curly brackets are necessary to distinguish between importing a whole module and importing only specific items. Otherwise `import my::lighting` would be ambiguous. If we attempt to heuristically resolve this, it can lead to confusing situations where the semantics suddenly changes. For example, if the user is commenting out a function, then the import statement could switch between importing a single function and importing the whole module. This is not a good user experience.
+</details>
+
 ## Variant B - Reference-level explanation
 
 An import statement is parsed as follows, with spaces and comments allowed between tokens:
 
 ```
 import:
-| 'import' function_list path
+| 'import' item_list path
 
 path:
 | string
 
-function_list:
+item_list:
 | '*' 'as' ident
 | '{' ident_list '}'
 
@@ -159,7 +165,7 @@ Where `ident` is defined in the WGSL grammar.
 
 **Unresolved question: What exactly is a file path?**
 
-The function list is a list of functions that are imported. If the function list is empty, the whole module is imported.
+The item list is a list of items that are imported. If the item list is empty, the whole module is imported.
 
 `path` is a quoted string that resolves to a file path. If it starts with `.` or `..`, it is a relative path. If it starts with a package name, it gets resolved to the package path. It may not start with anything else, such as `/` or `C:` or `http://`.
 
@@ -169,6 +175,10 @@ When the user imports a module, they can use the module name in the code. For ex
 
 Since double colons are not allowed in the WGSL grammar, this is a safe way to introduce them without having to introduce a new type of WGSL parser.
 
+## Importable items
+
+**Which items can be imported?**
+
 
 ## Name mangling
 
@@ -176,7 +186,7 @@ To join multiple modules into one, we need to make sure that names do not collid
 
 Compiled WGSL files have a few exposed parts, namely the names of the entry functions and pipeline overridable constants. These need to be stable and predictable, so we will introduce a stable, predictable and human-readable name mangling scheme.
 
-Finally, only top level items need to be mangled. This means that functions and structs and types will be be mangled, but their fields or local variables do not necessarily need to be.
+Finally, only importable items need to be mangled. 
 
 For name mangling, we introduce the concept of a **absolute module identifier**. This is an ID that is relative to the root of the project, and is unique for each module. For example `my::lighting` would be `my_lighting`. Relative paths are resolved to absolute module identifiers. Underscores are used as separators. If a file or folder name already contains an underscore, it is replaced by two underscores.
 
