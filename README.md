@@ -178,6 +178,17 @@ Since double colons are not allowed in the WGSL grammar, this is a safe way to i
 ## Importable items
 
 **Which items can be imported?**
+What exactly can be imported?
+
+- Structs: Yes
+- Functions: Yes 
+- [Extensions](https://www.w3.org/TR/WGSL/#extensions): ??
+- [Global diagnostic filters](https://www.w3.org/TR/WGSL/#global-diagnostic-directive): ???
+- Type aliases: Yes
+- [Const declarations, override declarations](https://www.w3.org/TR/WGSL/#value-decls): Yes
+- [Var declarations](https://www.w3.org/TR/WGSL/#var-decls): Probably yes 
+  - Importing a `var<private> foo: f32;` looks odd
+  - Bindings might not compose nicely, because they have a fixed index `@group(0) @binding(2) var<uniform> param: Params;`
 
 
 ## Name mangling
@@ -217,6 +228,7 @@ TODO:
 
 When I import foo, and it uses a type FooBar, then FooBar is implicitly imported as well. However, the user cannot type "FooBar" in the source code, because it hasn't been explicitly imported.
 
+alias vec2f = u32; is probably valid WGSL code, and can very much screw up code that comes after it.
 
 1. Replace mdule names in code with ???
 
