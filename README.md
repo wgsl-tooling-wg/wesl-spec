@@ -180,19 +180,25 @@ Since double colons are not allowed in the WGSL grammar, this is a safe way to i
 
 ## Importable items
 
-**Which items can be imported?**
-What exactly can be imported?
+The following items can be imported:
 
-- Structs: Yes
-- Functions: Yes 
-- [Extensions](https://www.w3.org/TR/WGSL/#extensions): ??
-- [Global diagnostic filters](https://www.w3.org/TR/WGSL/#global-diagnostic-directive): ???
-- Type aliases: Yes
-- [Const declarations, override declarations](https://www.w3.org/TR/WGSL/#value-decls): Yes
-- [Var declarations](https://www.w3.org/TR/WGSL/#var-decls): Probably yes 
+- Structs
+- Functions 
+- Type aliases
+- [Const declarations, override declarations](https://www.w3.org/TR/WGSL/#value-decls)
+- [Var declarations](https://www.w3.org/TR/WGSL/#var-decls) 
   - Importing a `var<private> foo: f32;` looks odd
   - Bindings might not compose nicely, because they have a fixed index `@group(0) @binding(2) var<uniform> param: Params;`
 
+These items cannot be imported, but they affect module behavior:
+
+- [Extensions](https://www.w3.org/TR/WGSL/#extensions)
+- [Global diagnostic filters](https://www.w3.org/TR/WGSL/#global-diagnostic-directive)
+
+These are always set in the main module, and affect all imported modules.
+
+When, during parsing of imported modules, we encounter an extension or a global diagnostic filter, we check if the main module enables it, or sets the filter.
+If yes, everything is fine. If not, we throw an error.
 
 ## Name mangling
 
@@ -221,11 +227,28 @@ If anything else is encountered, we add it to the current part.
 
 At the end, the final part is the item name, and the other parts are the module path.
 
-## Implementation Semantics
+## Identifier Resolution
 
-One way of implementing this with the desired semantics is as follows:
+TODO: How does https://www.w3.org/TR/WGSL/#declaration-and-scope get extended
 
-TODO:
+1. Parse the imports
+2. Parse the WGSL to a syntax tree
+3. Resolve each identifier (usual WGSL rules, and all the imports are also globals)
+4. Replace all global identifiers with mangled names
+5. Put the modules together 
+
+Each file introduces its own scope/namespace. An alias only affects everything inside that scope/namespace.
+
+## Example Implementation with Module Headers
+
+One concrete way of implementing this is described in this section. Tools do not, by any means, need to use this approach.
+
+1. Parse the import statements.
+2. Compile the imported WGSL files.
+3. Import
+4. Mangle the names
+
+TODO: 
 <!--
 
 When I import foo, and it uses a type FooBar, then FooBar is implicitly imported as well. However, the user cannot type "FooBar" in the source code, because it hasn't been explicitly imported.
