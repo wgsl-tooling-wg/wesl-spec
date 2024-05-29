@@ -202,8 +202,7 @@ Compiled WGSL files have a few exposed parts, namely the names of the entry func
 
 Finally, only importable items need to be mangled. 
 
-For name mangling, we introduce the concept of a **absolute module identifier**. This is an ID that is relative to the root of the project, and is unique for each module. For example `my::lighting` would be `my_lighting`. Relative paths are resolved to absolute module identifiers. Underscores are used as separators. If a file or folder name already contains an underscore, it is replaced by two underscores.
-
+For name mangling, we introduce the concept of a **absolute module identifier**. This is an ID that is relative to the nearest *package*, and is unique for each module. For example, given a file `my/geom/sphere.wgsl`, and a package `my`, then the absolute module identifier is `my_geom_sphere`. It is always this, regardless of how the file is imported. If a file or folder name already contains an underscore, it is replaced by two underscores.
 
 The name mangling scheme is as follows:
 1. Underscores are used as separators. If a name already contains an underscore, it is replaced by two underscores.
