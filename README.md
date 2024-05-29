@@ -169,9 +169,6 @@ When the user imports a module, they can use the module name in the code. For ex
 
 Since double colons are not allowed in the WGSL grammar, this is a safe way to introduce them without having to introduce a new type of WGSL parser.
 
-## Importing a module
-
-When I import foo, and it uses a type FooBar, then FooBar is implicitly imported as well. However, the user cannot type "FooBar" in the source code, because it hasn't been explicitly imported.
 
 ## Name mangling
 
@@ -207,6 +204,10 @@ One way of implementing this with the desired semantics is as follows:
 
 TODO:
 <!--
+
+When I import foo, and it uses a type FooBar, then FooBar is implicitly imported as well. However, the user cannot type "FooBar" in the source code, because it hasn't been explicitly imported.
+
+
 1. Replace mdule names in code with ???
 
 1. Parse the import statements.
