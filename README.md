@@ -115,7 +115,7 @@ item_list:
 | ident (',' ident)* (',')?
 
 path_ident:
-/[_\p{XID_Start}][\p{XID_Continue}]*/
+/[\p{XID_Start}][\p{XID_Continue}]*/
 ```
 
 And `ident` is defined in the WGSL grammar. 
@@ -195,7 +195,7 @@ These items cannot be imported, but they affect module behavior:
 - [Extensions](https://www.w3.org/TR/WGSL/#extensions)
 - [Global diagnostic filters](https://www.w3.org/TR/WGSL/#global-diagnostic-directive)
 
-These are always set in the main module, and affect all imported modules.
+These are always set at the very top in the main module, and affect all imported modules. They come before the imports.
 
 When, during parsing of imported modules, we encounter an extension or a global diagnostic filter, we check if the main module enables it, or sets the filter.
 If yes, everything is fine. If not, we throw an error.
