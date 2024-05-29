@@ -109,10 +109,13 @@ import:
 | 'import' path
 
 path:
-| ident ('::' ident)* ('::' '{' item_list '}' )?
+| path_ident ('::' path_ident)* ('::' '{' item_list '}' )?
 
 item_list:
 | ident (',' ident)* (',')?
+
+path_ident:
+/[_\p{XID_Start}][\p{XID_Continue}]*/
 ```
 
 And `ident` is defined in the WGSL grammar. 
