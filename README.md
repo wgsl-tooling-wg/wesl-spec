@@ -190,6 +190,8 @@ The following items can be imported:
   - Importing a `var<private> foo: f32;` looks odd
   - Bindings might not compose nicely, because they have a fixed index `@group(0) @binding(2) var<uniform> param: Params;`
 
+## Behaviour-changing items
+
 These items cannot be imported, but they affect module behavior:
 
 - [Extensions](https://www.w3.org/TR/WGSL/#extensions)
@@ -199,6 +201,13 @@ These are always set at the very top in the main module, and affect all imported
 
 When, during parsing of imported modules, we encounter an extension or a global diagnostic filter, we check if the main module enables it, or sets the filter.
 If yes, everything is fine. If not, we throw an error.
+
+## Preserved items
+
+These items are preserved when importing a module. They are not imported, but will land in the final module with a mangled name.
+
+- [Entry points](https://www.w3.org/TR/WGSL/#entry-points)
+- [Pipeline overridable constants](https://www.w3.org/TR/WGSL/#override-decls)
 
 ## Name mangling
 
@@ -229,26 +238,51 @@ At the end, the final part is the item name, and the other parts are the module 
 
 ## Identifier Resolution
 
-TODO: How does https://www.w3.org/TR/WGSL/#declaration-and-scope get extended
+The steps of identifier resolution are as follows:
 
-1. Parse the imports
-2. Parse the WGSL to a syntax tree
-3. Resolve each identifier (usual WGSL rules, and all the imports are also globals)
-4. Replace all global identifiers with mangled names
-5. Put the modules together 
+1. Parse the import statements. Resolve the paths to the concrete file paths.
+2. Bring the imported items into scope. All other items that the imported items depend on are also imported, *but not user-accessible in the current scope*. 
+  For example when importing `Foo` from `struct Foo { x: Bar; }`, we would import `Bar` as well. If the user types `Bar` in the source code, then that is an error.
+3. Parse the WGSL.
 
-Each file introduces its own scope/namespace. An alias only affects everything inside that scope/namespace.
+For example, given two modules
+```
+// lighting.wgsl
+struct Light {
+    color: vec3;
+}
+struct LightSources {
+    lights: array<Light>;
+}
+```
 
-## Example Implementation with Module Headers
+```
+// main.wgsl
+import lighting::{ LightSources };
 
-One concrete way of implementing this is described in this section. Tools do not, by any means, need to use this approach.
+// LightSources can be used
+fn clear_lights(lights: LightSources) -> LightSources {
+    for (var i = 0; i < lights.lights.length(); i = i + 1) {
+        // We can access everything inside of LightSources
+        let light = lights.lights[i];
 
-1. Parse the import statements.
-2. Compile the imported WGSL files.
-3. Import
-4. Mangle the names
+        // However, the user cannot use the type "Light"
+        // let light: Light <== error, Light is not imported
 
-TODO: 
+        light.color = vec3(0.0, 0.0, 0.0);
+    }
+    return lights;
+}
+```
+
+## Producing the final module
+
+The final module is produced by taking each imported module (in topological order, with the main module last), resolving and mangling all the globals, and joining the resulting pieces of code together.
+
+All entry points and pipeline overridable constants from the imported modules are also mangled and land in the output.
+
+Dead code elimination is allowed, but not required.
+
 <!--
 
 When I import foo, and it uses a type FooBar, then FooBar is implicitly imported as well. However, the user cannot type "FooBar" in the source code, because it hasn't been explicitly imported.
@@ -268,11 +302,11 @@ alias vec2f = u32; is probably valid WGSL code, and can very much screw up code 
     
 Unnamable names
 -->
-# TODO: Drawbacks
+# Drawbacks
 
-Why should we not do this?
+Are there reasons as to why we should we not do this?
 
-# TODO: Rationale and alternatives
+# Rationale and alternatives
 
 - Why is this design the best in the space of possible designs?
 - What other designs have been considered and what is the rationale for not choosing them?
@@ -310,15 +344,23 @@ Another drawback is that using the same name twice is impossible. In C-land, thi
 A future drawback is that "privacy" or "visibility" becomes very difficult to implement. Everything that is imported is automatically public and easily accessible.
 In C-land, the workaround is using header files. In other languages, such as Python, the convention ends up being "anything prefixed with an underscore `_` is private".
 
-## Using a higher level language
+## Putting exports in comments
 
-There are multiple higher level shading languages, such as slang (TODO: link) or Rust-GPU (TODO: link) which support imports. They also support more features that WGSL currently does not offer. For complex projects, this can very much pay off.
+This would have the advantage of letting some existing WGSL tools ignore the new syntax. For example, a WGSL formatter would not need to know about imports, and could just format the code as usual.
+
+## Using an alternative shader language
+
+There are multiple higher level shading languages, such as [slang](https://github.com/shader-slang/slang) or [Rust-GPU](https://github.com/EmbarkStudios/rust-gpu) which support imports. They also support more features that WGSL currently does not offer. For complex projects, this can very much pay off.
 
 The downside is using additional tooling, and dealing with an additional translation layer. An additonal translation layer could lock shader authors out of certain WGSL features.
 
-This is always a trade-off, and I believe that offering multiple solid choices is the ideal option.
+## Composing shader code at runtime
 
-# TODO: Prior art
+One alternative is to compose shader code at runtime, for example by joining together strings with WGSL code.
+This has the major downside of not being statically analyzable. The IDE cannot provide autocompletion, and the compiler cannot check for errors.
+
+<!--
+# Future: Prior art
 
 Discuss prior art, both the good and the bad, in relation to this proposal. A few examples of what this can include are:
 
@@ -330,19 +372,16 @@ Discuss prior art, both the good and the bad, in relation to this proposal. A fe
 This section is intended to encourage you as an author to think about the lessons from other languages, provide readers of your RFC with a fuller picture. If there is no prior art, that is fine - your ideas are interesting to us whether they are brand new or if it is an adaptation from other languages.
 
 Note that while precedent set by other languages is some motivation, it does not on its own motivate an RFC. Please also take into consideration that rust sometimes intentionally diverges from common language features.
-
+-->
 # Unresolved questions
 
 - Is .toml the best file format for the `wgsl.toml`? Some alternatives would be JSON/JSON5 and StrictYAML.
+- What exactly is a file path?
 
-
-- What parts of the design do you expect to resolve through the RFC process before this gets merged?
-- What parts of the design do you expect to resolve through the implementation of this feature before stabilization?
-- What related issues do you consider out of scope for this RFC that could be addressed in the future independently of the solution that comes out of this RFC?
 
 # Test cases
 
-We should add shared test cases for implementations to this repository.
+We encourage share test cases for this proposal. This is a work in progress right now!
 
 # Future possibilities
 
@@ -351,7 +390,50 @@ We should add shared test cases for implementations to this repository.
 One natural extension of this proposal is to add explicit exports.
 For one, this would allow library authors to hide certain functions or structs from the outside world. It would also enable re-exports, where a library re-exports a function from another library.
 
-However, this adds a significant amount of parser complexity, and is not necessary for the initial version of this proposal.
+However, this adds some parser complexity, and is not necessary for the initial version of this proposal.
+
+There are two variations of exports, which could be combined like in Typescript
+
+### Exporting a list of items
+
+A standalone export statement simply specifies which globals are exported.
+Then, imports can be checked against the list of exports. This is very easy to parse and implement.
+
+```
+export { foo, bar };
+```
+
+And when one wants to export everything defined in the current file, they can use the `*` syntax.
+
+```
+export *;
+```
+
+To re-export an item, one can use the same syntax.
+
+```
+import my::lighting::{ pbr };
+
+export { pbr };
+```
+
+
+### Exporting as an attribute
+
+Exports can also be added as an attribute to the item itself.
+
+```
+@export
+struct Foo {
+    x: f32;
+}
+
+@export
+fn foo() {}
+```
+
+This is more user friendly, but also more complex to parse. It requires a partial parsing of the WGSL file to find the exports and their names.
+A future export specification would include the minimal WGSL syntax that is necessary to implement this.
 
 ## Namespaces
 
