@@ -378,6 +378,10 @@ Note that while precedent set by other languages is some motivation, it does not
 - Is .toml the best file format for the `wgsl.toml`? Some alternatives would be JSON/JSON5 and StrictYAML.
 - What exactly is a file path?
 
+# Implementation
+
+We are slowly working on adopting and adjusting the specification.
+This work is happening in multiple tools, including [a WGSL language server](https://github.com/dannymcgee/vscode-wgsl/), a [Typescript WGSL linker](https://github.com/mighdoll/wgsl-linker) and [Bevy's WGSL-imports library](https://github.com/bevyengine/naga_oil).
 
 # Test cases
 
