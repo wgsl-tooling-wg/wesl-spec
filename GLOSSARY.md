@@ -1,7 +1,7 @@
 # Glossary of WGSL Importing terms
 
 - WGSL+: Temporary name for the extended WGSL syntax that allows importing
-- Item
+- Importable item
   - Structs
   - Functions 
   - Type aliases
@@ -18,6 +18,6 @@
   - (Maybe `const_assert`?)
 - Package: A publishable body of WGSL+ code containing multiple files. Akin to a JavaScript npm package or a Rust crate. 
 - Package Root: The root module of a package.
-- Visibility: Whether an item is visible to 
+- Visibility: Whether a importable item is visible to 
   - other modules
   - other packages
