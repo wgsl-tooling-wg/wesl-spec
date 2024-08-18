@@ -17,7 +17,7 @@
   - Directives: Generated WGSL code must agree on a set of directives
   - (Maybe `const_assert`?)
 - Package: A publishable body of WGSL+ code containing multiple files. Akin to a JavaScript npm package or a Rust crate. 
-- Package Root: The entry point of a package.
+- Package Root: The root module of a package.
 - Visibility: Whether an item is visible to 
   - other modules
   - other packages
