@@ -1,3 +1,4 @@
+# ![wgsl-import-spec](branding.svg)
 
 # Summary
 
