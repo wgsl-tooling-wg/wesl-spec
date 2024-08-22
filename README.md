@@ -1,4 +1,3 @@
-
 # Summary
 
 We propose adding an importing mechanism to the WGSL shading language as an extension.
@@ -7,75 +6,57 @@ We propose adding an importing mechanism to the WGSL shading language as an exte
 
 When writing bigger WGSL shaders, one tends to **split the code into reusable pieces**. Examples are re-using a set of lighting calculation functions and sharing a struct between two compute shaders and.
 
-However, current WGSL tooling is not built for this. The official language purposefully does not include this feature, nor does it provide adjacent features like namespaces, and there is no standardized extension yet. 
+However, current WGSL tooling is not built for this. The official language purposefully does not include this feature, nor does it provide adjacent features like namespaces, and there is no standardized extension yet.
 
 One important aspect is getting buy-in from **WGSL language servers**, as shader development with IDEs should be well supported.
 
-We also should account for **importing shader from libraries**. Ideally, users could upload WGSL shaders to existing package managers, which other users could then consume. 
+We also should account for **importing shader from libraries**. Ideally, users could upload WGSL shaders to existing package managers, which other users could then consume.
 
 Finally, we want **multiple tools** which can compile WGSL-with-imports down to raw WGSL. Using WGSL-with-imports both in Rust projects and in web projects should be possible.
 
-## Variant A - Guide-level explanation
+## Guide-level explanation
 
-This variant is based on Rust syntax.
+This variant is semantically most similar to the Typescript syntax, but comes with a recursive grammar that makes importing multiple importable items less verbose. The grammar is also heavily inspired by [Gleam](https://gleam.run/).
 
-By placing an import at the very top of a file, one can either import a whole module, or only specific items, such as functions, structs or types. To import an item, one needs to use curly brackets.
+By placing an import at the very top of a file, one can either import an entire module module, or only specific importable items, such as functions, structs or types.
 
 ```
-import bevy_ui;
-import my::lighting::{ pbr };
-import my::geom::sphere::{ draw, default_radius as foobar };
+// Importing a single item using a relative path
+import ./lighting/pbr;
+
+// Importing multiple items
+import my/geom/sphere/{ draw, default_radius as foobar };
+
+// Imports a whole module. Use it with `bevy_ui.name`
+import bevy_ui/*;
 ```
 
 These can then be used anywhere in the source code.
 
 ```
 fn main() {
-    bevy_ui::quad(vec2f(0.0, 1.0), 1.0);
+    bevy_ui.quad(vec2f(0.0, 1.0), 1.0);
     let a = draw(3);
 }
 ```
 
-Both `bevy_ui` and `my` are packages in the current project. Tools can look in a `wgsl.toml` file to find the location of the packages. This lets libraries be published to package managers, and users can import them with a simple syntax.
+Both `bevy_ui` and `my` are packages in the current project. Language servers and related tools can look in a `wgsl.toml` file to find the location of the packages. This lets libraries be published to package managers, and users can import them with a simple syntax.
 
-The parts that come after the package name are the path to the concrete file, and the file is assumed to have a `.wgsl` file extension.
+The first part is the file path, which is assumed to have a `.wgsl` file extension.
+TODO: Maybe we should use a different file extension, like `.wesl` for "WGSL Extended Shading Language".
 
-Relative paths are also supported, so one can import a shader from a different directory.
-
-```
-import super::sphere;
-import super::super::lighting::{ pbr };
-```
-
-
-## Variant B - Guide-level explanation
-
-This variant is based on Typescript syntax.
-
-By placing an import at the very top of a file, one can either import a whole module, or only specific items, such as functions, structs or types. Paths can either be relative, or start with a package name. They then continue with a path to the concrete file.
+Recursive import definitions are also supported, which leads to short and succinct import statements.
 
 ```
-import * as bevy_ui from "bevy_ui";
-import { pbr } from "my/lighting.wgsl";
-import { draw, default_radius as foobar } from "my/geom/sphere.wgsl";
-```
+import bevy_pbr/{
+  forward_io/VertexOutput,
+  pbr_types/{PbrInput, pbr_input_new},
+  pbr_bindings/*
+};
 
-These can then be used
-
-```
 fn main() {
-    bevy_ui::quad(vec2f(0.0, 1.0), 1.0);
-    let a = draw(3);
+
 }
-```
-
-Tools can look in a `wgsl.toml` file to find the location of the packages.
-
-Relative paths are also supported, so one can import a shader from a different directory.
-
-```
-import * as sphere from "./sphere.wgsl";
-import { pbr } from "./../lighting.wgsl";
 ```
 
 ## `wgsl.toml` file
@@ -89,44 +70,160 @@ edition = "2024"
 [dependencies]
 bevy_ui = { cargo = "bevy_ui" }
 shader_wiz = { path = "./node_modules/shader_wiz/src/main.wgsl" }
-``` 
+```
 
-We specify the paths of packages instead of scanning folders for `*.wgsl` files. 
+We specify how to resolve the paths of packages instead of scanning folders for `*.wgsl` files.
 In the Javascript world, it is common to have a `node_modules` folder with 10k files, which is not practical for a language server to scan.
 
-We also recommend supporting language specific package managers, such as `cargo` for Rust, and `npm` for Javascript. This makes it easier for users to consume shaders, and makes sense for ecosystem-specific tools.
+We are planning on taking advantage of existing package managers, such as `cargo` for Rust, and `npm` for Javascript. This makes it easier for users to consume shaders, and makes sense for ecosystem-specific tools.
 
 # Reference-level explanation
 
-Imports must appear as the first items in a WGSL file.  
-
-## Variant A - Reference-level explanation
+Imports must appear as the first items in a WGSL file.
 
 An import statement is parsed as follows, with spaces and comments allowed between tokens:
 
 ```
-import:
-| 'import' path
+main:
+| 'import' import_path ';'
 
-path:
-| path_ident ('::' path_ident)* ('::' '{' item_list '}' )?
+import_path:
+| ('.' | '..') '/' import_path
+| ident '/' (import_path | import_collection | item_import | star_import)
 
-item_list:
-| ident (',' ident)* (',')?
+star_import:
+| '*' ('as' ident)?
 
-path_ident:
-/[\p{XID_Start}][\p{XID_Continue}]*/
+item_import:
+| ident ('as' ident)?
+
+import_collection:
+| '{' (import_path | item_import) (',' (import_path | item_import))* ','? '}'
 ```
 
-And `ident` is defined in the WGSL grammar. 
+TODO: Should we restrict dots to only appear at the beginning of the path? It wouldn't restrict the user, but would make the grammar simpler.
+
+Where `ident` is defined in the WGSL grammar.
+
+An import consists of
+
+- A path part, which either is a relative path ('.' and '..'), or points at a known package (ident).
+
+  - Nested path segments are joined.
+  - Everything before the final slash is part of the path.
+  - The final part is the file name.
+
+- Items to import.
+
+A star import behaves like a star import in Typescript, except that the name can be inferred from the file name. **Notably**, it does *not* import all the items individually. Instead, it groups them all under a single name!
+
+An item import imports a single item. The item can be renamed with the `as` keyword.
+
+An import collection imports multiple items, and allows for nested imports.
+
+## Examples
+
+To compare it to the more widely known Typescript syntax, here are some examples.
+
+<table>
+<thead>
+<tr>
+<th>WGSL</th>
+<th>Typescript</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+
+```
+import ../geom/sphere/{draw, default_radius as foobar};
+```
+
+</td>
+<td>
+
+```ts
+import { draw, default_radius as foobar } from '../geom/sphere.wgsl';
+```
+
+</td>
+</tr>
+<tr>
+<td>
+
+```
+import bevy_ui/*;
+```
+
+</td>
+<td>
+
+```ts
+import * as bevy_ui from 'bevy_ui.wgsl';
+```
+
+</td>
+</tr>
+<tr>
+<td>
+
+```
+import bevy_pbr/{ 
+    forward_io/VertexOutput, 
+    pbr_types/{PbrInput, pbr_input_new}, 
+    pbr_bindings/* as pbr_b
+};
+```
+
+</td>
+<td>
+
+```ts
+import { VertexOutput } from 'bevy_pbr/forward_io.wgsl';
+import { PbrInput, pbr_input_new } from 'bevy_pbr/pbr_types.wgsl';
+import * as pbr_b from 'bevy_pbr/pbr_bindings.wgsl';
+```
+
+</td>
+</tr>
+</tbody>
+</table>
+
+## Parsing module.importable_item in the source code
+About extending the grammar:
+This one gets an additional meaning. A module property can also be a component.
+component_or_swizzle_specifier:
+| '.' member_ident component_or_swizzle_specifier ?
+
+This needs to be extended to support ident.ident
+for_init:
+| ident.ident func_call_statement.post.ident
+
+for_update:
+| ident.ident func_call_statement.post.ident
+
+global_decl:
+| attribute _ 'fn' ident ... '->' attribute _ ident.ident
+| 'alias' ident '=' ident.ident template_elaborated_ident.post.ident ';'
+
+primary_expression:
+| ident.ident template_elaborated_ident.post.ident
+| ident.ident template_elaborated_ident.post.ident argument_expression_list
+
+statement:
+| ident.ident template_elaborated_ident.post.ident argument_expression_list ';'
+
+type_specifier:
+| ident.ident ...
 
 After parsing, the semantics is as follows:
 
-1. If the path starts with `super`, it is a relative path. The number of `super` determines how many directories to go up, with one `super` corresponding to the current *directory*.  
-If the path starts with a package name, it is an absolute path. The package name is looked up in the `wgsl.toml` file, and the path is appended to the package path.
+1. If the path starts with `super`, it is a relative path. The number of `super` determines how many directories to go up, with one `super` corresponding to the current _directory_.  
+   If the path starts with a package name, it is an absolute path. The package name is looked up in the `wgsl.toml` file, and the path is appended to the package path.
 2. The other identifiers are appended to the file path. The final one gets a `.wgsl` extension.
 3. If the path has a `::{ ... }` part, the items listed in the curly brackets are imported.  
-Otherwise, the module is imported and can be used in code like `sphere::draw()`.
+   Otherwise, the module is imported and can be used in code like `sphere::draw()`.
 
 As an example, `import super::sphere` would be
 
@@ -134,9 +231,9 @@ As an example, `import super::sphere` would be
 2. `sphere` is the file name. The final path is `./sphere.wgsl`, and is relative to the current wgsl file.
 
 And `import my::lighting::{ pbr }` would be
+
 1. `my` is a package name. The path is looked up in the `wgsl.toml` file. With the `wgsl.toml` above, it is the name of our current project. If the project lives at `/home/username/my-cute-project`, then that is the path.
 2. `lighting` is the file name. The final path is `/home/username/my-cute-project/lighting.wgsl`.
-
 
 <details>
   <summary>Why do import items need curly brackets?</summary>
@@ -165,7 +262,6 @@ ident_list:
 
 Where `ident` is defined in the WGSL grammar.
 
-
 **Unresolved question: What exactly is a file path?**
 
 The item list is a list of items that are imported. If the item list is empty, the whole module is imported.
@@ -183,10 +279,10 @@ Since double colons are not allowed in the WGSL grammar, this is a safe way to i
 The following items can be imported:
 
 - Structs
-- Functions 
+- Functions
 - Type aliases
 - [Const declarations, override declarations](https://www.w3.org/TR/WGSL/#value-decls)
-- [Var declarations](https://www.w3.org/TR/WGSL/#var-decls) 
+- [Var declarations](https://www.w3.org/TR/WGSL/#var-decls)
   - Importing a `var<private> foo: f32;` looks odd
   - Bindings might not compose nicely, because they have a fixed index `@group(0) @binding(2) var<uniform> param: Params;`
 
@@ -215,11 +311,12 @@ To join multiple modules into one, we need to make sure that names do not collid
 
 Compiled WGSL files have a few exposed parts, namely the names of the entry functions and pipeline overridable constants. These need to be stable and predictable, so we will introduce a stable, predictable and human-readable name mangling scheme.
 
-Finally, only importable items need to be mangled. 
+Finally, only importable items need to be mangled.
 
-For name mangling, we introduce the concept of a **absolute module identifier**. This is an ID that is relative to the nearest *package*, and is unique for each module. For example, given a file `my/geom/sphere.wgsl`, and a package `my`, then the absolute module identifier is `my_geom_sphere`. It is always this, regardless of how the file is imported. If a file or folder name already contains an underscore, it is replaced by two underscores.
+For name mangling, we introduce the concept of a **absolute module identifier**. This is an ID that is relative to the nearest _package_, and is unique for each module. For example, given a file `my/geom/sphere.wgsl`, and a package `my`, then the absolute module identifier is `my_geom_sphere`. It is always this, regardless of how the file is imported. If a file or folder name already contains an underscore, it is replaced by two underscores.
 
 The name mangling scheme is as follows:
+
 1. Underscores are used as separators. If a name already contains an underscore, it is replaced by two underscores.
 2. Prefix each name with the absolute module identifier, followed by a single underscore.
 
@@ -229,7 +326,7 @@ For example, given a file `my/geom/sphere.wgsl` with a function `draw_now`, the 
 
 We keep track of a stack of parts, and always add characters to the last part. It starts with a single empty part.
 
-To unmangle a name, one goes over a mangled name from left to right.   
+To unmangle a name, one goes over a mangled name from left to right.  
 If two underscores are encountered, we add one underscore to the current part, and skip the second underscore.  
 If only one underscore is encountered, we start a new part.
 If anything else is encountered, we add it to the current part.
@@ -241,11 +338,12 @@ At the end, the final part is the item name, and the other parts are the module 
 The steps of identifier resolution are as follows:
 
 1. Parse the import statements. Resolve the paths to the concrete file paths.
-2. Bring the imported items into scope. All other items that the imported items depend on are also imported, *but not user-accessible in the current scope*. 
-  For example when importing `Foo` from `struct Foo { x: Bar; }`, we would import `Bar` as well. If the user types `Bar` in the source code, then that is an error.
+2. Bring the imported items into scope. All other items that the imported items depend on are also imported, _but not user-accessible in the current scope_.
+   For example when importing `Foo` from `struct Foo { x: Bar; }`, we would import `Bar` as well. If the user types `Bar` in the source code, then that is an error.
 3. Parse the WGSL.
 
 For example, given two modules
+
 ```
 // lighting.wgsl
 struct Light {
@@ -298,10 +396,11 @@ alias vec2f = u32; is probably valid WGSL code, and can very much screw up code 
 2. Parse the WGSL to a syntax tree.
 3. Mangle the names ???
 3. Add the imported items without mangling to the syntax tree. Every type that is referenced by the imports is also imported with a random UUID name.
-4. 
-    
+4.
+
 Unnamable names
 -->
+
 # Drawbacks
 
 Are there reasons as to why we should we not do this?
@@ -315,29 +414,30 @@ Are there reasons as to why we should we not do this?
 
 ## Not agreeing on a standard
 
-One major upside of standardizing it is that it becomes practical for language servers to support it. 
+One major upside of standardizing it is that it becomes practical for language servers to support it.
 
 The usual alternative is that one library, like shaderc, becomes very popular and the standard ends up being "whatever popular library XYZ does".
 
 An open process lets us find a better solution.
 
-## Preprocessor `#include <lighting.wgsl>` 
+## Preprocessor `#include <lighting.wgsl>`
 
 One alternative, which is common in the GLSL and C worlds, is an including mechanism which simply copy-pastes existing code. A major upside is that this is very simple to implement.
 
-One drawback is that importing the same shader multiple times, which can also happen indirectly, does not work without other preprocessor features. 
+One drawback is that importing the same shader multiple times, which can also happen indirectly, does not work without other preprocessor features.
 
 ```c
 // A.wgsl
 #include <lighting.wgsl>
 #include <math.wgsl>
 ```
+
 ```c
 // lighting.wgsl
 #include <math.wgsl>
 ```
-would not work, since anything defined in `math.wgsl` would be imported twice. In C-land, this is solved by using *include guards*.
 
+would not work, since anything defined in `math.wgsl` would be imported twice. In C-land, this is solved by using _include guards_.
 
 Another drawback is that using the same name twice is impossible. In C-land, this leads to pseudo-namespaces, where major libraries will prefix all of their functions with a few symbols. An example of this is the Vulkan API `vkBeginCommandBuffer` or `vkCmdDraw`.
 
@@ -373,6 +473,7 @@ This section is intended to encourage you as an author to think about the lesson
 
 Note that while precedent set by other languages is some motivation, it does not on its own motivate an RFC. Please also take into consideration that rust sometimes intentionally diverges from common language features.
 -->
+
 # Unresolved questions
 
 - Is .toml the best file format for the `wgsl.toml`? Some alternatives would be JSON/JSON5 and StrictYAML.
@@ -420,7 +521,6 @@ import my::lighting::{ pbr };
 
 export { pbr };
 ```
-
 
 ### Exporting as an attribute
 
