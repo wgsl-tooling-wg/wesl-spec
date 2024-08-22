@@ -361,6 +361,14 @@ Another drawback is that using the same name twice is impossible. In C-land, thi
 A future drawback is that "privacy" or "visibility" becomes very difficult to implement. Everything that is imported is automatically public and easily accessible.
 In C-land, the workaround is using header files. In other languages, such as Python, the convention ends up being "anything prefixed with an underscore `_` is private".
 
+## Typescript-like imports
+
+TODO: Main reason is just that they're more verbose
+
+## Rust-like imports
+
+TODO: Needs something akin to a `mod` statement, otherwise ambiguity.
+
 ## Putting exports in comments
 
 This would have the advantage of letting some existing WGSL tools ignore the new syntax. For example, a WGSL formatter would not need to know about imports, and could just format the code as usual.
