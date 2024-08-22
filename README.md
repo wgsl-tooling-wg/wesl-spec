@@ -81,7 +81,7 @@ We are planning on taking advantage of existing package managers, such as `cargo
 
 # Reference-level explanation
 
-Imports must appear as the first items in a WGSL file.
+Imports must appear as the first items in a WGSL file. They import "importable items" (see [GLOSSARY.md](./GLOSSARY.md)).
 
 An import statement is parsed as follows, with spaces and comments allowed between tokens:
 
@@ -219,75 +219,6 @@ statement:
 type_specifier:
 | ident.ident ...
 
-After parsing, the semantics is as follows:
-
-1. If the path starts with `super`, it is a relative path. The number of `super` determines how many directories to go up, with one `super` corresponding to the current _directory_.  
-   If the path starts with a package name, it is an absolute path. The package name is looked up in the `wgsl.toml` file, and the path is appended to the package path.
-2. The other identifiers are appended to the file path. The final one gets a `.wgsl` extension.
-3. If the path has a `::{ ... }` part, the items listed in the curly brackets are imported.  
-   Otherwise, the module is imported and can be used in code like `sphere::draw()`.
-
-As an example, `import super::sphere` would be
-
-1. `super` means current directory.
-2. `sphere` is the file name. The final path is `./sphere.wgsl`, and is relative to the current wgsl file.
-
-And `import my::lighting::{ pbr }` would be
-
-1. `my` is a package name. The path is looked up in the `wgsl.toml` file. With the `wgsl.toml` above, it is the name of our current project. If the project lives at `/home/username/my-cute-project`, then that is the path.
-2. `lighting` is the file name. The final path is `/home/username/my-cute-project/lighting.wgsl`.
-
-<details>
-  <summary>Why do import items need curly brackets?</summary>
-  
-The curly brackets are necessary to distinguish between importing a whole module and importing only specific items. Otherwise `import my::lighting` would be ambiguous. If we attempt to heuristically resolve this, it can lead to confusing situations where the semantics suddenly changes. For example, if the user is commenting out a function, then the import statement could switch between importing a single function and importing the whole module. This is not a good user experience.
-</details>
-
-## Variant B - Reference-level explanation
-
-An import statement is parsed as follows, with spaces and comments allowed between tokens:
-
-```
-import:
-| 'import' item_list path
-
-path:
-| string
-
-item_list:
-| '*' 'as' ident
-| '{' ident_list '}'
-
-ident_list:
-| ident (',' ident)* (',')?
-```
-
-Where `ident` is defined in the WGSL grammar.
-
-**Unresolved question: What exactly is a file path?**
-
-The item list is a list of items that are imported. If the item list is empty, the whole module is imported.
-
-`path` is a quoted string that resolves to a file path. If it starts with `.` or `..`, it is a relative path. If it starts with a package name, it gets resolved to the package path. It may not start with anything else, such as `/` or `C:` or `http://`.
-
-## Module names in code
-
-When the user imports a module, they can use the module name in the code. For example, if they import `my::lighting`, they can use `lighting::pbr` in the code.
-
-Since double colons are not allowed in the WGSL grammar, this is a safe way to introduce them without having to introduce a new type of WGSL parser.
-
-## Importable items
-
-The following items can be imported:
-
-- Structs
-- Functions
-- Type aliases
-- [Const declarations, override declarations](https://www.w3.org/TR/WGSL/#value-decls)
-- [Var declarations](https://www.w3.org/TR/WGSL/#var-decls)
-  - Importing a `var<private> foo: f32;` looks odd
-  - Bindings might not compose nicely, because they have a fixed index `@group(0) @binding(2) var<uniform> param: Params;`
-
 ## Behaviour-changing items
 
 These items cannot be imported, but they affect module behavior:
@@ -383,29 +314,13 @@ All entry points and pipeline overridable constants from the imported modules ar
 
 Dead code elimination is allowed, but not required.
 
-<!--
-
-When I import foo, and it uses a type FooBar, then FooBar is implicitly imported as well. However, the user cannot type "FooBar" in the source code, because it hasn't been explicitly imported.
-
-alias vec2f = u32; is probably valid WGSL code, and can very much screw up code that comes after it.
-
-1. Replace mdule names in code with ???
-
-1. Parse the import statements.
-2. Parse the WGSL code to a syntax tree. This can be done with an existing parser.
-
-1. Parse the import statements.
-2. Parse the WGSL to a syntax tree.
-3. Mangle the names ???
-3. Add the imported items without mangling to the syntax tree. Every type that is referenced by the imports is also imported with a random UUID name.
-4.
-
-Unnamable names
--->
-
 # Drawbacks
 
 Are there reasons as to why we should we not do this?
+
+- This introduces yet another importing syntax that developers have to learn, instead of using a standard syntax.
+- To implement the name mangling, one has to parse WGSL code! This is not trivial, and requires a partial WGSL parser.
+- Paths in import statements must consist of valid WGSL identifiers, which can be limiting. This limitation could be lifted by allowing arbitrary strings in import paths, but would make the implementation more complex.
 
 # Rationale and alternatives
 
@@ -479,7 +394,6 @@ Note that while precedent set by other languages is some motivation, it does not
 # Unresolved questions
 
 - Is .toml the best file format for the `wgsl.toml`? Some alternatives would be JSON/JSON5 and StrictYAML.
-- What exactly is a file path?
 
 # Implementation
 
