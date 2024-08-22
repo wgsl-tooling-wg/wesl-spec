@@ -1,3 +1,5 @@
+# ![wgsl-import-spec](branding.svg)
+
 # Summary
 
 We propose adding an importing mechanism to the WGSL shading language as an extension.
