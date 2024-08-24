@@ -10,8 +10,6 @@ When writing bigger WGSL shaders, one tends to **split the code into reusable pi
 
 However, current WGSL tooling is not built for this. The official language purposefully does not include this feature, nor does it provide adjacent features like namespaces, and there is no standardized extension yet.
 
-One important aspect is getting buy-in from **WGSL language servers**, as shader development with IDEs should be well supported.
-
 We also should account for **importing shader from libraries**. Ideally, users could upload WGSL shaders to existing package managers, which other users could then consume.
 
 Finally, we want **multiple tools** which can compile WGSL-with-imports down to raw WGSL. Using WGSL-with-imports both in Rust projects and in web projects should be possible.
