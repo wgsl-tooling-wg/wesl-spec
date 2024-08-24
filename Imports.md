@@ -16,7 +16,10 @@ Finally, we want **multiple tools** which can compile WGSL-with-imports down to 
 
 ## Guide-level explanation
 
-This variant is semantically most similar to the Typescript syntax, but comes with a recursive grammar that makes importing multiple importable items less verbose. The grammar is also heavily inspired by [Gleam](https://gleam.run/).
+The `import` statement extension is designed to appear somewhat familiar to TypeScript syntax,
+but with a Rust like recursive grammar to make importing
+multiple importable items less verbose.
+The syntax is also heavily inspired by [Gleam](https://gleam.run/).
 
 By placing an import at the very top of a file, one can either import an entire module module, or only specific importable items, such as functions, structs or types.
 
