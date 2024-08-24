@@ -42,8 +42,8 @@ fn main() {
 
 Both `bevy_ui` and `my` are packages in the current project. Language servers and related tools can look in a `wgsl.toml` file to find the location of the packages. This lets libraries be published to package managers, and users can import them with a simple syntax.
 
-The first part is the file path, which is assumed to have a `.wgsl` file extension.
-TODO: Maybe we should use a different file extension, like `.wesl` for "WGSL Extended Shading Language".
+The first part is the file path, which is assumed to have a either `.wgsl` file extension,
+or the extension we use for extended wgsl syntax (possibly `.wesl`).
 
 Recursive import definitions are also supported, which leads to short and succinct import statements.
 
