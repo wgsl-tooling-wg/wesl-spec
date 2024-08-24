@@ -26,3 +26,7 @@ We specify how to resolve the paths of packages instead of scanning folders for 
 In the Javascript world, it is common to have a `node_modules` folder with 10k files, which is not practical for a language server to scan.
 
 We are planning on taking advantage of existing package managers, such as `cargo` for Rust, and `npm` for Javascript. This makes it easier for users to consume shaders, and makes sense for ecosystem-specific tools.
+
+### Unresolved questions
+
+- Is .toml the best file format for the `wgsl.toml`? Some alternatives would be JSON/JSON5 and StrictYAML.

@@ -364,10 +364,6 @@ This section is intended to encourage you as an author to think about the lesson
 Note that while precedent set by other languages is some motivation, it does not on its own motivate an RFC. Please also take into consideration that rust sometimes intentionally diverges from common language features.
 -->
 
-# Unresolved questions
-
-- Is .toml the best file format for the `wgsl.toml`? Some alternatives would be JSON/JSON5 and StrictYAML.
-
 # Implementation
 
 We are slowly working on adopting and adjusting the specification.
