@@ -102,9 +102,10 @@ Package WGSL for crates.io and npm.
 **[virtual functions](./VirtualFunctions.md)** -
 Customize a library by replacing a function.
 
-**[visibility control](./Visibility.md)** - Define the public parts of wgsl.
+**[visibility control](./Visibility.md)** -
+Define the public parts of wgsl.
 e.g. `export`.
 
 **[extends](./Extends.md)** - Struct inheritance.
 
-**[versioning](./Versioning.md)** - specify feature levels, ES2024
+**[versioning](./Versioning.md)** - specify feature levels for enhanced WGSL, e.g. `version WESL2024`.
