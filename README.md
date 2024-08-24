@@ -23,13 +23,13 @@ in crates.io and npm.
 ## WGSL Enhancements
 
 We're aiming for to design and prioritize WGSL enhancements that are
-needed by community projects,
-feel natural and well integrated to the WGSL programmer,
-feasible to integrate into tools.
+important for community projects,
+feel natural to the WGSL programmer,
+and are reasonable to integrate into tools.
 
-A WGSL enhancement to support `import` statements is planned first.
-
-**[imports](./Imports.md)** - Import functions from other WGSL files.
+A WGSL enhancement to support `import` statements is planned first
+to enable importing WGSL elements like functions from other files.
+See spec draft here: **[imports](./Imports.md)**.
 
 Several [other](#other-wgsl-enhancements) WGSL enhancements
 are in various stages of discussion, see below.
