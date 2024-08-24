@@ -393,58 +393,10 @@ This work is happening in multiple tools, including [a WGSL language server](htt
 
 # Test cases
 
-We encourage share test cases for this proposal. This is a work in progress right now!
+Test cases will be available on
+[github](https://github.com/wgsl-tooling-wg/wgsl-import-spec).
 
 # Future possibilities
-
-## Export
-
-One natural extension of this proposal is to add explicit exports.
-For one, this would allow library authors to hide certain functions or structs from the outside world. It would also enable re-exports, where a library re-exports a function from another library.
-
-However, this adds some parser complexity, and is not necessary for the initial version of this proposal.
-
-There are two variations of exports, which could be combined like in Typescript
-
-### Exporting a list of items
-
-A standalone export statement simply specifies which globals are exported.
-Then, imports can be checked against the list of exports. This is very easy to parse and implement.
-
-```
-export { foo, bar };
-```
-
-And when one wants to export everything defined in the current file, they can use the `*` syntax.
-
-```
-export *;
-```
-
-To re-export an item, one can use the same syntax.
-
-```
-import my::lighting::{ pbr };
-
-export { pbr };
-```
-
-### Exporting as an attribute
-
-Exports can also be added as an attribute to the item itself.
-
-```
-@export
-struct Foo {
-    x: f32;
-}
-
-@export
-fn foo() {}
-```
-
-This is more user friendly, but also more complex to parse. It requires a partial parsing of the WGSL file to find the exports and their names.
-A future export specification would include the minimal WGSL syntax that is necessary to implement this.
 
 ## Namespaces
 
