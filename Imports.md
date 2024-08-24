@@ -21,7 +21,7 @@ but with a Rust like recursive grammar to make importing
 multiple importable items less verbose.
 The syntax is also heavily inspired by [Gleam](https://gleam.run/).
 
-By placing an import at the very top of a file, one can either import an entire module module, or only specific importable items, such as functions, structs or types.
+By placing an import at the very top of a file, one can either import an entire module, or only specific importable items, such as functions, structs or types.
 
 ```
 // Importing a single item using a relative path
