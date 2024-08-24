@@ -30,7 +30,8 @@ See spec draft here: **[imports](./Imports.md)**.
 Several other WGSL enhancements
 are in various stages of discussion,
 see [below](#other-wgsl-enhancements).
-We'll group a first set of stable enhancements into a 1.0 release.
+We'll eventually group a community prioritized
+set of stable enhancements into a 1.0 release. 
 
 ## Tools
 
