@@ -334,10 +334,20 @@ There are multiple higher level shading languages, such as [slang](https://githu
 
 The downside is using additional tooling, and dealing with an additional translation layer. An additonal translation layer could lock shader authors out of certain WGSL features.
 
-## Composing shader code at runtime
+## Composing shader code as strings at runtime
 
-One alternative is to compose shader code at runtime, for example by joining together strings with WGSL code.
+One alternative is to compose shader code at runtime
+by simply joining together strings with WGSL code, perhaps
+with some string templating tool for flexibility.
 This has the major downside of not being statically analyzable. The IDE cannot provide autocompletion, and the compiler cannot check for errors.
+
+However, an import aware wgsl linker tool can be bundled with applications
+to compose shaders at runtime.
+(Related community projects
+[naga_oil](https://github.com/bevyengine/naga_oil) and
+[wgsl-linker](https://github.com/wgsl-tooling-wg/wgsl-linker)
+support runtime linking.)
+
 
 <!--
 # Future: Prior art
