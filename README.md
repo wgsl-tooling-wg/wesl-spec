@@ -11,70 +11,54 @@ By standardizing an enhanced WGSL, we can
 share the effort of building better tools for everyone,
 including small projects
 that can't afford to create their own tooling.
-For tool makers,
-more users makes it easier to justify the extra effort
-of creating more polished designs.
+And with a standardized version of community WGSL,
+the community can publish WGSL libraries in crates.io and npm.
 
-A standard enhanced WGSL also helps us to
-share shader code.
-We'd like to enable WGSL libraries
-in crates.io and npm.
+Join us on [github](https://github.com/wgsl-tooling-wg/wgsl-import-spec)
+or [discord](https://discord.gg/FXhZDV8V) to help.
 
 ## WGSL Enhancements
 
-We're aiming for to design and prioritize WGSL enhancements that are
-important for community projects,
-feel natural to the WGSL programmer,
-and are reasonable to integrate into tools.
+We're aiming to prioritize WGSL enhancements that are: 1) important for community projects,
+2) feel natural to the WGSL programmer,
+and 3) reasonable to integrate into tools.
 
 A WGSL enhancement to support `import` statements is planned first
 to enable importing WGSL elements like functions from other files.
 See spec draft here: **[imports](./Imports.md)**.
 
-Several [other](#other-wgsl-enhancements) WGSL enhancements
-are in various stages of discussion, see below.
+Several other WGSL enhancements
+are in various stages of discussion,
+see [below](#other-wgsl-enhancements).
+We'll group a first set of stable enhancements into a 1.0 release.
 
 ## Tools
 
 We'll build or promote tools to support a community standard WGSL.
 
-**Linking** - Bundling tools to combine wgsl files together,
-and translate extended WGSL into vanilla W3C WGSL.
+**Linking** - Tools to bundle wgsl files together
+while translating extended WGSL into vanilla W3C WGSL.
 
-**Test Cases** - A collection of examples to help tools be interoperable.
+**Test Cases** - A collection of examples to help tools interoperate.
 
-**WGSL Language Servers** Enable syntax directed editing in IDEs.
+**WGSL Language Servers** - Enable syntax directed editing in IDEs.
 Shader development with IDEs should be well supported.
 
-**Syntax Highlighters** Display pretty extended WGSL on web pages and in other tools.
+**Syntax Highlighters** - Display pretty extended WGSL on web pages with
+tools like Shiki and CodeMirror.
 
-**more** We'd like to see documentation extractors, prettifiers, etc. understand
-a standard extended version of WGSL.
-
-Work has begun on a few of these tools, we could use your help.
-File a an issue, or visit on [discord](https://discord.gg/FXhZDV8V).
-
-## Relationship to W3C WGSL and WebGPU
-
-Enhanced WGSL features are invisible to WebGPU engines -
-all WGSL enhancements are translated to vanilla WGSL before being passed to WebGPU
-call like [`createShaderModule()`](https://developer.mozilla.org/en-US/docs/Web/API/GPUDevice/createShaderModule).
-
-Hopefully some community WGSL enhancements will be relevant to
-guide future versions of W3C standard WGSL.
-That would be welcome, but it is explicitly _not_ a goal.
+**More Tools** - We'd like to see documentation extractors (rustdoc/javadoc),
+prettifiers, etc. that understand the community standard version of WGSL.
 
 ## Stability
 
-The intent is to eventually maintain backward compatibility so that an ecosystem
-of enhanced wgsl libraries can prosper.
-Stabilized features will be grouped and released periodically,
-analagously to ECMAScript and its `ES2024` feature level.
-
 As a community project,
-we can iterate quickly on experimental WGSL features to share
-for use in local projects,
-enabled by an `experimental` flag.
+we can iterate quickly on experimental WGSL features to use
+in local projects, enabled by an `experimental` flag.
+
+As mention Stabilized features will be grouped in periodic releases
+with backwards compatibilty
+so that an ecosystem of enhanced wgsl libraries can prosper.
 
 ## Filename extension
 
@@ -109,3 +93,13 @@ e.g. `export`.
 **[extends](./Extends.md)** - Struct inheritance.
 
 **[versioning](./Versioning.md)** - specify feature levels for enhanced WGSL, e.g. `version WESL2024`.
+
+## Relationship to W3C WGSL and WebGPU
+
+Enhanced WGSL features are invisible to WebGPU engines -
+all WGSL enhancements are translated to vanilla WGSL before being passed to WebGPU
+call like [`createShaderModule()`](https://developer.mozilla.org/en-US/docs/Web/API/GPUDevice/createShaderModule).
+
+Hopefully some community WGSL enhancements will be relevant to
+guide future versions of W3C standard WGSL.
+That would be welcome, but it is explicitly _not_ a goal.
