@@ -176,6 +176,12 @@ import * as pbr_b from 'bevy_pbr/pbr_bindings.wgsl';
 </table>
 
 ## Parsing module.importable_item in the source code
+
+For tools that are parsing WGSL,
+here's how to extend the
+[WGSL grammar](https://www.w3.org/TR/WGSL/#grammar-recursive-descent)
+to parse imports:
+
 About extending the grammar:
 This one gets an additional meaning. A module property can also be a component.
 component_or_swizzle_specifier:
