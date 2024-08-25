@@ -1,4 +1,4 @@
-# A Community Standard for Enhanced WGSL
+# A Community Standard for WGSL-Enhanced
 
 We propose specifying enhancements
 to WebGPU's [WGSL](https://www.w3.org/TR/WGSL/) shading language to support
@@ -11,7 +11,8 @@ By standardizing an enhanced WGSL, we can
 share the effort of building better tools for everyone,
 including small projects
 that can't afford to create their own tooling.
-And with a standardized version of community WGSL,
+And with a standardized community WGSL that supports
+the necessary features,
 the community can publish WGSL libraries in crates.io and npm.
 
 Join us on [github](https://github.com/wgsl-tooling-wg/wgsl-import-spec)
@@ -30,12 +31,10 @@ See spec draft here: **[imports](./Imports.md)**.
 Several other WGSL enhancements
 are in various stages of discussion,
 see [below](#other-wgsl-enhancements).
-We'll eventually group a community prioritized
-set of stable enhancements into a 1.0 release. 
 
 ## Tools
 
-We'll build or promote tools to support a community standard WGSL.
+We'll build or promote tools to support community standard WGSL.
 
 **Linking** - Tools to bundle wgsl files together
 while translating extended WGSL into vanilla W3C WGSL.
@@ -55,17 +54,19 @@ prettifiers, etc. that understand the community standard version of WGSL.
 
 As a community project,
 we can iterate quickly on experimental WGSL features to use
-in local projects, enabled by an `experimental` flag.
+in local projects.
 
-As mention Stabilized features will be grouped in periodic releases
-with backwards compatibilty
-so that an ecosystem of enhanced wgsl libraries can prosper.
+Stabilized features will be grouped in periodic releases
+with backwards compatibilty.
+The aim is to help nurture an ecosystem
+of wgsl libraries.
 
 ## Filename extension
 
-Many tools should be able to handle extended wgsl transparently.
-But for clarity, we expect a separate file extension for enhanced wgsl files,
-perhaps `.wesl`.
+Source files containing
+the community variant of wgsl-enhanced files,
+should have the `.wesl` extension
+to distingusih them from vanilla W3C WGSL.
 
 ## Other WGSL Enhancements
 
@@ -97,9 +98,11 @@ e.g. `export`.
 
 ## Relationship to W3C WGSL and WebGPU
 
-Enhanced WGSL features are invisible to WebGPU engines -
-all WGSL enhancements are translated to vanilla WGSL before being passed to WebGPU
-call like [`createShaderModule()`](https://developer.mozilla.org/en-US/docs/Web/API/GPUDevice/createShaderModule).
+Enhanced WGSL features are invisible to WebGPU engines
+like Dawn or Naga -
+all WGSL enhancements are translated to vanilla WGSL
+before being passed to WebGPU calls
+(such as [`createShaderModule()`](https://developer.mozilla.org/en-US/docs/Web/API/GPUDevice/createShaderModule)).
 
 Hopefully some community WGSL enhancements will be relevant to
 guide future versions of W3C standard WGSL.
