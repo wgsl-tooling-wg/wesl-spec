@@ -397,3 +397,4 @@ We encourage tooling authors to also implement source maps when implementing imp
 ## Preprocessor
 
 How a preprocessor would interact with this proposal is an open question for a future proposal.
+See [Conditional Compilation](./ConditionalCompilation.md).
