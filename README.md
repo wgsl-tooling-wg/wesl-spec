@@ -59,8 +59,8 @@ Shader development with IDEs should be well supported.
 **Syntax Highlighters** - Display pretty extended WGSL on web pages with
 tools like Shiki and CodeMirror.
 
-**More Tools** - We'd like to see documentation extractors (rustdoc/javadoc),
-prettifiers, etc. that understand the community standard version of WGSL.
+**More Tools** - We'd like to see documentation extractors (akin to rustdoc/javadoc),
+prettifiers, etc. that understand the extended version of WGSL.
 
 ## Stability
 
