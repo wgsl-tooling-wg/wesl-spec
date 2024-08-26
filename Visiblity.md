@@ -37,7 +37,7 @@ export *;
 To re-export an item, one can use the same syntax.
 
 ```
-import my::lighting::{ pbr };
+import my/lighting/{ pbr };
 
 export { pbr };
 ```
