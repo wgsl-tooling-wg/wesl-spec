@@ -1,19 +1,32 @@
-# A Community Standard for WGSL-Enhanced
+# A Community Standard for Enhanced WGSL
 
-We propose specifying enhancements
-to WebGPU's [WGSL](https://www.w3.org/TR/WGSL/) shading language to support
-features like [`import`](./Imports.md), [`export`](./Export.md)
-and [conditional compilation](./ConditionalCompilation.md).
-We propose building and promoting community tools that support
-a standard community enhanced version of WGSL.
+We propose building an enhanced version of WebGPU's
+[WGSL](https://www.w3.org/TR/WGSL/) shading language
+using community tooling.
+We want to see WGSL enhancements shared more broadly.
+We want to enable a WGSL library ecosystem.
 
-By standardizing an enhanced WGSL, we can
-share the effort of building better tools for everyone,
-including small projects
-that can't afford to create their own tooling.
-And with a standardized community WGSL that supports
-the necessary features,
-the community can publish WGSL libraries in crates.io and npm.
+Many community projects have independently uncovered
+a need for WGSL enhancements like module composition,
+conditional compilation,
+and runtime variable substitution.
+Further features like virtual functions and generics
+have also proven valuable.
+By evolving to shared community set of WGSL enhancement definitions,
+we can build common tools.
+Better tooling benefits everyone,
+including smaller projects that can't afford to build
+their own enhancements and associated tools.
+
+We'd like to
+enable authors to publish resusable WGSL libraries
+on npm and crates.io.
+Community WGSL code sharing is limited today,
+partly because users need to manually rewrite copy-pasted code fragments.
+By combining a standardized and versioned set of extensions
+with some packaging standards, we can
+make it easy to publish and automatic to use WGSL libraries.
+A standard community library format is key to enable an WGSL library ecosystem.
 
 Join us on [github](https://github.com/wgsl-tooling-wg/wgsl-import-spec)
 or [discord](https://discord.gg/FXhZDV8V) to help.
