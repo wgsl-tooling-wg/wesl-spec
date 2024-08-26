@@ -338,7 +338,12 @@ This would have the advantage of letting some existing WGSL tools ignore the new
 
 There are multiple higher level shading languages, such as [slang](https://github.com/shader-slang/slang) or [Rust-GPU](https://github.com/EmbarkStudios/rust-gpu) which support imports. They also support more features that WGSL currently does not offer. For complex projects, this can very much pay off.
 
-The downside is using additional tooling, and dealing with an additional translation layer. An additonal translation layer could lock shader authors out of certain WGSL features.
+The downside is using additional tooling, and dealing with an additional translation layer.
+An additonal translation layer could lock shader authors out of certain WGSL features.
+
+Also, higher level GPU languages are typically processed at build time,
+which precludes using language features to adapt to runtime conditions
+like GPU characteristics or user settings.
 
 ## Composing shader code as strings at runtime
 
