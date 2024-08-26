@@ -37,17 +37,16 @@ We're aiming to prioritize WGSL enhancements that are: 1) important for communit
 2) feel natural to the WGSL programmer,
 and 3) reasonable to integrate into tools.
 
-A WGSL enhancement to support `import` statements is planned first
-to enable importing WGSL elements like functions from other files.
+A WGSL enhancement for `import` statements
+to enable importing WGSL elements like functions from other files is our first priority.
 See spec draft here: **[imports](./Imports.md)**.
 
 Several other WGSL enhancements
-are in various stages of discussion,
-see [below](#other-wgsl-enhancements).
+are on the [roadmap](#wgsl-enhancements-roadmap).
 
 ## Tools
 
-We'll build or promote tools to support community standard WGSL.
+We'll build and promote tools to support community standard WGSL.
 
 **Linking** - Tools to bundle wgsl files together
 while translating extended WGSL into vanilla W3C WGSL.
@@ -66,8 +65,7 @@ prettifiers, etc. that understand the community standard version of WGSL.
 ## Stability
 
 As a community project,
-we can iterate quickly on experimental WGSL features to use
-in local projects.
+we can iterate quickly on experimental WGSL features for projects to use.
 
 Stabilized features will be grouped in periodic releases
 with backwards compatibilty.
@@ -77,46 +75,59 @@ of wgsl libraries.
 ## Filename extension
 
 Source files containing
-the community variant of wgsl-enhanced files,
+the community variant of wgsl-enhanced files
 should have the `.wesl` extension
 to distingusih them from vanilla W3C WGSL.
 
-## Other WGSL Enhancements
+## WGSL Enhancements Roadmap
 
-Several other features are in various stages of discussion.
+Several other features are queued up for discussion.
+`import` is the first priority, the others are not prioritized.
 
-**[conditional compilation](./ConditionalCompilation.md)** -
-Select blocks of WGSL to enable based on external variables. e.g. `#if MOBILE_GPU`.
+Many projects already need these features:
 
-**[variable substitution](./VariableSubstiution.md)** -
+* **[imports](./Imports.md)** -
+`import` enhanced WGSL fragments from other files and eventually from libraries.
+
+* **[conditional compilation](./ConditionalCompilation.md)** -
+Select blocks of WGSL to enable based on external variables.
+e.g. `#if MOBILE_CLASS_GPU`
+or `#[cfg gpu_class="mobile")]`.
+
+* **[variable substitution](./VariableSubstiution.md)** -
 Insert runtime
-variables from Rust/js host code into WGSL. e.g. `#{WORKGROUP_SIZE}`.
+variables into WGSL from Rust/JavaScript host code into WGSL. e.g. `#{WORKGROUP_SIZE}`,
+`#define`.
 
-**[generics](./Generics.md)** -
+* **[packaging](./Packaging.md)** -
+Package enhanced WGSL for crates.io and npm.
+
+Several projects have identified these features as valuable to be shared more broadly:
+
+* **[visibility control](./Visibility.md)** -
+Define the public parts of wgsl.
+e.g. `export`, `public`.
+
+* **[generics](./Generics.md)** -
 Define functions that work on any data type.
 
-**[packaging](./Packaging.md)** -
-Package WGSL for crates.io and npm.
-
-**[virtual functions](./VirtualFunctions.md)** -
+* **[virtual functions](./VirtualFunctions.md)** -
 Customize a library by replacing a function.
 
-**[visibility control](./Visibility.md)** -
-Define the public parts of wgsl.
-e.g. `export`.
+Other features to consider include:
 
-**[extends](./Extends.md)** - Struct inheritance.
+* **[extends](./Extends.md)** - Struct inheritance.
 
-**[versioning](./Versioning.md)** - specify feature levels for enhanced WGSL, e.g. `version WESL2024`.
+* **[versioning](./Versioning.md)** - Feature levels for enhanced WGSL, e.g. `version WESL2024`.
 
 ## Relationship to W3C WGSL and WebGPU
 
 Enhanced WGSL features are invisible to WebGPU engines
-like Dawn or Naga -
-all WGSL enhancements are translated to vanilla WGSL
+like Dawn and Naga.
+All WGSL enhancements are translated to vanilla WGSL
 before being passed to WebGPU calls
-(such as [`createShaderModule()`](https://developer.mozilla.org/en-US/docs/Web/API/GPUDevice/createShaderModule)).
+such as [`createShaderModule()`](https://developer.mozilla.org/en-US/docs/Web/API/GPUDevice/createShaderModule).
 
-Hopefully some community WGSL enhancements will be relevant to
-guide future versions of W3C standard WGSL.
-That would be welcome, but it is explicitly _not_ a goal.
+Hopefully community WGSL enhancements will prove useful
+to help inform future versions of W3C standard WGSL.
+That would be welcome, but that is _not_ the goal.
