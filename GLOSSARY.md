@@ -17,7 +17,7 @@
   - Directives: Generated WGSL code must agree on a set of directives
   - (Maybe `const_assert`?)
 - Package: A publishable body of WGSL+ code containing multiple files. Akin to a JavaScript npm package or a Rust crate. 
-- Package Root: The root module of a package.
-- Visibility: Whether a importable item is visible to 
+- Package Root: The root directory of wgsl/wesl files
+- Visibility: Whether a importable item is visible to
   - other modules
   - other packages
