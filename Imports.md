@@ -349,16 +349,18 @@ like GPU characteristics or user settings.
 
 One alternative is to compose shader code at runtime
 by simply joining together strings with WGSL code, perhaps
-with some string templating tool for flexibility.
-This has the major downside of not being statically analyzable. The IDE cannot provide autocompletion, and the compiler cannot check for errors.
+with some string templating for flexibility.
+This has the major downside of not being statically analyzable.
+The IDE cannot provide autocompletion,
+and a language server cannot check for errors.
 
-However, an import aware wgsl linker tool can be bundled with applications
-to compose shaders at runtime.
-(Related community projects
-[naga_oil](https://github.com/bevyengine/naga_oil) and
-[wgsl-linker](https://github.com/wgsl-tooling-wg/wgsl-linker)
-support runtime linking.)
-
+A linker that understands imports also typically
+composes shader strings, and can link at runtime.
+But a linker uses its more sophisticated understanding of WGSL
+to drive composition.
+For example, a linker can identify imports
+that are needed by other imports,
+automating shader composition for users.
 
 <!--
 # Future: Prior art
