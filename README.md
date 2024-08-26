@@ -128,6 +128,7 @@ All WGSL enhancements are translated to vanilla WGSL
 before being passed to WebGPU calls
 such as [`createShaderModule()`](https://developer.mozilla.org/en-US/docs/Web/API/GPUDevice/createShaderModule).
 
-Hopefully community WGSL enhancements will prove useful
-to help inform future versions of W3C standard WGSL.
-That would be welcome, but that is _not_ the goal.
+Hopefully community WGSL enhancements will
+help inform future versions of W3C standard WGSL.
+But designing changes to W3C standard WGSL is
+beyond the scope of this project.
