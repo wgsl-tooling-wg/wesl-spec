@@ -15,7 +15,8 @@ This section will describe wgsl enhancements to control which WGSL elements are 
 ## Export
 
 One natural extension is to add explicit exports.
-For one, this would allow library authors to hide certain functions or structs from the outside world. It would also enable re-exports, where a library re-exports a function from another library.
+For one, this would allow library authors to hide certain functions or structs from the outside world.
+It would also enable re-exports, where a library re-exports a function from another library.
 
 There are two variations of exports, which could be combined like in Typescript
 
@@ -58,3 +59,25 @@ fn foo() {}
 
 This is more user friendly, but also more complex to parse. It requires a partial parsing of the WGSL file to find the exports and their names.
 A future export specification would include the minimal WGSL syntax that is necessary to implement this.
+
+## Translating Source File Paths to Import Module Paths
+
+Tools that look at source code will refer to a `package_root` in `wgsl.toml` that defines
+the common prefix of `.wesl` and `.wgsl` files.
+
+Source directories and files under the `package_root` and map directly to module paths
+under the package name as expected.
+e.g.
+
+* Source file `C:\Users\lee\myProj\wgpu\foo.wesl` contains `export fn bar() {}`
+* `wgpu` is the `project_root` in `wgsl.toml`.
+* The project as published as package `fooz`.
+* Other projects can write `import fooz/foo/bar;` to use `bar()`.
+
+### lib.wgsl
+
+If there is a file named `lib.wgsl` in the `package_root` directory,
+any public exports in `lib.wgsl` are visible at the root of the module.
+e.g. if a package ‘pkg’ has a source file `pkg_root/lib.wgsl`
+that contains `export fn fun()`,
+a module file in another package can import that function with `import pkg/fun`.
