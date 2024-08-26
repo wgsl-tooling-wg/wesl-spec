@@ -2,11 +2,13 @@
 
 This section will describe wgsl enhancements to control which WGSL elements are visible to importers.
 
-* which wgsl elements are available to import from wgsl modules within the same package
-* which wgsl elements are available to import from wgsl modules in other packages
-* re-exporting elements so that they're visible with a different path or name
-* lib.wgsl to make things visible at the root of a package.
-* controlling host visible names like entry points and overrides.
+* which wgsl elements are available to import from wgsl modules within the same package?
+* which wgsl elements are available to import from wgsl modules in other packages?
+* how to re-export elements so that they're visible with a different path or name?
+* lib.wgsl to make things visible at the root of a package?
+* controlling host visible names like entry points and overrides?
+* Should export allow `as` renaming?
+* Treat .wgsl files as .wesl with every element exported?
 
 (TBD)
 
