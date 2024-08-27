@@ -7,6 +7,23 @@ See also [Visiblity Control](Visiblity.md).
 (TBD)
 
 * What goes in `package.json`?
+  * at runtime in the browser, the linker needs
+    wgsl strings and relative paths for every needed wgsl file, from every every package.
+    * (this so the linker can resolve imports)
+  * something needs to tell javascript bundlers to included needed wgsl files in the bundle:
+    * we could ask package publishers to produce a javascript file containing a map of relative paths and wgsl strings
+    * perhaps ideally a vite/rollup plugin could use linker code to trace from the source wgsl to the needed files
+      * this would avoid putting requiring publishers to publish
+      * corner case issue: runtime conditional compilation could potentially change the imported
+        files required. Perhaps we'll need some workaround markers in this rare case, so tree shaking can still work.
+      * note that the wgsl-linker already has this problem of bundling local wgsl files, 
+        and asks users to 'self package' wgsl using import.meta.glob
+        (which bundles files into [file path, wgsl string] pairs)
+  * what other metadata should be available to the linker? 
+    * name of package.
+    * host visible bits from wgsl? e.g. entry points, runtime variables, overrides, binding groups, uniforms?
+      An IDE tool could use that data to typecheck/autocomplete host calls.
+  * how do we handle packages with multiple entry points e.g. stoneberry/reduce stoneberry/prefixSum.
 * What goes in `cargo.toml`?
 
 ## `wgsl.toml` file
