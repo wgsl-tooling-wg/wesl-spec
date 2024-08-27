@@ -7,7 +7,8 @@ from subsequent releases.
 
 Issues:
 
-* Feature flags or versions?
+* Feature flags or versions? Consider also version
 * perhaps `version WESL2024`?
-* Does the version need to go in wgsl or just in metadata like wgsl.toml.
 * We'd like tools to maintain backward compatibility with previous stable versions. What do tools need?
+* Look to rust [editions](https://doc.rust-lang.org/edition-guide/editions/) as a model for versioning
+* Look at WGSL discussion of similar topics, e.g. #2941

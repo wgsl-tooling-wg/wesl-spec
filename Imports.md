@@ -4,6 +4,12 @@
 
 We propose adding an importing mechanism to the WGSL shading language as an extension.
 
+## TBD
+
+* Require braces for wgsl items? e.g. `import ./lighting/{ pbr };`
+  * If we require braces for wgsl items, could do `import ./foo/bar` instead of `import ./foo/bar/*`?
+* Add example for recursive imports
+
 # Motivation
 
 When writing bigger WGSL shaders, one tends to **split the code into reusable pieces**. Examples are re-using a set of lighting calculation functions and sharing a struct between two compute shaders and.
@@ -13,6 +19,7 @@ However, current WGSL tooling is not built for this. The official language purpo
 We also should account for **importing shader from libraries**. Ideally, users could upload WGSL shaders to existing package managers, which other users could then consume.
 
 Finally, we want **multiple tools** which can compile WGSL-with-imports down to raw WGSL. Using WGSL-with-imports both in Rust projects and in web projects should be possible.
+
 
 ## Guide-level explanation
 
@@ -69,12 +76,14 @@ Imports must appear as the first items in a WGSL file. They import "importable i
 An import statement is parsed as follows, with spaces and comments allowed between tokens:
 
 ```
-main:
-| 'import' import_path ';'
+main:  
+| 'import' import_relative? import_path ';'  
 
-import_path:
-| ('.' | '..') '/' import_path
-| ident '/' (import_path | import_collection | item_import | star_import)
+import_relative:  
+| ('.' | '..') '/' ('..' '/')*  
+
+import_path:  
+| ident '/' (import_path | import_collection | item_import | star_import)  
 
 star_import:
 | '*' ('as' ident)?
@@ -85,8 +94,6 @@ item_import:
 import_collection:
 | '{' (import_path | item_import) (',' (import_path | item_import))* ','? '}'
 ```
-
-TODO: Restrict dots to only appear at the beginning of the path.
 
 Where `ident` is defined in the WGSL grammar.
 
@@ -219,6 +226,10 @@ These are always set at the very top in the main module, and affect all imported
 
 When, during parsing of imported modules, we encounter an extension or a global diagnostic filter, we check if the main module enables it, or sets the filter.
 If yes, everything is fine. If not, we throw an error.
+
+(In naga-oil entrypoints are lowered to normal functions.
+Not clear we should preserve that, it's against the spec,
+but noting current behaviour that is being used in the wild.)
 
 ## Preserved items
 
@@ -405,3 +416,7 @@ We encourage tooling authors to also implement source maps when implementing imp
 
 How a preprocessor would interact with this proposal is an open question for a future proposal.
 See [Conditional Compilation](./ConditionalCompilation.md).
+
+## Scoped imports
+
+Allow imports that are only active within one function?
