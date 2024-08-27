@@ -47,4 +47,9 @@ We are planning on taking advantage of existing package managers, such as `cargo
 
 ### Unresolved questions
 
-- Is .toml the best file format for the `wgsl.toml`? Some alternatives would be JSON/JSON5 and StrictYAML.
+* Is .toml the best file format for the `wgsl.toml`? Some alternatives would be JSON/JSON5 and StrictYAML.
+* do we need to put paths for every package's wgsl in wgsl.toml?
+  * Fine to get started that way if need be, but its a maintenance burden every user..
+  * Better if we could get the language servers to find the wgsl in packages in node_modules.
+* Do we need to list the wgsl package names in wgsl.toml?
+  They'll already be listed in as cargo.toml / package.json..
