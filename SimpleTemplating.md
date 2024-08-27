@@ -1,4 +1,4 @@
-# Variable Substitution
+# Simple Templating
 
 (TBD)
 

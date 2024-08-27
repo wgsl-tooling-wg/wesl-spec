@@ -8,7 +8,7 @@ are set by the host code runtime or build time.
 
 * `#if #else #endif` (or perhaps `#ifdef`) in the style of a C preprocessor 
   is the approach that comes first to mind.
-* conditional compilation runs after variable substitution but before import processing..
+* conditional compilation runs after simple templating but before import processing..
   * (note that we may want to disable code that may not be correct so parsing first is iffy)
 * best to define default values in the wgsl for all conditionals
   * IDE tools can't assume any definitions that aren't in the wgsl.

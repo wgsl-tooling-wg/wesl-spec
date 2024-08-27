@@ -9,7 +9,7 @@ We want to enable a WGSL library ecosystem.
 Many community projects have independently uncovered
 a need for WGSL enhancements like module composition,
 conditional compilation,
-and runtime variable substitution.
+and simple templating.
 Fancier features like virtual functions and generics
 have also proven valuable.
 By evolving a shared community set of WGSL enhancement definitions,
@@ -93,7 +93,7 @@ Select blocks of WGSL to enable based on external variables.
 e.g. `#if MOBILE_CLASS_GPU`
 or `#[cfg gpu_class="mobile")]`.
 
-* **[variable substitution](./VariableSubstiution.md)** -
+* **[simple templating](./SimpleTemplating.md)** -
 Insert runtime
 variables into WGSL from Rust/JavaScript host code into WGSL. e.g. `#{WORKGROUP_SIZE}`,
 `#define`.
