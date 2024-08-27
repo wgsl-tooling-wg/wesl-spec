@@ -14,7 +14,7 @@
     - Shader entry-points
     - Pipeline-overridable constants
     - Global variables, including bindings
-  - Directives: Generated WGSL code must agree on a set of directives
+  - [Directives](https://www.w3.org/TR/WGSL/#directives): Generated WGSL code must agree on a set of directives
   - (Maybe `const_assert`?)
 - Package: A publishable body of WGSL+ code containing multiple files. Akin to a JavaScript npm package or a Rust crate. 
 - Package Root: The root module of a package.
