@@ -4,6 +4,12 @@
 
 We propose adding an importing mechanism to the WGSL shading language as an extension.
 
+## TBD
+
+* Require braces for wgsl items? e.g. `import ./lighting/{ pbr };`
+  * If we require braces for wgsl items, could do `import ./foo/bar` instead of `import ./foo/bar/*`?
+* Add example for recursive imports
+
 # Motivation
 
 When writing bigger WGSL shaders, one tends to **split the code into reusable pieces**. Examples are re-using a set of lighting calculation functions and sharing a struct between two compute shaders and.
