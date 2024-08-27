@@ -86,7 +86,7 @@ import_collection:
 | '{' (import_path | item_import) (',' (import_path | item_import))* ','? '}'
 ```
 
-TODO: Should we restrict dots to only appear at the beginning of the path? It wouldn't restrict the user, but would make the grammar simpler.
+TODO: Restrict dots to only appear at the beginning of the path.
 
 Where `ident` is defined in the WGSL grammar.
 
