@@ -59,10 +59,8 @@ Shader development with IDEs should be well supported.
 **Syntax Highlighters** - Display pretty extended WGSL on web pages with
 tools like Shiki and CodeMirror.
 
-**Extended Grammar** - Grammars for TextMate, Kate, tree-sitter, etc. will enable support from a broad array of editors and highlighters.
-
 **More Tools** - We'd like to see documentation extractors (akin to rustdoc/javadoc),
-prettifiers, other editors (e.g. Kate), TextMate, etc. that understand the extended version of WGSL.
+prettifiers, etc. that understand the extended version of WGSL.
 
 ## Stability
 

@@ -11,10 +11,7 @@ This section will describe wgsl enhancements to control which WGSL elements are 
 * controlling host visible names like entry points and overrides?
 * Should export allow `as` renaming?
 * Treat .wgsl files as .wesl with every element exported?
-* Why not export struct Foo?
-  * Many current wgsl parsers (including wgpu's naga) would 
-    choke on the unknown attribute as is and feels like having 
-    two export forms is a bit inconsistent.
+
 
 ## Export
 

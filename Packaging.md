@@ -29,7 +29,6 @@ See also [Visiblity Control](Visiblity.md).
       Things like entry points are computable from the wgsl,
       but it's a lot to ask of a language server to parse through all the wgsl in advance to find them.
       Probably better to put it into the metadata if we need it.
-      * these are parts of the API of the package as a whole and can reduce bugs by making them visible
   * how do we handle packages with multiple entry points e.g. stoneberry/reduce stoneberry/prefixSum.
 * What goes in `cargo.toml`? 
 
