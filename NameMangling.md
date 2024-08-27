@@ -10,6 +10,10 @@ See also renaming host visible names in [Visibility](./Visiblity.md).
 
 * Extend scheme to support generics.
 * Can we find an explicit naming scheme where packages specify names for their host exposed wgsl parts
+  rather than publishing automatically mangled names?
+  * e.g. `@publicName("mypkg_util_bar") @compute fn compute_shader() {}`
+  * that way the host code doesn't need to change if the wgsl file structure is refactored.
+
 ## Mangling
 To join multiple modules into one, we need to make sure that names do not collide. This is done by name mangling.
 
