@@ -75,12 +75,14 @@ Imports must appear as the first items in a WGSL file. They import "importable i
 An import statement is parsed as follows, with spaces and comments allowed between tokens:
 
 ```
-main:
-| 'import' import_path ';'
+main:  
+| 'import' import_relative? import_path ';'  
 
-import_path:
-| ('.' | '..') '/' import_path
-| ident '/' (import_path | import_collection | item_import | star_import)
+import_relative:  
+| ('.' | '..') '/' ('..' '/')*  
+
+import_path:  
+| ident '/' (import_path | import_collection | item_import | star_import)  
 
 star_import:
 | '*' ('as' ident)?
@@ -91,8 +93,6 @@ item_import:
 import_collection:
 | '{' (import_path | item_import) (',' (import_path | item_import))* ','? '}'
 ```
-
-TODO: Restrict dots to only appear at the beginning of the path.
 
 Where `ident` is defined in the WGSL grammar.
 
