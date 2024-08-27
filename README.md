@@ -10,9 +10,9 @@ Many community projects have independently uncovered
 a need for WGSL enhancements like module composition,
 conditional compilation,
 and runtime variable substitution.
-Further features like virtual functions and generics
+Fancier features like virtual functions and generics
 have also proven valuable.
-By evolving to shared community set of WGSL enhancement definitions,
+By evolving a shared community set of WGSL enhancement definitions,
 we can build common tools.
 Better tooling benefits everyone,
 including smaller projects that can't afford to build
@@ -21,7 +21,7 @@ their own enhancements and associated tools.
 We'd like to
 enable authors to publish resusable WGSL libraries
 on npm and crates.io.
-Community WGSL code sharing is limited today,
+Sharing of WGSL code is limited today,
 partly because users need to manually rewrite copy-pasted code fragments.
 By combining a standardized and versioned set of extensions
 with some packaging standards, we can
@@ -68,16 +68,15 @@ As a community project,
 we can iterate quickly on experimental WGSL features for projects to use.
 
 Stabilized features will be grouped in periodic releases
-with backwards compatibilty.
-The aim is to help nurture an ecosystem
-of wgsl libraries.
+with backwards compatibilty with the aim of
+nurturing an ecosystem of wgsl libraries.
 
 ## Filename extension
 
 Source files containing
 the community variant of wgsl-enhanced files
 should have the `.wesl` extension
-to distingusih them from vanilla W3C WGSL.
+to distinguish them from vanilla W3C WGSL.
 
 ## WGSL Enhancements Roadmap
 

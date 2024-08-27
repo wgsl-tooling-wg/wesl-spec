@@ -1,10 +1,11 @@
 # Packaging
 
+(TBD)
+
 The section will discuss packaging extended wgsl in reusable crates or npm packages.
 
 See also [Visiblity Control](Visiblity.md).
 
-(TBD)
 
 * What goes in `package.json`?
   * at runtime in the browser, the linker needs

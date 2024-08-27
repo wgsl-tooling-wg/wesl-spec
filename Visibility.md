@@ -1,5 +1,7 @@
 # Visibility Control
 
+(TBD)
+
 This section will describe wgsl enhancements to control which WGSL elements are visible to importers.
 
 * which wgsl elements are available to import from wgsl modules within the same package?
@@ -10,7 +12,6 @@ This section will describe wgsl enhancements to control which WGSL elements are 
 * Should export allow `as` renaming?
 * Treat .wgsl files as .wesl with every element exported?
 
-(TBD)
 
 ## Export
 
