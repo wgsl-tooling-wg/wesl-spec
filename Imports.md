@@ -226,6 +226,10 @@ These are always set at the very top in the main module, and affect all imported
 When, during parsing of imported modules, we encounter an extension or a global diagnostic filter, we check if the main module enables it, or sets the filter.
 If yes, everything is fine. If not, we throw an error.
 
+(In naga-oil entrypoints are lowered to normal functions.
+Not clear we should preserve that, it's against the spec,
+but noting current behaviour that is being used in the wild.)
+
 ## Preserved items
 
 These items are preserved when importing a module. They are not imported, but will land in the final module with a mangled name.
