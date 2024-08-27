@@ -8,6 +8,8 @@ See also renaming host visible names in [Visibility](./Visiblity.md).
 
 (TBD)
 
+* Extend scheme to support generics.
+* Can we find an explicit naming scheme where packages specify names for their host exposed wgsl parts
 ## Mangling
 To join multiple modules into one, we need to make sure that names do not collide. This is done by name mangling.
 
