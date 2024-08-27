@@ -415,3 +415,7 @@ We encourage tooling authors to also implement source maps when implementing imp
 
 How a preprocessor would interact with this proposal is an open question for a future proposal.
 See [Conditional Compilation](./ConditionalCompilation.md).
+
+## Scoped imports
+
+Allow imports that are only active within one function?
