@@ -124,7 +124,7 @@ Other features to consider include:
 ## Relationship to W3C WGSL and WebGPU
 
 Enhanced WGSL features are invisible to WebGPU engines
-like Dawn and Naga.
+like Dawn and wgpu.
 All WGSL enhancements are translated to vanilla WGSL
 before being passed to WebGPU calls
 such as [`createShaderModule()`](https://developer.mozilla.org/en-US/docs/Web/API/GPUDevice/createShaderModule).
