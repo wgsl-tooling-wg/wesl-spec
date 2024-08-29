@@ -160,9 +160,10 @@ both inside and outside.
 
 ### Visibility in Other Lanaguages
 
-* JavaScript and TypeScript are private by default, annotate for public.
+* JavaScript and TypeScript are private by default
+  for importing elements from modules. Annotate with `export` for public.
 * Rust is private by default
-but public by default for module descendants, so a bit of a hybrid.
+but public by default for module descendants. So a bit of a hybrid.
 * Go and Dart distinguish public/private by first letter rather than by annotation
   * Go leans private by default (first letter capitalize to mark as public)
   * Dart leans public by default (first letter _ to mark as private)
