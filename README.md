@@ -31,15 +31,47 @@ A standard community library format is key to enable an WGSL library ecosystem.
 Join us on [github](https://github.com/wgsl-tooling-wg/wgsl-import-spec)
 or [discord](https://discord.gg/FXhZDV8V) to help.
 
+## Goals
+
+Our ambition is to create a modestly improved, practical variant of WGSL.
+The result should feel like WGSL with a few things added.
+
+## Enhanced WGSL Programmers
+
+Enhanced WGSL programmers are very likely to write shader programs
+only part time.
+And our programmers will learn WGSL first before learning our extensions.
+Our enhancements should be easy for our target programmers to learn
+and to remember.
+
+We imagine enhanced WGSL programmers will have learned WGSL,
+but not be familiar with other shader languages.
+They're very likely familiar with JavaScript
+and probably TypeScript. A smaller but significant portion of our
+target programmers will know Rust
+and Rust users are likely early adopters.
+Some Python, Java, C++ familiarity is likely,
+but we'll imagine that our target programmers took a class or two
+and don't use those languages as often.
+
+The target project size for enhanced WGSL ranges from tiny programs
+up to teams of few dozen programmers.
+Software engineering features useful for very large teams or very large
+projects are unlikely to be needed for enhanced WGSL.
+
 ## WGSL Enhancements
 
 We're aiming to prioritize WGSL enhancements that are: 1) important for community projects,
 2) feel natural to the WGSL programmer,
 and 3) reasonable to integrate into tools.
 
+The simple enhancements we want to find will take some time to stabilize.
+Adventerous projects will be able to opt in to experimental enhancements
+to try alongside stable features.
+
 A WGSL enhancement for `import` statements
-to enable importing WGSL elements like functions from other files is our first priority.
-See spec draft here: **[imports](./Imports.md)**.
+to enable importing WGSL elements like functions from other files is our first priority to
+stabilize. See spec draft here: **[imports](./Imports.md)**.
 
 Several other WGSL enhancements
 are on the [roadmap](#wgsl-enhancements-roadmap).
@@ -67,7 +99,7 @@ prettifiers, other editors (e.g. Kate), TextMate, etc. that understand the exten
 ## Stability
 
 As a community project,
-we can iterate quickly on experimental WGSL features for projects to use.
+we can iterate quickly on experimental WGSL features.
 
 Stabilized features will be grouped in periodic releases
 with backwards compatibilty with the aim of
