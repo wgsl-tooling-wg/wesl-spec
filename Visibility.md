@@ -167,3 +167,5 @@ but public by default for module descendants. So a bit of a hybrid.
 * Go and Dart distinguish public/private by first letter rather than by annotation
   * Go leans private by default (first letter capitalize to mark as public)
   * Dart leans public by default (first letter _ to mark as private)
+* Python doesn't distinguish public vs. private, but the community
+  use a first letter _ for private convention.
