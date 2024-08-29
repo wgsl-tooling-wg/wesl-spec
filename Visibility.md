@@ -97,7 +97,7 @@ first implementation approach forever, or more likely publishers change the
 implementation anyway, and then library users need to expect to edit their wgsl
 code to upgrade to a new published library version. Upgrades get scarier for
 publishers and consumers. That added friction makes it harder to get to a viable
-wgsl library ecosystem. So I think we want to enable an api vs internal
+wgsl library ecosystem. So we want to enable an api vs internal
 distinction for libraries.
 If a library publisher makes a privacy choice the user doesn’t like, the user
 can still fork/edit to make things public.
@@ -107,8 +107,8 @@ can still fork/edit to make things public.
 Libraries should have the ability to distinguish the public part
 of the api (and that the language should help with that). Then the question
 becomes whether public or private should be the default. A software engineering
-perspective is a good way to think about the public/private question. I mean
-software engineering in the sense that the api boundary serves as a way to help
+perspective is a good way to think about the public/private question.
+Software engineering perspective in the sense that the api boundary serves as a way to help
 communication between multiple programmers over time. If all the functions are
 fresh in one programmer’s mind, then a public/private distinction doesn’t matter
 much. On the other hand, if there are multiple engineers involved, api
@@ -118,7 +118,7 @@ api to code in another package and the api to code in the same package.
 #### Private by Default for Libraries
 
 Communication between programmers working on different packages is likely quite
-limited, so I think there’s a strong argument that strong barriers are the right
+limited, so there’s a strong argument that strong barriers are the right
 default choice. So private by default makes sense between packages. By requiring
 annotations to make something public, we require the publisher to think about
 their api. Good fences make good neighbors and all that.
@@ -133,9 +133,9 @@ Communication between programmers working on the same package might be smoother
 than communications between teams working on different packages. At the least,
 people working on the same package are probably working in the same git
 repository. Should the language help distinguish public vs private for imports
-within the package? I’d argue yes, and for the same reasons as for library publishers. A
+within the package? Yes, and for the same reasons as for library publishers. A
 significant enough internal module wants a boundary to aid in ongoing
-maintenance. So I think the language should support distinguishing internal from
+maintenance. So the language should support distinguishing internal from
 api for within the package.
 
 Should the default for within package visibility be public or private? For an
@@ -146,13 +146,13 @@ so private by default is better because it forces the writer to at least briefly
 consider where the api boundary should lie. So more noise in files that don’t
 care about an api, or more encouragement to define an api?
 
-I’d suggest private by default within the package as well, e.g. with an annotation
+Private by default within the package makes sense as well, e.g. with an annotation
 like `export` to expand vibility.  
 Accidental coupling between internal modules happens all too easily even on
 small teams (even one person communicating with their future self). The argument
 for default private within the package is admittedly not as strong as the argument
 for default private at the package boundary. But on balance
-I think encouraging stronger internal apis is worth the cost of some syntactic noise.
+encouraging stronger internal apis is worth the cost of some syntactic noise.
 
 Note that public outside the package could be combined with public inside the package.
 So an element can be public to imports inside the package or public to imports both
