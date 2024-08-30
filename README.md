@@ -130,6 +130,9 @@ Other features to consider include:
 
 * **[versioning](./Versioning.md)** - Feature levels for enhanced WGSL, e.g. `version WESL2024`.
 
+For guidance on contributing
+to the design of WGSL extensions, see **[Designing](./Designing.md)**.
+
 ## Relationship to W3C WGSL and WebGPU
 
 Enhanced WGSL features are invisible to WebGPU engines
