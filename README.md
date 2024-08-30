@@ -36,29 +36,6 @@ or [discord](https://discord.gg/FXhZDV8V) to help.
 Our ambition is to create a modestly improved, practical variant of WGSL.
 The result should feel like WGSL with a few things added.
 
-## Enhanced WGSL Programmers
-
-Enhanced WGSL programmers are very likely to write shader programs
-only part time.
-And our programmers will learn WGSL first before learning our extensions.
-Our enhancements should be easy for our target programmers to learn
-and to remember.
-
-We imagine enhanced WGSL programmers will have learned WGSL,
-but not be familiar with other shader languages.
-They're very likely familiar with JavaScript
-and probably TypeScript. A smaller but significant portion of our
-target programmers will know Rust
-and Rust users are likely early adopters.
-Some Python, Java, C++ familiarity is likely,
-but we'll imagine that our target programmers took a class or two
-and don't use those languages as often.
-
-The target project size for enhanced WGSL ranges from tiny programs
-up to teams of few dozen programmers.
-Software engineering features useful for very large teams or very large
-projects are unlikely to be needed for enhanced WGSL.
-
 ## WGSL Enhancements
 
 We're aiming to prioritize WGSL enhancements that are: 1) important for community projects,
