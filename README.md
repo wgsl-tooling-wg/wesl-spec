@@ -31,15 +31,24 @@ A standard community library format is key to enable an WGSL library ecosystem.
 Join us on [github](https://github.com/wgsl-tooling-wg/wgsl-import-spec)
 or [discord](https://discord.gg/FXhZDV8V) to help.
 
+## Goals
+
+Our ambition is to create a modestly improved, practical variant of WGSL.
+The result should feel like WGSL with a few things added.
+
 ## WGSL Enhancements
 
 We're aiming to prioritize WGSL enhancements that are: 1) important for community projects,
 2) feel natural to the WGSL programmer,
-and 3) reasonable to integrate into tools.
+and 3) not too difficult to integrate into community tools.
+
+The simple enhancements we want to find will take some time to stabilize.
+Adventerous projects will be able to opt in to experimental enhancements
+to try alongside stable features.
 
 A WGSL enhancement for `import` statements
-to enable importing WGSL elements like functions from other files is our first priority.
-See spec draft here: **[imports](./Imports.md)**.
+to enable importing WGSL elements like functions from other files is our first priority to
+stabilize. See spec draft here: **[imports](./Imports.md)**.
 
 Several other WGSL enhancements
 are on the [roadmap](#wgsl-enhancements-roadmap).
@@ -59,7 +68,7 @@ Shader development with IDEs should be well supported.
 **Syntax Highlighters** - Display pretty extended WGSL on web pages with
 tools like Shiki and CodeMirror.
 
-**Extended Grammar** - Grammars for TextMate, Kate, tree-sitter, etc. will enable support from a broad array of editors and highlighters.
+**Extended Grammars** - Grammars for TextMate, Kate, tree-sitter, etc. will enable support from a broad array of editors and highlighters.
 
 **More Tools** - We'd like to see documentation extractors (akin to rustdoc/javadoc),
 prettifiers, other editors (e.g. Kate), TextMate, etc. that understand the extended version of WGSL.
@@ -67,7 +76,7 @@ prettifiers, other editors (e.g. Kate), TextMate, etc. that understand the exten
 ## Stability
 
 As a community project,
-we can iterate quickly on experimental WGSL features for projects to use.
+we can iterate quickly on experimental WGSL features.
 
 Stabilized features will be grouped in periodic releases
 with backwards compatibilty with the aim of
