@@ -63,7 +63,7 @@ projects are unlikely to be needed for enhanced WGSL.
 
 We're aiming to prioritize WGSL enhancements that are: 1) important for community projects,
 2) feel natural to the WGSL programmer,
-and 3) reasonable to integrate into tools.
+and 3) not too difficult to integrate into community tools.
 
 The simple enhancements we want to find will take some time to stabilize.
 Adventerous projects will be able to opt in to experimental enhancements
