@@ -2,7 +2,7 @@
 
 (TBD)
 
-This section will discuss some general design guidelines for WGSL enhancements.
+This section discusses some general design guidelines for creating new WGSL enhancements.
 
 ## Goals
 
@@ -33,10 +33,13 @@ We should be additive to WGSL, not change semantics.
 **Medium size teams**. Our progammers work on projects ranging in size from tiny programs
 up to teams of few dozen programmers.
 
-**General programming knowledge**. Our programmers will likely know JavaScript / TypeScript or Rust,
-but not both. They'll have been trained in some
-other popular languages like Python, Java, or C++.
-Our programmers know general concepts from mainstream languages,
+**General programming knowledge**.
+Our programmers will likely know
+JavaScript/TypeScript or Rust,
+though not both. They'll also have been trained in at least one
+other popular language like Python, Java, or C++.
+Overall, we can expect that our programmers will know general 
+concepts available in most mainstream languages,
 but we can't count on them to know the details from any particular language
 other than WGSL.
 
@@ -47,7 +50,7 @@ unless it can fully match the source language semantics.
 If it _looks just like_ a Rust or TypeScript feature, programmers will expect it
 _work like_ the source language.
 
-But fully matching the source language will typically be impossible
+But fully matching the source language will often be impossible
 in WGSL, or undesirable for complexity reasons.
 And a feature that looks the same but works differently will be hard
 for programmers to keep straight in their minds.
