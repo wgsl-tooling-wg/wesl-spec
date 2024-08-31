@@ -22,3 +22,7 @@ are set by the host code runtime or build time.
   * function variants e.g. select which function variant to use based on condition
   * struct fields e.g. include fields only if condition is set
   * import statements? e.g. import util/fast vs util/regular based on condition
+* how do we support build time vs runtime linking?
+  * e.g. some projects will want prebuilt versions for various mobile configurations.
+    * ref [unity shader conditionals](https://docs.unity3d.com/Manual/shader-conditionals.html)
+  * should the wesl code distinguish conditions that are settable at compile time from those that are settable at runtime?
