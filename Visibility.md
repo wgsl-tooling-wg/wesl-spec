@@ -4,17 +4,23 @@
 
 This section will describe wgsl enhancements to control which WGSL elements are visible to importers.
 
-* which wgsl elements are available to import from wgsl modules within the same package?
-* which wgsl elements are available to import from wgsl modules in other packages?
 * how to re-export elements so that they're visible with a different path or name?
-* lib.wgsl to make things visible at the root of a package?
 * controlling host visible names like entry points and overrides?
 * Should export allow `as` renaming?
-* Treat .wgsl files as .wesl with every element exported?
 * Why not export struct Foo?
   * Many current wgsl parsers (including wgpu's naga) would
     choke on the unknown attribute as is and feels like having
     two export forms is a bit inconsistent.
+* Consider changing to public by default for imports within the package only.
+  * Matches semantics when importing from .wgsl code
+  * no annotation effort for tiny projects, everything public is fine.
+  * (Private by default gives a gentle push to programmers to consider their api every time
+    they add a public annotation.)
+  * (And the path of laziness leads to undersharing,
+    which is safer from a maintenance point of view.)
+  * (less consistent with package visibility.)
+  * (unexpected if programmers are accustomed to e.g. JavaScript imports.)
+
 
 ## Export
 
@@ -86,86 +92,24 @@ e.g. if a package ‘pkg’ has a source file `pkg_root/lib.wgsl`
 that contains `export fn fun()`,
 a module file in another package can import that function with `import pkg/fun`.
 
-## An Argument for Private by Default
+## Libraries and Internal Modules Need Privacy
 
-### Libraries Need API Control
+We want library publishers to decide carefully what to expose as
+part of their public api, so they can upgrade private parts of the library safely.
+Smooth upgrades are valuable to the library ecosystem.
 
-We want library publishers to be able to decide what to expose as
-part of their api. Libraries want to maintain and improve over time in a way
-that’s compatible with existing users. Otherwise publishers are stuck with their
-first implementation approach forever, or more likely publishers change the
-implementation anyway, and then library users need to expect to edit their wgsl
-code to upgrade to a new published library version. Upgrades get scarier for
-publishers and consumers. That added friction makes it harder to get to a viable
-wgsl library ecosystem. So we want to enable an api vs internal
-distinction for libraries.
-If a library publisher makes a privacy choice the user doesn’t like, the user
-can still fork/edit to make things public.
+Authors of significant internal modules will similarly want
+to make a public vs private distinction to reduce maintenance effort as
+the internal module evolves.
 
-### Public or Private by Default?
+### Private by Default
 
-Libraries should have the ability to distinguish the public part
-of the api (and that the language should help with that). Then the question
-becomes whether public or private should be the default. A software engineering
-perspective is a good way to think about the public/private question.
-Software engineering perspective in the sense that the api boundary serves as a way to help
-communication between multiple programmers over time. If all the functions are
-fresh in one programmer’s mind, then a public/private distinction doesn’t matter
-much. On the other hand, if there are multiple engineers involved, api
-boundaries help clarify communication. There are two boundaries to consider: the
-api to code in another package and the api to code in the same package.
+We propose that importable elements like functions and structs
+be private by default, (i.e. inaccessible from import statements).
+The programmer needs to add an annotation to make them public, (i.e. available to import).
+The programmer can decide whether the element should be public within the package only
+or also public to importers from other packages. Perhaps `@export` and `@export(public)`.
 
-#### Private by Default for Libraries
-
-Communication between programmers working on different packages is likely quite
-limited, so there’s a strong argument that strong barriers are the right
-default choice. So private by default makes sense between packages. By requiring
-annotations to make something public, we require the publisher to think about
-their api. Good fences make good neighbors and all that.
-The default choice doesn't lead to an accidental maintenance problem.
-Let’s annotate with
-e.g. `public` (or `pub` or `@public`) so that private can be the default, and package
-publishers are pushed to define an api.
-
-#### Private by Default Inside the Package
-
-Communication between programmers working on the same package might be smoother
-than communications between teams working on different packages. At the least,
-people working on the same package are probably working in the same git
-repository. Should the language help distinguish public vs private for imports
-within the package? Yes, and for the same reasons as for library publishers. A
-significant enough internal module wants a boundary to aid in ongoing
-maintenance. So the language should support distinguishing internal from
-api for within the package.
-
-Should the default for within package visibility be public or private? For an
-insignificant internal module where everything ought to be public, it’d be
-overhead to have to annotate everything if private is the default. But for a
-module that does want to distinguish an api, strong boundaries make sense, and
-so private by default is better because it forces the writer to at least briefly
-consider where the api boundary should lie. So more noise in files that don’t
-care about an api, or more encouragement to define an api?
-
-Private by default within the package makes sense as well, e.g. with an annotation
-like `export` to expand vibility.  
-Accidental coupling between internal modules happens all too easily even on
-small teams (even one person communicating with their future self). The argument
-for default private within the package is admittedly not as strong as the argument
-for default private at the package boundary. But on balance
-encouraging stronger internal apis is worth the cost of some syntactic noise.
-
-Note that public outside the package could be combined with public inside the package.
-So an element can be public to imports inside the package or public to imports both
-both inside and outside.
-
-### Visibility in Other Lanaguages
-
-* JavaScript and TypeScript are private by default
-  for importing elements from modules. Annotate with `export` for public.
-* Rust is private by default
-but public by default for module descendants. So a bit of a hybrid.
-* Go and Dart distinguish public/private by first letter rather than by annotation
-  * Go leans private by default (first letter capitalize to mark as public)
-  * Dart leans public by default (first letter _ to mark as private)
-* Python doesn't distinguish public vs. private, but the community
-  use a first letter _ for private convention.
+Importable elements from (unenhanced) .wgsl code may be imported from .wesl functions
+in the same package. Elements in .wgsl code are not public from other packages
+(.wesl code may reexport .wgsl element for package publishing).
