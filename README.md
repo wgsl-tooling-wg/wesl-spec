@@ -29,7 +29,7 @@ make it easy to publish and automatic to use WGSL libraries.
 A standard community library format is key to enable an WGSL library ecosystem.
 
 Join us on [github](https://github.com/wgsl-tooling-wg/wgsl-import-spec)
-or [discord](https://discord.gg/FXhZDV8V) to help.
+or [discord](https://discord.gg/Ng5FWmHuSv) to help.
 
 ## Goals
 
