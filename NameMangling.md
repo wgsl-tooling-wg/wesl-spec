@@ -30,6 +30,22 @@ The name mangling scheme is as follows:
 
 For example, given a file `my/geom/sphere.wgsl` with a function `draw_now`, the mangled name would be `my_geom_sphere_draw__now`.
 
+
+Example implementation (non-normative)
+```js
+/** @param qualified_name string[] */
+function mangle(qualified_name) {
+    return qualified_name.map(write_escaped).join('_');
+}
+/** @param qualified_name string[] */
+function write_escaped(text) {
+    return text.split('').map(c => c == '_' ? '__' : c).join('');
+}
+
+mangle(["bevy_pbr", "lighting", "fragment_main"])
+// returns "bevy__pbr_lighting_fragment__main" 
+```
+
 ### Unmangling
 
 We keep track of a stack of parts, and always add characters to the last part. It starts with a single empty part.
