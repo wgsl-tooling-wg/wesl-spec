@@ -4,17 +4,23 @@
 
 This section will describe wgsl enhancements to control which WGSL elements are visible to importers.
 
-* which wgsl elements are available to import from wgsl modules within the same package?
-* which wgsl elements are available to import from wgsl modules in other packages?
 * how to re-export elements so that they're visible with a different path or name?
-* lib.wgsl to make things visible at the root of a package?
 * controlling host visible names like entry points and overrides?
 * Should export allow `as` renaming?
-* Treat .wgsl files as .wesl with every element exported?
 * Why not export struct Foo?
-  * Many current wgsl parsers (including wgpu's naga) would 
-    choke on the unknown attribute as is and feels like having 
+  * Many current wgsl parsers (including wgpu's naga) would
+    choke on the unknown attribute as is and feels like having
     two export forms is a bit inconsistent.
+* Consider changing to public by default for imports within the package only.
+  * Matches semantics when importing from .wgsl code
+  * no annotation effort for tiny projects, everything public is fine.
+  * (Private by default gives a gentle push to programmers to consider their api every time
+    they add a public annotation.)
+  * (And the path of laziness leads to undersharing,
+    which is safer from a maintenance point of view.)
+  * (less consistent with package visibility.)
+  * (unexpected if programmers are accustomed to e.g. JavaScript imports.)
+
 
 ## Export
 
@@ -85,3 +91,25 @@ any public exports in `lib.wgsl` are visible at the root of the module.
 e.g. if a package ‘pkg’ has a source file `pkg_root/lib.wgsl`
 that contains `export fn fun()`,
 a module file in another package can import that function with `import pkg/fun`.
+
+## Libraries and Internal Modules Need Privacy
+
+We want library publishers to decide carefully what to expose as
+part of their public api, so they can upgrade private parts of the library safely.
+Smooth upgrades are valuable to the library ecosystem.
+
+Authors of significant internal modules will similarly want
+to make a public vs private distinction to reduce maintenance effort as
+the internal module evolves.
+
+### Private by Default
+
+We propose that importable elements like functions and structs
+be private by default, (i.e. inaccessible from import statements).
+The programmer needs to add an annotation to make them public, (i.e. available to import).
+The programmer can decide whether the element should be public within the package only
+or also public to importers from other packages. Perhaps `@export` and `@export(public)`.
+
+Importable elements from (unenhanced) .wgsl code may be imported from .wesl functions
+in the same package. Elements in .wgsl code are not public from other packages
+(.wesl code may reexport .wgsl element for package publishing).
