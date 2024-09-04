@@ -83,10 +83,17 @@ so more projects can try them.
 We'll typically want to avoid using keywords used in current WGSL, unless
 the meaning is consistent and additive to the keyword's use in WGSL.
 
-We'll want to avoid conflicting with the meaning of keywords in future
-versions of WGSL as well.
-It's not yet clear whether we should avoid using all the keywords 
+Any differences we introduce in WESL will
+will be erased during transpilation to WGSL.
+But we don't want to confuse our programmers by
+unexpectedly changing the meaning of a keyword.
+
+It's not as clear whether we should avoid using all the keywords
 [reserved by WGSL](https://www.w3.org/TR/WGSL/#reserved-words)
 for future use.
-But in any case, we'll work with the W3C WebGPU/WGSL team
+Some WESL enhancements may serve as beta versions of future
+WGSL features, and it'll be easier for programmers if the syntax
+stays the same.
+
+In any case, we'll work with the W3C team
 to be supportive of future WGSL evolution.
