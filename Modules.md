@@ -6,7 +6,7 @@ We propose adding a module system mechanism to the WGSL shading language as an e
 
 ## Assumptions
 
-Assumes that `load` has already been implemented.
+Assumes that [`load`](./Imports.md) has already been implemented.
 
 # Motivation
 
@@ -68,7 +68,7 @@ module_member_decl :
 ;
 
 module_decl:  
-  'mod' ident "{" module_member_decl * "}" ";"?
+  attribute * 'mod' ident "{" module_member_decl * "}" ";"?
 ;
 
 module_path :
@@ -76,7 +76,7 @@ module_path :
 ;
 
 module_alias_decl :
-  'mod' ident '=' module_path ';'
+  attribute * 'mod' ident '=' module_path ';'
 ;
 ```
 
