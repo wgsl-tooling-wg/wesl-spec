@@ -1,15 +1,18 @@
 # Glossary of WGSL Importing terms
 
 - WESL: The extended WGSL language, and is pronounced like "weasel". Stands for WGSL Extended Shading Language
-- Importable item
+- Global Items:
   - Structs
   - Functions 
   - Type aliases
   - [Const declarations, override declarations](https://www.w3.org/TR/WGSL/#value-decls)
   - [Var declarations](https://www.w3.org/TR/WGSL/#var-decls) 
-- Module: A single WESL file
-- Root Module: A WESL module from which compilation starts. A single project can have many root modules.
-- Module Path: Hierarchical address of a module file or partial path, akin to a filesystem path
+  - Modules
+- WESL File: A single WESL file
+- Main File: A WESL file from which compilation starts. A single project can have many main files.
+- WESL File Path: Hierarchical or relative address of a file, akin to a filesystem path with additional restrictions
+- Module: A construct appearing within a WESL file that groups global items together.
+- Module Path: Hierarchical or relative address of a module. Similar in concept to accessing nested namespaces or modules in other languages.
 - Side effects: WGSL code that can affect other modules when imported
   - Things that are specified when [creating a WGSL pipeline](https://developer.mozilla.org/en-US/docs/Web/API/GPUDevice/createRenderPipeline#fragment_object_structure)
     - Shader entry-points

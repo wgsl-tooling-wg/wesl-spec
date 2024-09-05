@@ -4,12 +4,6 @@
 
 We propose adding an importing mechanism to the WGSL shading language as an extension.
 
-## TBD
-
-* Require braces for wgsl items? e.g. `import ./lighting/{ pbr };`
-  * If we require braces for wgsl items, could do `import ./foo/bar` instead of `import ./foo/bar/*`?
-* Add example for recursive imports
-
 # Motivation
 
 When writing bigger WGSL shaders, one tends to **split the code into reusable pieces**. Examples are re-using a set of lighting calculation functions and sharing a struct between two compute shaders and.
@@ -20,199 +14,89 @@ We also should account for **importing shader from libraries**. Ideally, users c
 
 Finally, we want **multiple tools** which can compile WGSL-with-imports down to raw WGSL. Using WGSL-with-imports both in Rust projects and in web projects should be possible.
 
-## Guide-level explanation
+# Guide-level explanation
 
-The `import` statement extension is designed to appear somewhat familiar to TypeScript syntax,
-but with a Rust like recursive grammar to make importing
-multiple importable items less verbose.
-The syntax is also heavily inspired by [Gleam](https://gleam.run/).
+The `load` statement extension is designed to appear somewhat familiar to Ruby `require` syntax, and specifies that a given file should be loaded by the linker and all of its symbols be made available to the global context. 
 
-By placing an import at the very top of a file, one can either import an entire module, or only specific importable items, such as functions, structs or types.
+A given file is loaded only once and it is also legal for files to cyclically refer to one another. 
 
-```
-// Importing a single item using a relative path
-import ./lighting/pbr;
+One important restriction of this proposal is that it is illegal for symbols to have the same name, unless as per the [Extends](./Extends.md) proposal a symbol is declared virtual. 
 
-// Importing multiple items
-import my/geom/sphere/{ draw, default_radius as foobar };
+All loaded entrypoints in the global scope are guaranteed to be available to the WebGPU API. However this guarantee does not extend to bindings as these may be removed by dead code elimination if not used in any entry point. 
 
-// Imports a whole module. Use it with `bevy_ui.name`
-import bevy_ui/*;
-```
+An example of how a shader may use loads is as follows:
 
-These can then be used anywhere in the source code.
+In a file called `utils.wesl`:
 
-```
-fn main() {
-    bevy_ui.quad(vec2f(0.0, 1.0), 1.0);
-    let a = draw(3);
+```wgsl 
+@binding(0) @group(0) var<uniform> frame : u32;
+
+fn current_frame_plus_two() -> f32 {
+  return frame + 2.0;
 }
 ```
 
-Both `bevy_ui` and `my` are packages in the current project. Language servers and related tools can look in a `wgsl.toml` file to find the location of the packages. This lets libraries be published to package managers, and users can import them with a simple syntax.
+In a file called `entrypoint.wesl` in the same directory as `utils.wesl`:
 
-The first part is the file path, which is assumed to have a either `.wgsl` file extension,
-or the extension we use for extended wgsl syntax (possibly `.wesl`).
+```wgsl
+load ./utils;
 
-Recursive import definitions are also supported, which leads to short and succinct import statements.
-
-```
-import bevy_pbr/{
-  forward_io/VertexOutput,
-  pbr_types/{PbrInput, pbr_input_new},
-  pbr_bindings/*
-};
-
-fn main() {
-
+@fragment
+fn frag_main() -> @location(0) vec4f {
+  return vec4(1, sin(current_frame_plus_two()), 0, 1);
 }
 ```
+
+Note that all names in the above example are preserved in linker output.
+
 
 # Reference-level explanation
 
-Imports must appear as the first items in a WGSL file. They import "importable items" (see [GLOSSARY.md](./GLOSSARY.md)).
-
-An import statement is parsed as follows, with spaces and comments allowed between tokens:
+A load statement is parsed as follows, with spaces and comments allowed between tokens:
 
 ```
 main:  
-| 'import' import_relative? import_path ';'  
+| 'load' load_relative? load_path ';'  
+;
 
-import_relative:  
+load_relative:  
 | ('.' | '..') '/' ('..' '/')*  
+| '/'
+;
 
-import_path:  
-| ident '/' (import_path | import_collection | item_import | star_import)  
-
-star_import:
-| '*' ('as' ident)?
-
-item_import:
-| ident ('as' ident)?
-
-import_collection:
-| '{' (import_path | item_import) (',' (import_path | item_import))* ','? '}'
+load_path:  
+| ident ('/' ident)*
+;
 ```
 
 Where `ident` is defined in the WGSL grammar.
 
-An import consists of
+A load consists of
 
-- A path part, which either is a relative path ('.' and '..'), or points at a known package (ident).
-
+- A path part, which either is a relative path ('.', '..' or '/'), or points at a known package (ident).
   - Nested path segments are joined.
   - Everything before the final slash is part of the path.
   - The final part is the file name.
 
-- Items to import.
+## Items to import.
 
-A star import behaves like a star import in Typescript, except that the name can be inferred from the file name. **Notably**, it does *not* import all the items individually. Instead, it groups them all under a single name!
+This proposal brings all items from the requested file recursively into scope. 
+This means that if file a loads `abc.wesl` which uses `def.wesl`, then the symbols from 
+both `abc.wesl` _and_ `def.wesl` will be in scope. Note that both `wgsl` and `wesl` files may be 
+loaded, so it is a link time error to have both a wgsl file and a wesl file in the same directory with 
+the same name.
 
-An item import imports a single item. The item can be renamed with the `as` keyword.
+If two loaded files have any clashing global symbols, then implementions of this specification are expected to produce an error.
 
-An import collection imports multiple items, and allows for nested imports.
+Entrypoints in the global scope that are loaded either directly or indirectly via the main file are considered used. 
+
+Typical linker implementations would likely want to analyse usages from these entrypoints to eliminate unused globals and bindings.
 
 ## Examples
 
-To compare it to the more widely known Typescript syntax, here are some examples.
+## Related Specifications
 
-<table>
-<thead>
-<tr>
-<th>WGSL</th>
-<th>Typescript</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-
-```
-import ../geom/sphere/{draw, default_radius as foobar};
-```
-
-</td>
-<td>
-
-```ts
-import { draw, default_radius as foobar } from '../geom/sphere.wgsl';
-```
-
-</td>
-</tr>
-<tr>
-<td>
-
-```
-import bevy_ui/*;
-```
-
-</td>
-<td>
-
-```ts
-import * as bevy_ui from 'bevy_ui.wgsl';
-```
-
-</td>
-</tr>
-<tr>
-<td>
-
-```
-import bevy_pbr/{ 
-    forward_io/VertexOutput, 
-    pbr_types/{PbrInput, pbr_input_new}, 
-    pbr_bindings/* as pbr_b
-};
-```
-
-</td>
-<td>
-
-```ts
-import { VertexOutput } from 'bevy_pbr/forward_io.wgsl';
-import { PbrInput, pbr_input_new } from 'bevy_pbr/pbr_types.wgsl';
-import * as pbr_b from 'bevy_pbr/pbr_bindings.wgsl';
-```
-
-</td>
-</tr>
-</tbody>
-</table>
-
-## Parsing module.importable_item in the source code
-
-For tools that are parsing WGSL,
-here's how to extend the
-[WGSL grammar](https://www.w3.org/TR/WGSL/#grammar-recursive-descent)
-to parse imports:
-
-About extending the grammar:
-This one gets an additional meaning. A module property can also be a component.
-component_or_swizzle_specifier:
-| '.' member_ident component_or_swizzle_specifier ?
-
-This needs to be extended to support ident.ident
-for_init:
-| ident.ident func_call_statement.post.ident
-
-for_update:
-| ident.ident func_call_statement.post.ident
-
-global_decl:
-| attribute _ 'fn' ident ... '->' attribute _ ident.ident
-| 'alias' ident '=' ident.ident template_elaborated_ident.post.ident ';'
-
-primary_expression:
-| ident.ident template_elaborated_ident.post.ident
-| ident.ident template_elaborated_ident.post.ident argument_expression_list
-
-statement:
-| ident.ident template_elaborated_ident.post.ident argument_expression_list ';'
-
-type_specifier:
-| ident.ident ...
+This proposal on its own is impractical for developing a robust ecosystem due to lack of namespacing. The [Modules](./Modules.md) proposal is likely necessary to make this import proposal workable.
 
 ## Behaviour-changing items
 
@@ -224,74 +108,24 @@ These items cannot be imported, but they affect module behavior:
 These are always set at the very top in the main module, and affect all imported modules. They come before the imports.
 
 When, during parsing of imported modules, we encounter an extension or a global diagnostic filter, we check if the main module enables it, or sets the filter.
+
 If yes, everything is fine. If not, we throw an error.
-
-(In naga-oil entrypoints are lowered to normal functions.
-Not clear we should preserve that, it's against the spec,
-but noting current behaviour that is being used in the wild.)
-
-## Preserved items
-
-These items are preserved when importing a module. They are not imported, but will land in the final module with a mangled name.
-
-- [Entry points](https://www.w3.org/TR/WGSL/#entry-points)
-- [Pipeline overridable constants](https://www.w3.org/TR/WGSL/#override-decls)
-
-## Identifier Resolution
-
-The steps of identifier resolution are as follows:
-
-1. Parse the import statements. Resolve the paths to the concrete file paths.
-2. Bring the imported items into scope. All other items that the imported items depend on are also imported, _but not user-accessible in the current scope_.
-   For example when importing `Foo` from `struct Foo { x: Bar; }`, we would import `Bar` as well. If the user types `Bar` in the source code, then that is an error.
-3. Parse the WGSL.
-
-For example, given two modules
-
-```
-// lighting.wgsl
-struct Light {
-    color: vec3;
-}
-struct LightSources {
-    lights: array<Light>;
-}
-```
-
-```
-// main.wgsl
-import lighting::{ LightSources };
-
-// LightSources can be used
-fn clear_lights(lights: LightSources) -> LightSources {
-    for (var i = 0; i < lights.lights.length(); i = i + 1) {
-        // We can access everything inside of LightSources
-        let light = lights.lights[i];
-
-        // However, the user cannot use the type "Light"
-        // let light: Light <== error, Light is not imported
-
-        light.color = vec3(0.0, 0.0, 0.0);
-    }
-    return lights;
-}
-```
 
 ## Producing the final module
 
-The final module is produced by taking each imported module (in topological order, with the main module last), resolving and mangling all the globals, and joining the resulting pieces of code together.
-
-All entry points and pipeline overridable constants from the imported modules are also mangled and land in the output.
+The final module is produced by taking each loaded module in topological order, with the main module last, and ensuring that each module is only taken once. The results are then concatenated together.
 
 Dead code elimination is allowed, but not required.
 
-# Drawbacks
+## Drawbacks
 
 Are there reasons as to why we should we not do this?
 
 - This introduces yet another importing syntax that developers have to learn, instead of using a standard syntax.
-- To implement the name mangling, one has to parse WGSL code! This is not trivial, and requires a partial WGSL parser.
-- Paths in import statements must consist of valid WGSL identifiers, which can be limiting. This limitation could be lifted by allowing arbitrary strings in import paths, but would make the implementation more complex.
+- Paths in load statements must consist of valid WGSL identifiers, which can be limiting. This limitation could be lifted by allowing arbitrary strings in import paths, but would make the implementation more complex.
+- The design of this proposal requires that developers of reusable shader libraries shoulder the responsibility to prevent naming collisions. This would be ameliorated by the [Modules](./Modules.md) proposal.
+- This essentially makes _all loads_ wildcard imports. This could make language servers and usage analysis harder to implement though one would hope the uniformity of this proposal would help somewhat in reducing this complexity.
+
 
 # Rationale and alternatives
 
@@ -308,9 +142,13 @@ The usual alternative is that one library, like shaderc, becomes very popular an
 
 An open process lets us find a better solution.
 
+# Simplicity
+
+This model is simple to implement and understand, even for users not familiar with languages like typescript or rust. It also avoids the name mangling problem in the WebGPU visible API. 
+
 ## Preprocessor `#include <lighting.wgsl>`
 
-One alternative, which is common in the GLSL and C worlds, is an including mechanism which simply copy-pastes existing code. A major upside is that this is very simple to implement.
+One close alternative, which is common in the GLSL and C worlds, is an including mechanism which simply copy-pastes existing code. A major upside is that this is very simple to implement.
 
 One drawback is that importing the same shader multiple times, which can also happen indirectly, does not work without other preprocessor features.
 
@@ -327,33 +165,37 @@ One drawback is that importing the same shader multiple times, which can also ha
 
 would not work, since anything defined in `math.wgsl` would be imported twice. In C-land, this is solved by using _include guards_.
 
-Another drawback is that using the same name twice is impossible. In C-land, this leads to pseudo-namespaces, where major libraries will prefix all of their functions with a few symbols. An example of this is the Vulkan API `vkBeginCommandBuffer` or `vkCmdDraw`.
+Another drawback is that using the same name twice is impossible. In C-land, this leads to pseudo-namespaces, where major libraries will prefix all of their functions with a few symbols. An example of this is the Vulkan API `vkBeginCommandBuffer` or `vkCmdDraw`. The [Modules](./Modules.md) proposal would avoid this pitfall.
 
 A future drawback is that "privacy" or "visibility" becomes very difficult to implement. Everything that is imported is automatically public and easily accessible.
+
 In C-land, the workaround is using header files. In other languages, such as Python, the convention ends up being "anything prefixed with an underscore `_` is private".
+
+Visibility in our proposal in contrast would be via the [Module Interfaces](./ModulesInterfaces.md) proposal and 
+would be optional, allowing regular wgsl files to be imported without modification.
 
 ## Typescript-like imports
 
-TODO: Main reason is just that they're more verbose
+TODO: Main reason is just that they're more verbose. Also is more complicated than this proposal
 
 ## Rust-like imports
 
-TODO: Needs something akin to a `mod` statement, otherwise ambiguity.
+TODO: Needs something akin to a `mod` statement, otherwise ambiguity. Also is more complicated than this proposal
 
 ## Putting exports in comments
 
 This would have the advantage of letting some existing WGSL tools ignore the new syntax. For example, a WGSL formatter would not need to know about imports, and could just format the code as usual.
+
+This could be considered in conjunction with or in addition to this proposal. 
 
 ## Using an alternative shader language
 
 There are multiple higher level shading languages, such as [slang](https://github.com/shader-slang/slang) or [Rust-GPU](https://github.com/EmbarkStudios/rust-gpu) which support imports. They also support more features that WGSL currently does not offer. For complex projects, this can very much pay off.
 
 The downside is using additional tooling, and dealing with an additional translation layer.
-An additonal translation layer could lock shader authors out of certain WGSL features.
+An additional translation layer could lock shader authors out of certain WGSL features.
 
-Also, higher level GPU languages are typically processed at build time,
-which precludes using language features to adapt to runtime conditions
-like GPU characteristics or user settings.
+Also, higher level GPU languages are typically processed at build time, which precludes using language features to adapt to runtime conditions like GPU characteristics or user settings.
 
 ## Composing shader code as strings at runtime
 
@@ -399,10 +241,6 @@ Test cases will be available on
 
 # Future possibilities
 
-## Namespaces
-
-We hope that namespaces will be added to WGSL itself. Then, the importing mechanism can be extended to fully support namespaces, for example by treating each file as introducing its own namespace.
-
 ## Documentation comments
 
 This proposal works nicely with documentation comments in WGSL. This would allow library authors to document their shaders, which would be very useful for consumers.
@@ -415,7 +253,3 @@ We encourage tooling authors to also implement source maps when implementing imp
 
 How a preprocessor would interact with this proposal is an open question for a future proposal.
 See [Conditional Compilation](./ConditionalCompilation.md).
-
-## Scoped imports
-
-Allow imports that are only active within one function?
