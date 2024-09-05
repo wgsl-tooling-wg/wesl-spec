@@ -1,4 +1,4 @@
-# Simple Generics for WGSL
+<!-- # Generics Modules for WGSL
 
 (TBD)
 
@@ -161,4 +161,4 @@ Re-exporting generics is allowed (presuming we allow re-exporting in general, se
 
   Array_sum has a nested generic! This is cool.
   
-  Also, some SFINAE I guess: because 0 is AbstractInt, it can subtitute E with u32 or i32, BUT not f32 afaik, because 0 is not AbstractFloat. This is somewhat disappointing. 
+  Also, some SFINAE I guess: because 0 is AbstractInt, it can subtitute E with u32 or i32, BUT not f32 afaik, because 0 is not AbstractFloat. This is somewhat disappointing.  -->
