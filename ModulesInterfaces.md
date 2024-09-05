@@ -128,7 +128,17 @@ one addition:
 
 ## Type Checking
 
-<!-- TODO -->
+In general, type checking in WESL is to be performed by testing for structural equality. 
+
+This means that given a module signature and a module, the following should hold after the canonicalisation step:
+
+
+- all types declared in the module signature should be present either as an alias or a struct declaration. 
+- all submodules declared in the signature should be present and be structurally a superset of the specified submodule type
+- all functions should be present and have the same type and number of arguments as well as the same return type. 
+- all constants, overrides and vars should be present and have the same types. 
+- each of these respective elements should have identical attributes values present. 
+- additional symbols are ignored and should be treated as private after assignment or declaration. 
 
 ## Drawbacks
 
