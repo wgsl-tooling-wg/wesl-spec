@@ -2,32 +2,46 @@
 
 ## Overview
 
-Conditional compilation is a mechanism to modify the source code based on parameters passed to the compiler. We distinguish two kinds:
+> This section is non-normative
 
- * **unstructured**: arbitrary code sections can be injected or conditionaly included. This is what the C preprocessor and macros do, and a lesser version of that is proposed in [`simple templating`](SimpleTemplating.md). 
- * **structured**: only structural elements of the syntax can be manipulated, e.g. a whole declaration, a member, etc. Rust uses this approach with the `#[cfg]` attribute.
+Conditional compilation is a mechanism to modify the source code based on parameters passed to the compiler.
+This specificaton extends the [*attribute* syntax](https://www.w3.org/TR/WGSL/#attributes) with three new attributes: `@if`, `@elif`, `@else`.
+These attributes indicate that the syntax node they decorate can be removed by the compiler based on feature flags.
 
-We think that *structured* is the way to go. It leads to clearer and safer code, which is more important than implementation complexity in our eyes.
-Also, a language that has a good expressive power already should not need a way to hack around with arbitrary code injection, like C macros do.
+> Note: This implementation is similar to the `#[cfg(feature = "")]` syntax in rust.
 
-| unstructured | structured |
-|--------------|------------|
-| (+) much easier to implement: just look for the `#word` symbols | (-) harder to implement: requires a full parsing |
-| (+) often language-agnostic (see the [C preprocessor](https://en.wikipedia.org/wiki/C_preprocessor). Familiar to C developers. | (-) a new syntax needs to be taught, not always self-explanatory |
-| (-) poorly integrated in the language, harder to read by humans | (+) is a well-designed syntax feature of the language |
-| (+) technically more expressive (e.g. [manipulating identifiers](https://en.wikipedia.org/wiki/C_preprocessor#Token_concatenation)) | (-) can only conditionaly include parts of the syntax tree, poor text generation capabilities. |
-| (-) behaves unpredictably, intent and behavior is hidden | (+) intent and behavior is visible at the usage site |
-| (-) no type checking, no syntax checking, because code is generated dynamically | (+) can statically check that conditional variants lead to syntactically correct and type-valid code |
-| (-) poor IDE support | (+) IDE can check all possible code paths |
+### Usage Example
 
-## Proposal
+```rs
+// global variables and bindings...
+@if(textured)
+@group(0) @binding(0) var my_textuer: texture_2d<f32>;
 
-We propose to leverage the [*attribute* syntax](https://www.w3.org/TR/WGSL/#attributes) to decorate syntax nodes with conditional compilation attributes.
-The compiler is provided with a set of '*compile-time features*' to enable (see below).
+// structs declarations and struct members...
+struct Ray {
+  position: vec4f,
+  direction: vec4f,
+  @if(debug_mode && raytracing_enabled)
+  ray_steps: u32,
+}
 
-### Definitions
+// function declarations, parameters and statements...
+fn main() -> vec4 {
+  @if(legacy_implementation || (is_web_version && xyz_not_supported))
+  let result = legacy_impl();
+  @else
+  let result = modern_impl();
+}
+```
+
+## Definitions
 
  * **Compile-time expression**: A *compile-time expression* is evaluated by the compiler before the rest of the program. It lives in the *compile-time scope*.
+   Its grammar is a subset of normal WGSL [expressions](https://www.w3.org/TR/WGSL/#expressions). it must be one of:
+   * a *compile-time feature*,
+   * a [logical expression](https://www.w3.org/TR/WGSL/#logical-expr): logical not (`!`), short-circuiting AND (`&&`), short-circuiting OR (`||`),
+   * a [parenthesized expression](https://www.w3.org/TR/WGSL/#parenthesized-expressions),
+   * a boolean literal value (`true` or  `false`).
 
  * **Compile-time scope**: The *compile-time scope* this is an independent scope from the [*module scope*](https://www.w3.org/TR/WGSL/#module-scope), meaning it cannot see any declarations from the source code, and its identifers are independent.
 
@@ -35,7 +49,7 @@ The compiler is provided with a set of '*compile-time features*' to enable (see 
 
  * **Compile-time attribute**: A *compile-time attribute* is parametrized by a *compile-time expression*. It is eliminated after the compilation phase but can affect the syntax node it decorates.
 
-### Location of *Compile-time attributes*
+## Location of *Compile-time attributes*
 
 (TODO: this needs more reflexion)
 
@@ -55,35 +69,9 @@ Because eliminating the decorated node would lead to invalid code, a Compile-tim
 > Note: The WGSL grammar currently does not allow attributes in front of const value declarations, variable declarations, directives, switch clauses and several statements. We would extend the syntax to allow them.
 > Which exacly we will enable is subject to discussion. Enabling them before all statements is perhaps undesirable.
 
-### Syntax 1: Features only and the `@ifdef`, `@ifndef` attributes
+## `@if`, `@elif` and `@else` attributes
 
-> This is the least complex implementation.
-
-A *compile-time expression* must be a single *compile-time feature*.
-
-Two new attributes are introduced that take a single parameter.
-* The `@ifdef` attribute marks the decorated node for removal if the parameter evaluates to `false`.
-* The `@ifndef` attribute marks the decorated node for removal if the parameter evaluates to `true`.
-
-*Example*
-
-```rs
-@ifdef(my_feature)
-fn f() { ... }
-@ifndef(my_feature)
-fn f() { ... }
-```
-
-### Syntax 2: `@if` attribute with compile-time logical expressions
-
-> This is the medium-complexity implementation.
-
-A *compile-time expression* is a subset of normal WGSL [expressions](https://www.w3.org/TR/WGSL/#expressions). it must be one of:
- * a *compile-time feature*,
- * a [logical expression](https://www.w3.org/TR/WGSL/#logical-expr): logical not (`!`), short-circuiting AND (`&&`), short-circuiting OR (`||`),
- * a [parenthesized expression](https://www.w3.org/TR/WGSL/#parenthesized-expressions).
-
-Three new attributes are introduced.
+Three new *compile-time attributes* are introduced.
 * An `@if` attribute takes a single parameter. It marks the decorated node for removal if the parameter evaluates to `false`.
 * An `@elif` attribute decorates the next sibling of a syntax node decorated by a `@if` or an `@elif`. It takes one parameter.
    It marks the decorated node for removal if its parameter evaluates to `true` AND if the previous `@if` and `@elif` attribute parameters evaluate to false.
@@ -101,18 +89,29 @@ fn f() { ... }
 fn f() { ... }
 ```
 
-### Execution of the conditional compilation phase
+## Execution of the conditional compilation phase
 
 The conditional compilation phase *should* be the first phase to run in the full WESL compilation pipeline.
 
-1. The compiler is invoked with a list of features to enable.
-2. The source file is parsed.
-3. *Compile-time attributes* are evaluated
-    * If the syntax node is marked for removal: it is eliminated from the source code along with the attribute.
-    * Otherwise, only the attribute is eliminated from the source code.
-4. The updated source is passed to the next compilation phase. (e.g. import resolution) 
+> Note: The conditional compilation was designed to be incremental. In case some features can only be resolved at runtime, the compiler can be invoked in two passes:
+> The first pass is invoked with compile-time features and returns a partially compiled WESL source. The second pass is invoked with the runtime features and returns a fully compiled WGSL source.
 
-### Possible future extensions
+1. The compiler is invoked with a list of features to *enable* or *disable*.
+2. The source file is parsed.
+3. The *compile-time features* in *Compile-time expressions* are resolved:
+    * If the feature is not present in the compiler's feature list, it is unchanged.
+    * If the feature is *enabled*, the identifier is replaced with `true`.
+    * If the feature is *disabled*, the identifier is replaced with `false`.
+   
+   The expression is *fully resolved* if all its *compile-time features* have been replaced by `true` or `false`.
+5. *Compile-time attributes* which have *fully resolved expressions* are evaluated:
+    * If the syntax node is marked for removal: it is eliminated from the source code along with the attribute.
+    * Otherwise, if all features in only the attribute is eliminated from the source code.
+4. The updated source is passed to the next compilation phase. (e.g. import resolution)
+
+## Possible future extensions
+
+> This section is non-normative
 
 * High-complexity *compile-time expressions*: if we end up implementing other compile-time attributes, such as loops (e.g. `@for`, `@repeat`), or [compile-time-evaluable](https://zig.guide/language-basics/comptime/) expressions, then we would need to extend the grammar of *compile-time expressions*. It would also affect this proposal.
 
