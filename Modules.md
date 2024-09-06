@@ -15,7 +15,7 @@ Currently all symbols in wgsl share a single global namespace with a prohibition
 Additionally WGSL provides very little way to encapsulate and organise code. This proposal would pave the way for both
 [Module Interfaces](./ModulesInterfaces.md) and [Generic Modules](./GenericModules.md). The former would allow a graphics programmer to optionally control the visibility and typecheck the symbols within a module, while the latter would allow for more reusable code and the ability to build powerful abstractions. 
 
-Finally [Includes](./Include.md), another extension of modules, gives a way to compose behaviour in a manner not too dissimilar to inheritance, which is important for use cases such as writing extended shaders based on Standard PBR workflows in game engines such as [Bevy](https://bevyengine.org/). 
+Finally [Include](./Include.md), another extension of modules, gives a way to compose behaviour in a manner not too dissimilar to inheritance, which is important for use cases such as writing extended shaders based on Standard PBR workflows in game engines such as [Bevy](https://bevyengine.org/). 
 
 # Guide-level explanation
 

@@ -11,6 +11,7 @@
 - WESL File: A single WESL file
 - Main File: A WESL file from which compilation starts. A single project can have many main files.
 - WESL File Path: Hierarchical or relative address of a file, akin to a filesystem path with additional restrictions
+- Namespace: Either the collection of symbols contained within the global scope, or the contents of a module
 - Module: A construct appearing within a WESL file that groups global items together.
 - Module Path: Hierarchical or relative address of a module. Similar in concept to accessing nested namespaces or modules in other languages.
 - Side effects: WGSL code that can affect other modules when imported
