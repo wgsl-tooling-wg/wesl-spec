@@ -19,7 +19,7 @@ that we've seen was for a reduction algorithm that ran on the GPU. This algorith
 
 # Guide-level explanation
 
-A module signature declared using `mod sig` keyword. A module signature contains a set of declarations of elements such as functions, variables, modules, and constants without specifying their implementation. A module can be said to "return" such a signature, which signals to type checkers that only the symbols defined in the interface should be exposed, and that all the symbols need to be present for typechecking to pass.
+A module signature declared using `mod sig` keyword. A module signature contains a set of declarations of elements such as functions, variables, modules, and constants without specifying their implementation. A module can be said to "return" such a signature, which signals to type checkers that only the symbols defined in the interface should be exposed, and that all the symbols need to be present for typechecking to pass. Like modules, module signatures can also be aliased.
 
 Below is an example of a module signature and its usage:
 
@@ -28,7 +28,8 @@ Below is an example of a module signature and its usage:
 
 mod sig MathImpl {
     const DEG_TO_RAD: f32;
-    fn quat_from_euler(xyzRad: vec3<T>) -> vec4<f32>;
+    type Quat;
+    fn quat_from_euler(xyzRad: vec3<T>) -> Quat;
 }
 
 // Another module signature:
@@ -36,12 +37,16 @@ mod sig MainMath {
     mod Float -> MathImpl;
 }
 
+alias MainMathSig = MainMath;
+
 // This can be type checked to determine 
 // whether Math (and consequently Float conform to the provided signature)
-mod Math -> MainMath {
+mod Math -> MainMathSig {
     mod FloatMath {
         const DEG_TO_RAD: f32 = 0.0174533;
-        fn quat_from_euler(xyzRad: vec3<f32>) -> vec4<f32> {
+        alias Quat = vec4<f32>;
+
+        fn quat_from_euler(xyzRad: vec3<f32>) -> Quat {
             // Implementation here
         }
 
@@ -56,12 +61,11 @@ mod Math -> MainMath {
 // Usage
 Math::Float::quat_from_euler(vec4<f32>(90.0 * Math::Float::DEG_TO_RAD))
 
-
 // Not allowed as the FloatMath module isn't in the interface
-Math::FloatMath::quat_from_euler(vec4<f32>(90.0 * Math::Float::DEG_TO_RAD))
+// Math::FloatMath::quat_from_euler(vec4<f32>(90.0 * Math::Float::DEG_TO_RAD))
 
 // Not allowed as private_function isn't in the interface
-Math::Float::private_function()
+// Math::Float::private_function()
 ```
 
 # Reference-level explanation
@@ -71,7 +75,7 @@ Module signatures are parsed as follows, with spaces and comments allowed betwee
 ```bnf
 
 module_sig_decl :
-  attribute * 'mod' 'sig' "{" global_sig * "}" ";"?
+  attribute * 'mod' 'sig' '{' global_sig * '}' ';'?
 ;
 
 global_sig :
@@ -79,6 +83,7 @@ global_sig :
   | nested_mod_sig
   | global_variable_sig
   | global_value_sig
+  | associated_type_sig
 ;
 
 function_sig : 
@@ -102,13 +107,16 @@ extend module_member_decl :
 ;
 
 module_decl:  
-  attribute * 'mod' ident ('->' type_specifier)? "{" module_member_decl * "}" ";"?
+  attribute * 'mod' ident ('->' type_specifier)? '{' module_member_decl * '}' ';'?
 ;
 
 module_alias_decl :
   attribute * 'mod' optionally_typed_ident '=' module_path ';'
 ;
 
+associated_type_sig :
+    attribute * 'type' ident ';'
+;
 ```
 
 Where `ident`, `attribute`, `type_specifier`, `function_header` and `optionally_typed_ident` are defined in the WGSL grammar. The WGSL grammer is additionally extended as follows: 
@@ -132,13 +140,12 @@ In general, type checking in WESL is to be performed by testing for structural e
 
 This means that given a module signature and a module, the following should hold after the canonicalisation step:
 
-
 - all types declared in the module signature should be present either as an alias or a struct declaration. 
 - all submodules declared in the signature should be present and be structurally a superset of the specified submodule type
 - all functions should be present and have the same type and number of arguments as well as the same return type. 
 - all constants, overrides and vars should be present and have the same types. 
 - each of these respective elements should have identical attributes values present. 
-- additional symbols are ignored and should be treated as private after assignment or declaration. 
+- additional symbols in the module are ignored by the typechecker and should be treated as private after assignment or declaration. 
 
 ## Drawbacks
 
@@ -165,5 +172,3 @@ Visibility would also not be a feature that could be later extended to offer mor
 ### No concept of visibility 
 
 We could continue without visibilty or module signatures. The downside is relying on duck typing if/when generics are implemented could result in a worse experience, and type inference would be a more complicated approach.
-
-

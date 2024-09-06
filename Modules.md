@@ -36,7 +36,7 @@ mod Math {
     }
 
     // An alias for a module
-    mod Float = FloatMath;
+    alias Float = FloatMath;
 }
 
 // Usage
@@ -53,7 +53,6 @@ Module statements are parsed as follows, with spaces and comments allowed betwee
 ```bnf
 module_decl_main: 
     | module_decl
-    | module_alias_decl
 ;
 
 module_member_decl :
@@ -75,9 +74,6 @@ module_path :
   ident ('::' ident)*
 ;
 
-module_alias_decl :
-  attribute * 'mod' ident '=' module_path ';'
-;
 ```
 
 Where `ident` is defined in the WGSL grammar. The WGSL grammer is additionally extended as follows: 
@@ -109,7 +105,6 @@ If yes, everything is fine. If not, we throw an error.
 As modules are imported into the global namespace, a naive bundling algorithm would be:
 - Remove all `load` statements
 - Concatenate files together according to the linking logic described in [Imports](./Imports.md) 
-
 
 ## Linking WESL Files
 
