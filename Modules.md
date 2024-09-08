@@ -23,7 +23,7 @@ A module is declared using the `mod` keyword. A module contains a set of declara
 
 There are two ways to declare a module - as an alias for another module, or as an inline module. Here is an example of both forms, along with a module usage example:
 
-```wgsl
+```rescript
 // An inline module:
 mod Math {
     // Another inline module:

@@ -22,7 +22,7 @@ the PBR values across the surface.
 An example of how we would want such our abstraction to look like in a game engine such as [Bevy](https://bevyengine.org/)
 would be as follows:
 
-```wgsl
+```reasonml
 // Including standard material adds all the symbols 
 // to the global module including the vertex and fragment entry points. 
 include BevyPbr::StandardMaterial;
@@ -57,6 +57,10 @@ A possible extension to this specification would be to only allow `virtual` func
 ```bnf
 include_decl :
   'include' module_path ';'
+;
+
+extend global_sig :
+  | include_decl
 ;
 ```
 

@@ -1,164 +1,217 @@
-<!-- # Generics Modules for WGSL
+# Generics Modules for WGSL
 
-(TBD)
+# Summary
 
-Generic programming is useful for wgsl, particularly for libraries.
-With generics, wgsl functions like `reduce` or `prefixSum`
-don’t need to be manually rewritten for each combination of element type and binary operation.
-I’m hoping we can find a fairly minimal design for generics
-that is easy for programmers to learn and supportable with modest effort in wesl tools.
+We propose adding a mechanism to allow generic programming using WESL modules as an extension to the language.
 
-To ease implementation effort, I imagine we’ll want to avoid type inference
-or type constraints on generics. But without type inference, 
-specifying generic types at every call site to a generic function gets verbose and tedious. To avoid that verbosity, let’s allow generic variables on import statements (glslify and wgsl-linker did this too).
+## Assumptions
 
-I thought we might start by allowing generics only on functions.
-We’ll want a design that’s extensible to more features (e.g. generic structs)
-of course, 
-but we can start with a minimal implementation and add features as they prove necessary.
+Assumes that [`load`](./Imports.md), [Modules](./Modules.md) and [Module Interfaces](./ModulesInterfaces.md) have already been implemented. 
 
-## Summary
+# Motivation
 
-* angle bracket syntax for generic variable declaration, and generic value specification.
-* declare generic variables on function declarations, e.g.: `fn foo<E>(arg: E) -> E { let e:E = arg; return e; }`
-* within an fn with a generic declaration,
-  generic variables names can be used in place of a wgsl type in both the fn declaration and fn body,
-  or in a function call expression inside the fn body.
-  The generic variable text will be replaced by the generic value text during linking.
-  So if `E` is `f32`  the linked wgsl for foo would be: `fn foo(arg: f32) { let e:f32 = arg; return e; }`.
-* Note that a linker will generate multiple copies of fn foo() in wgsl,
-  one for each unique set of generic arguments. So each fn will have a unique name.
-* generic variable values are supplied on import statements or call statements.
+Generic programming is useful for WESL, particularly for libraries.
 
-      * import with a generic:
-        ```
-        import util/foo<f32> as foo32;
-        main() { foo32(1.0); }
-        ```
-      * or, call with a generic:
-        ```
-        foo<f32>(1.0);
-        ```
+With generic modules, operations like `Reduce` or `PrefixSum` wouldn't need to be manually rewritten for each combination of element type and binary operation.
 
-* generic values supplied with imports are single world tokens (typically wgsl type names or function names), 
-  or generic variables declared on that function.
-
-## Examples
+Larger projects like GPU accelerated particle systems could also benefit from generic modules. This is because the 
+encapsulation of types, functions and other globals in modules provides a means of structuring libraries in a way that is 
+readily user extensible, reusable, and maintainable. 
 
 
-Simple Example:
+# Guide-level explanation
 
-* ```
-  ./util.wgsl:
+Generic modules and signatures are declared using the `mod` keyword and like generic types and built-in functions, use angle brackets (`<>`) to denote the generic parameters. Parameters are permitted to be other modules. 
 
-  @export fn workgroupMin<E>(elems: array<E, 4>) -> E { }  // E is a generic parameter
-  ```
+An insantiation of a generic module can be declared inline when used, added to the current namespace using [`include`](./Include.md) (if implemented) or aliased to give the module a concrete name. 
 
-* ```
-  ./main.wgsl:
+In addition to generic modules, this proposal also requires that [module signatures](./ModulesInterfaces.md) support generic parameters. Module signatures may be used to constrain the type of a generic argument.
+Generic module signatures in generic type constraints may additionally use `_` as a "hole" in arguments to indicate that the user doesn't care about the type of a particular generic parameter. 
 
-  import ./util/workgroupMin<f32> as workMin; // substitutes f32 for E
+Below is an annotated example of how generic modules may be used in practise. This has been translated from the 
+[StoneBerry WebGPU Repository](https://github.com/stoneberry-webgpu/) into the proposed WESL format
 
-  fn main() {
-    workMin(a1);  // no generic variables required at the call site 
-    workMin(a2);
-  }
-  ```
+```rescript
+// Module signature that simply exposes the single type T. Could perhaps later be sugared to elide the module in follow-up 
+// work
+mod sig Type {
+  type T;
+}
 
-Here’s a more complicated case. reduce is parameterized by an element type (e.g. u32) and a binary operation, e.g. max()
+// Module signature that exposes a single constant `value`. Could perhaps later be sugared to elide the module in follow-up work
+mod sig Const<Type: Type> {
+  const value: Type::T;
+}
 
-* ```
-    ./util.wgsl:
+// Abstract representation of a binary operation. 
+mod sig BinaryOp<OpElem: Type, LoadElem: Type> {
+  // This is a common pattern to allow transfer of type information from generic input to output module
+  type LoadElem : LoadElem::T;
+  type OpElem : OpElem::T; 
+  fn identityOp() -> OpElem;
+  fn loadOp(a: LoadElem::T) -> OpElem;
+  fn binaryOp(a: OpElem, b: OpElem) -> OpElem;
+}
 
-    export<E, BinOp> 
-    fn reduce(elems: array<E, 2>) -> E { 
-      return BinOp(elems[0], elems[1]); 
+// In future, modules representing numbers, vectors, matrices and other built in types
+// would be part of the standard library. But lets define some common operations for now
+mod sig Number {
+  type T;
+
+  fn add(a: T, b: T) -> T;
+  fn identity() -> T;
+}
+
+mod Sum<N: Number> {
+    struct T {
+      sum: N::T;
+    }
+}
+
+
+mod SumBinaryOp<N: Number> -> BinaryOp<Sum<N>, Sum<N>> {
+    alias OpElem = Sum<N>::T;
+    alias LoadElem = Sum<N>::T;
+
+    fn identityOp() -> OpElem {
+      return OpElem();
+    }
+    
+    fn loadOp(a: LoadElem) -> OpElem {
+        return OpElem(a.sum);
     }
 
-* ```
-    ./main.wgsl:
-
-    import ./ops/binOpMax<f32> as binOpMax;
-    import ./util/reduce<f32, binOpMax> as maxF32; 
-
-    fn main() {
-      maxF32(a1);
+    fn binaryOp(a: OpElem, b: OpElem) -> OpElem {
+      return OpElem(N::add(a.sum, b.sum));
     }
-    ```
+}
 
-Note that you can import a generic function w/o providing parameters:
-
-* ```
-    ./util.wgsl:
-
-    import binOpMax from ./ops;   // no generic variable specified yet
-
-    export fn reduceMax<E>(elems: array<E, 2>) -> E { 
-      return binOpMax<E>(elems[0], elems[1]); // generic value applied at call site
-    }
-    ```
-
-Re-exporting generics is allowed (presuming we allow re-exporting in general, see [Visibility](./Visiblity.md)):
-
-* ```
-    ./lib.wgsl:
-    export reduce from util/reduce.wgsl; // re-export at package root level
-
-    ./util/reduce.wgsl:
-    export<E, BinOp> fn reduce(elems: array<E, 2>) -> E { }
-    ```
-
-## Questions and possible extensions
-
-* Do angle brackets conflict or comport with wgsl templates?
-* Can you export a generic function after variable substitution too? or only the generic version
-* Allow generic values to be pulled from runtime parameters?
-  wgsl-linker currently recognizes an `ext.` prefix to get variable values from the runtime caller.
-  e.g. ext.workgroupSize would patch in runtime variables at link time.
-  Hopefully we can address that with runtime #define, we’ll see.
-* Currently there are no type constraints available for generic variable declarations..
-  Simply substituting parameters and letting dawn or naga typecheck at runtime seems ok for now.
-  A future type checker could check annotation uses are valid by substituting generic parameters
-  and type checking the expanded wgsl.
-  And of course a future version of wgsl or wesl generics could add explicit type constraints on generic variables.
-
-* Generics on structs too?
-
-  * ```
-      ./util.wgsl:
-      export struct Point<T> { position: vec2<T>, color vec3f } 
-
-      ./main.wgsl
-      import Point<u32> as UPoint from ./util
-
-      fn main() {
-        let p = UPoint(vec2u(0, 0), vec3f(.5, .5, .5));
-      }
-      ```
-
-* The reduce example makes me think whether we could call a generic function recursively,
-  and what would that do.
-  In theory, the following would unroll to N nested function calls.
-  The wgsl compilers may be good at flattening this.
-
-* ```
-    fn accumulate<E, Op, N>(acc: E, elems: array<E, N>) -> E {
-      if N >= 2 {
-        return accumulate<E, Op, N-1>(accumulateBinOp(E, elems[N-1]), elems);
-      else {
-        return acc;
-      }
-    }
-
-    fn op_add<E>(e1: E, e2: E) {
-      return e1 + e2;
-    }
-
-    fn array_sum<E, N>(elems: array<E, N>) -> E {
-      return accumulate<E, op_add<E>, N>(0, elems);
-    }
-  ```
-
-  Array_sum has a nested generic! This is cool.
+mod F32 {
+  alias T = f32;
   
-  Also, some SFINAE I guess: because 0 is AbstractInt, it can subtitute E with u32 or i32, BUT not f32 afaik, because 0 is not AbstractFloat. This is somewhat disappointing.  -->
+  fn add(a: T, b: T) -> T {
+    return a + b;
+  }
+
+  fn identity() -> T {
+    return 0.0;
+  }
+}
+
+mod U32 {
+  alias T = u32;
+}
+
+// Here we don't care about the exact generic mod values
+// passed to BinaryOp as we can extract the underlying types from the module 
+// members
+mod ReduceWorkgroup<Op: BinaryOp<_, _>, WorkSize: Const<U32>, Threads: Const<U32>> {
+    var <workgroup> work: array<Op::OpElem::T, WorkSize::value>; 
+    fn reduceWorkgroup(localId: u32) {
+        let workDex = localId << 1u;
+        for (var step = 1u; step < Threads::value; step <<= 1u) {
+            workgroupBarrier();
+            if localId % step == 0u {
+                work[workDex] = Op::binaryOp(work[workDex], work[workDex + step]);
+            }
+        }
+    }
+}
+
+// Same here
+mod ReduceBuffer<Op: BinaryOp<_, _>, BlockArea: Const<U32>, WorkSize: Const<U32>, Threads: Const<U32>> {
+  // Including brings the module members into the namespace
+  include ReduceWorkgroup<Op, WorkSize, Threads>;
+
+  alias Input = Op::LoadElem::T;
+  alias Output = Op::OpElem::T;
+
+  struct Uniforms {
+      sourceOffset: u32,        // offset in Input elements to start reading in the source
+      resultOffset: u32,        // offset in Output elements to start writing in the results
+  }
+
+  @group(0) @binding(0) var<uniform> u: Uniforms;                     
+  @group(0) @binding(1) var<storage, read> src: array<Input>; 
+  @group(0) @binding(2) var<storage, read_write> out: array<Output>;  
+  @group(0) @binding(11) var<storage, read_write> debug: array<f32>; // buffer to hold debug values
+
+  override workgroupThreads = 4u;                          
+
+  var <workgroup> work: array<Output, workgroupThreads>; 
+
+  // reduce a buffer of values to a single value, returned as the last element of the out array
+  // 
+  // each dispatch does two reductions:
+  //    . each invocation reduces from a src buffer to the workgroup buffer
+  //    . one invocation per workgroup reduces from the workgroup buffer to the out buffer
+  // the driver issues multiple dispatches until the output is 1 element long
+  //    (subsequent passes uses the output of the previous pass as the src)
+  // the same output buffer can be used as input and output in subsequent passes
+  //    . start and end indices in the uniforms indicate input and output positions in the buffer
+  // 
+  @compute
+  @workgroup_size(workgroupThreads, 1, 1) 
+  fn main(
+      @builtin(global_invocation_id) grid: vec3<u32>,    // coords in the global compute grid
+      @builtin(local_invocation_index) localIndex: u32,  // index inside the this workgroup
+      @builtin(num_workgroups) numWorkgroups: vec3<u32>, // number of workgroups in this dispatch
+      @builtin(workgroup_id) workgroupId: vec3<u32>      // workgroup id in the dispatch
+  ) {
+      reduceBufferToWork(grid.xy, localIndex);
+      let outDex = workgroupId.x + u.resultOffset;
+      reduceWorkgroup(localIndex);
+      if localIndex == 0u {
+          out[outDex] = work[0];
+      }
+  }
+
+  fn reduceBufferToWork(grid: vec2<u32>, localId: u32) {
+      var values = fetchSrcBuffer(grid.x);
+      var v = reduceSrcBlock(values);
+      work[localId] = v;
+  }
+
+  fn fetchSrcBuffer(gridX: u32) -> array<Output, BlockArea::value> {
+      let start = u.sourceOffset + (gridX * BlockArea::value);
+      let end = arrayLength(&src);
+      var a = array<Output, BlockArea::value>();
+      for (var i = 0u; i < BlockArea::value; i = i + 1u) {
+          var idx = i + start;
+          if idx < end {
+              a[i] = Op::loadOp(src[idx]);
+          } else {
+              a[i] = Op::identityOp();
+          }
+      }
+      return a;
+  }
+
+  fn reduceSrcBlock(a: array<Output, BlockArea::value>) -> Output {
+      var v = a[0];
+      for (var i = 1u; i < BlockArea::value; i = i + 1u) {
+          v = Op::binaryOp(v, a[i]);
+      }
+      return v;
+  }
+}
+// To actually realize a concrete ReduceBuffer module, we need concrete const values:
+
+mod BlockArea -> Const<U32> {
+  const value: u32 = 4u;
+}
+
+mod WorkSize -> Const<U32> {
+  const value: u32 = 18u;
+}
+
+mod Threads -> Const<U32> {
+  const value: u32 = 10u;
+}
+
+// Putting everything together and into the global namespace
+include ReduceBuffer<SumBinaryOp<F32>, BlockArea, WorkSize, Threads>;
+```
+
+
+# Reference-level explanation

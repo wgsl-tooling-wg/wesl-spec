@@ -19,22 +19,32 @@ that we've seen was for a reduction algorithm that ran on the GPU. This algorith
 
 # Guide-level explanation
 
-A module signature declared using `mod sig` keyword. A module signature contains a set of declarations of elements such as functions, variables, modules, and constants without specifying their implementation. A module can be said to "return" such a signature, which signals to type checkers that only the symbols defined in the interface should be exposed, and that all the symbols need to be present for typechecking to pass. Like modules, module signatures can also be aliased.
+A module signature declared using `mod sig` keyword. A module signature contains a set of declarations of elements such as functions, variables, modules, and constants without specifying their implementation. A module can be said to "return" a set of signatures, which signals to type checkers that only the symbols defined in the signatures should be exposed, and that all the symbols need to be present for typechecking to pass. Like modules, module signatures can also be aliased. 
 
 Below is an example of a module signature and its usage:
 
-```wgsl
+```rescript
 // A module signature:
 
 mod sig MathImpl {
     const DEG_TO_RAD: f32;
-    type Quat;
+    type Quat; // An opaque type. It's exact representation is hidden from users
     fn quat_from_euler(xyzRad: vec3<T>) -> Quat;
 }
 
-// Another module signature:
+// Another module signature
+mod sig Pi {
+    const PI: f32;
+}
+
+// A third module signature
 mod sig MainMath {
-    mod Float -> MathImpl;
+    // Here Float conforms to both MathImpl and Pi
+    mod Float : MathImpl + Pi;
+}
+
+mod sig F32 {
+    type T: f32;
 }
 
 alias MainMathSig = MainMath;
@@ -43,7 +53,9 @@ alias MainMathSig = MainMath;
 // whether Math (and consequently Float conform to the provided signature)
 mod Math -> MainMathSig {
     mod FloatMath {
+        alias T = f32;
         const DEG_TO_RAD: f32 = 0.0174533;
+        const PI: f32 = 3.142;
         alias Quat = vec4<f32>;
 
         fn quat_from_euler(xyzRad: vec3<f32>) -> Quat {
@@ -54,8 +66,8 @@ mod Math -> MainMathSig {
             // Implementation here
         }
     }
-    // An alias for a module
-    mod Float = FloatMath;
+    // An alias for a module that is exposed with the following signatures:
+    alias Float : MathImpl + Pi + F32 = FloatMath;
 }
 
 // Usage
@@ -90,7 +102,7 @@ function_sig :
   attribute * function_header ';'
 
 nested_mod_sig : 
-  attribute * 'mod' ident '->' type_specifier  ';'
+  attribute * 'mod' ident ':' (type_specifier ('+' type_specifier) *)  ';'
 ;
 
 global_variable_sig :
@@ -107,15 +119,11 @@ extend module_member_decl :
 ;
 
 module_decl:  
-  attribute * 'mod' ident ('->' type_specifier)? '{' module_member_decl * '}' ';'?
-;
-
-module_alias_decl :
-  attribute * 'mod' optionally_typed_ident '=' module_path ';'
+  attribute * 'mod' ident ('->' type_specifier ('+' type_specifier) * )? '{' module_member_decl * '}' ';'?
 ;
 
 associated_type_sig :
-    attribute * 'type' ident ';'
+    attribute * 'type' optionally_typed_ident ';'
 ;
 ```
 
@@ -124,6 +132,10 @@ Where `ident`, `attribute`, `type_specifier`, `function_header` and `optionally_
 ```bnf
 extend global_decl :
   | module_sig_decl
+;
+
+type_alias_decl :
+  'alias' ident (':' type_specifier ('+' type_specifier) *) ? '=' type_specifier
 ;
 ```
 
@@ -140,8 +152,8 @@ In general, type checking in WESL is to be performed by testing for structural e
 
 This means that given a module signature and a module, the following should hold after the canonicalisation step:
 
-- all types declared in the module signature should be present either as an alias or a struct declaration. 
-- all submodules declared in the signature should be present and be structurally a superset of the specified submodule type
+- all types declared in the module signatures should be present either as an alias or a struct declaration and in addition, if specified, evaluate to the same type specified in the type constraint. (This is useful for cases where it is necessary to expose the type in the module signature).
+- all submodules declared in the signatures should be present and be structurally a superset of the specified submodule type
 - all functions should be present and have the same type and number of arguments as well as the same return type. 
 - all constants, overrides and vars should be present and have the same types. 
 - each of these respective elements should have identical attributes values present. 
