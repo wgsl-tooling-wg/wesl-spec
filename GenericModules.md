@@ -215,3 +215,218 @@ include ReduceBuffer<SumBinaryOp<F32>, BlockArea, WorkSize, Threads>;
 
 
 # Reference-level explanation
+
+Generic modules and signatures are parsed as follows, with spaces and comments allowed between tokens:
+
+```bnf
+module_decl:  
+  attribute * 'mod' ident _disambiguate_template module_template_param_list ('->'  module_type_specifier_set)? "{" module_member_decl * "}" ";"?
+;
+
+module_template_param_list :
+  _template_args_start module_template_param_comma_list _template_args_end
+;
+
+module_template_param_comma_list : 
+  module_template_param ( ',' module_template_param ) * ',' ?
+;
+
+module_type_specifier_set :  
+  module_type_specifier ('+' module_type_specifier) * 
+;
+
+module_template_param : 
+  attribute * ident ':' module_type_specifier_set
+;
+
+module_sig_decl :
+  attribute * 'mod' 'sig' ident _disambiguate_template module_template_param_list '{' global_sig * '}' ';'?
+;
+
+module_type_specifier : 
+  (module_path '::')? ident _disambiguate_template template_list ?
+;
+
+module_path :
+  module_path_part ('::' module_path_part)*
+;
+
+module_path_part :
+  ident _disambiguate_template template_list ?
+
+nested_mod_sig : 
+  attribute * 'mod' ident ':' (module_type_specifier ('+' module_type_specifier) *)  ';'
+;
+```
+
+Where `ident`, `_disambiguate_template`, `template_list`,  `_template_args_start` and `_template_args_end` are defined in the WGSL grammar. 
+
+## Linking WESL Files
+
+Further linking complexity is introduced with this proposal. This is because generic modules need to an additional specialization pass prior to linking.
+
+A basic specialization pass could be implemented according to the following handwavy logic (though includes makes this actually quite a bit subtler, see below for further discussion): 
+
+- for each generic module:
+  - for each unique set of generic parameters:
+    0. a new concrete module should be produced and given a unique name
+    0. for each usage:
+      - the generic reference should be rewritten to refer to the concrete module
+
+### Includes
+
+The `include` feature of course breaks this relatively simple scheme because of variables. 
+
+Each time a module with variables is included (regardless of whether it is generic or not), it needs to copy 
+the variables into the including namespace, along with at minimum all the dependancies of these variables. 
+
+A naïve approach would be rather to avoid specialization with includes and instead just blindly copy symbols.
+This would work, though would lead to larger amounts of output shader code.
+
+### Optimizations
+
+Generics have a lot of room for optimization. 
+
+For example implementations may want to find functions within a module which do not in their usage graph reference any variables or generic parameters; these functions would not need to be specialized. 
+
+<!-- Q: Does this paragraph make sense even? -->
+Another potential optimization approach would be producing groups of module members which only depend upon subsets of the declared generic parameters. For each of these sets of module members, specialization would only need to occur for each unique combination of generic argument in the subset.
+
+## Type Checking
+
+Type checking of generics brings its own challenges. The main additions are: module constraints in generic arguments (which might themselves be generic signatures), and the addition of generic "holes" which may be present in module type constraints. 
+
+From a type checking perspective, the constraints is similar to checking modules against their signatures in [Module Interfaces](./ModulesInterfaces.md), however the holes introduce "don't care" semantics. These "don't cares" are necessary 
+for brevity but also introduce an indeterminate state to module signatures, relaxing the generic paramaters within a generic module signature to their most general type. 
+
+
+# Rationale and alternatives
+
+- Why is this design the best in the space of possible designs?
+  - Well conceived, consistent abstraction inspired by Ocaml
+  - Doesn't introduce introduce additional runtime costs to WESL, and module contents remain valid WGSL
+  - Builds upon modules, meaning that there are no additional language concepts to learn beyond understanding modules
+  - More flexible than just generic functions
+  - Good base for adding syntactic sugar
+- What other designs have been considered and what is the rationale for not choosing them?
+  - See below
+- What is the impact of not doing this?
+  - Harder to build abstractions in WESL 
+  - Users resorting once again to the escape hatch of basic string templating 
+
+
+## Alternatives 
+
+### Generic functions
+- Less powerful than generic modules
+- Harder to build larger, more complicated abstractions
+- Potentially simpler to understand for users
+- Could be quite easily added later as a syntactic transform using generic modules
+
+### String templating/Substituition
+- Hard to have reasonable language server behaviour
+- Simple to understand
+- Extremely flexible & powerful
+- Simple to implement
+- Hard to document
+
+### Abstract Modules
+_Modules which are partially implemented and require concrete implementation to realize the module_
+
+- Less explicit, and expressive
+- Harder to compose behaviour
+- Simpler to typecheck
+- Likely simpler to implement
+- Could be emulated using `include` and module signatures 
+
+## Drawbacks
+
+- Generic modules could be quite complex to implement as soon as you step beyond a naïve approach.
+- Unfamiliar programming model
+- Without additional syntactic sugar, can sometimes be verbose
+- Some form of standard library may become necessary to make using built-in types and functions feasible using this approach
+
+# Future work
+
+## Generic Functions
+The implementation of generic functions could depend on generic modules. It would simply be syntactic sugar. 
+A generic function could in implementations create a hidden generic module with the same template/generic signature. 
+
+Usages of the generic function would perform a rewrite of the symbol name to refer to the function inside this module
+This way a lot of implementation effort could be saved.
+
+For example we could rewrite this generic function 
+`fn foo<N: Number>(a: vec4<N::T>, b: vec4<N::T>) -> N {}` as:
+```rescript
+mod foo<N: Number> {
+    fn impl(a: vec4<N::T>, b: vec4<N::T>) -> N::T {}
+}
+```
+ 
+Usage of this function could then be rewritten from `foo<F32>(vec4<f32>(1.0),  vec4<f32>(2.0))` to `foo<F32>::impl(vec4<f32>(1.0),  vec4<f32>(2.0))`.
+
+Generic functions and modules could take in both modules and concrete functions as arguments, along with constant expressions. Module signatures for generic functions could take the following general pattern:
+
+```rescript
+mod sig Fn2<Arg1: Type, Arg2: Type, Returns: Type> {
+  fn invoke(arg1: Arg1::T, arg2: Arg2) -> Returns::T;
+}
+
+mod sig UnitFn2<Arg1, Arg2> {
+  fn invoke(arg1: Arg1::T, arg2: Arg2);
+}
+```
+
+## Constants
+
+Similarly, the implementation of generic constant parameters could depend on generic modules. It again would simply be syntactic sugar for a generic module. 
+
+For example we could instantiate the generic module `Foo` seen below, as `Foo<10u>` by rewriting `10u` as a module containing a constant value: 
+
+```rescript
+mod sig Const<Type: Type> {
+  const value: Type::T;
+}
+
+mod Foo<V: Constant<U32>> {
+
+}
+```
+
+## Types
+
+Finally, the implementation of generic type parameters could depend on generic modules. It once _again_ would simply be syntactic sugar for a generic module. 
+
+We could do this by transforming types provided as an argument to a generic module as an implementation of the `Type`
+signature:
+
+```rescript
+mod sig Type {
+  type T;
+}
+```
+
+Then the struct `Foo` provided as a generic argument could be rewritten as 
+
+```rescript
+mod FooType {
+  alias T = Foo;
+}
+```
+
+## Anonymous Module Declarations
+To prevent a prolifieration of single use modules, an additional feature could be added, which is the ability to declare anonymous modules as part of generic arguments. For example this would allow one to write something like this:
+
+```rescript
+mod GenericExample<Settings: {
+  const frac: f32;
+  const height: f32;
+}> {
+  // Uses settings here
+}
+
+alias ConcreteGenericExample = GenericExample<{ 
+  const frac = 0.4f; 
+  const height = 3f; 
+}>;
+```

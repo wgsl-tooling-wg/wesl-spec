@@ -85,11 +85,11 @@ Linking a WESL file that supports both `include` and `patch` naturally introduce
 The first, more naïve approach, is to copy all the symbols from the module being included and simply replace the patched functions within the AST in the pass before
 canonicalization. This may be more than somewhat inefficient however as there would likely be many duplicates included in output. This means you'd be relying heavily on dead code elimination, the wgsl compiler, and the underlying drivers to reduce register pressure. However this approach should be easy to ensure correctness with. 
 
-The second is more forensic, requiring that a usage graph be created for all the patched functions in the module being included. The functions present within this graph would need to be copied into the including namespace, while functions not within the graph would need to resolve to the original module. 
+The second is more forensic, requiring that a usage graph be created for all the patched functions and variables in the module being included. The functions and variables present within this graph would need to be copied into the including namespace, while functions not within the graph would resolve to the original module. 
 
 What increases the complexity of both approaches is the support for module nesting. Inline modules are able to access the symbols of the outer namespaces. Both usage graph and symbol duplication approaches would therefore need to include these submodules in all calculations. An additional source of complexity is that an included module may itself use `include`. To reduce complexity, cycles should be strictly forbidden in compliant implementations. 
 
-For the second approach, dead code elimination would additionally need to take extension usages into account. 
+For the second approach, dead code elimination would additionally need to take include usages into account. 
 
 ## Type Checking
 

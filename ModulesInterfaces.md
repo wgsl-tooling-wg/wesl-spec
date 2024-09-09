@@ -87,7 +87,7 @@ Module signatures are parsed as follows, with spaces and comments allowed betwee
 ```bnf
 
 module_sig_decl :
-  attribute * 'mod' 'sig' '{' global_sig * '}' ';'?
+  attribute * 'mod' 'sig' ident '{' global_sig * '}' ';'?
 ;
 
 global_sig :

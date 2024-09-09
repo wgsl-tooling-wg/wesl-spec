@@ -112,9 +112,9 @@ Linking WESL files with modules is a little bit more complex than the base [Impo
 
 To do so the following steps must be taken:
 - Bundling needs to occur prior to linking. 
-- A map of modules to their implementation should be made. A canonical module name should be picked using the logic described in the Name Mangling section in this proposal. 
+- A map of modules to their implementation should be made. A canonical module name should be picked using the logic described in the Name Mangling section below. 
 - Module usages should be replaced with the canonical module name.
-- Next symbols within the module need to be mangled using the canonical module name using the [mangling algorithm](./NameMangling.md) and should be added to the global scope. 
+- Next symbols within the module need to be mangled using the canonical module name using the [mangling algorithm](./NameMangling.md) and should be added to the global namespace. 
 - Usage of symbols within a module should then replaced with the mangled representation using the same algorithm. 
 - Finally a plain wgsl module is produced
 
