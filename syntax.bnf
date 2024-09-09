@@ -621,7 +621,7 @@ swizzle_name :
 
 # BEGIN WESL
 load_decl: 
-| 'load' load_relative? load_path
+| attribute * 'load' load_relative? load_path
 ;
 
 load_relative: 
