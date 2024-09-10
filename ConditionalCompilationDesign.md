@@ -45,7 +45,51 @@ Also, a language that has a good expressive power already should not need a way 
 
 ## Why do we prefer structured?
 
-TODO
+### Argument 1: structured is sound, and soundness is more important than implementation burden on the long run.
+
+Once a couple great and safe linker/compiler implementations for WESL exist, everyone can benefit from them.
+Whatever design choice we make now, is potentially a burden in the future. Therefore, we want a robust design.
+
+### Argument 2: structured is better for IDEs and human readers, and is closer to WGSL design choices.
+
+`#ifdef`s are not very readable. They don't match the language syntax style, they don't respect the structure (indentation etc), they are more verbose (require `#endif`) and error-prone.
+WGSL takes inspiration from Rust (all its keywords were borrowed from rust, and some elements of it's strong safety guarantees, such as making dangling pointer impossible.
+Rust uses structured conditional compilation too, with the `#[cfg()]` attribute, which works very similarly to the `@if` attribute.
+
+Structured is great for IDEs too: with a structured `@if`, one can always generate a unified syntax tree
+```rs
+struct Foo {
+  a: f32,
+  @if(some_condition)
+  b: f32
+}
+```
+would turn into a syntax tree along the lines of `(struct foo (member a) (if some_condition (member b)))`.
+This means that at the very least, a linker can always check if the WGSL code is syntactically (not semantically) valid.
+
+Meanwhile with `#ifdef`, one can frequently end up with multiple separate syntax trees. The above example could be turned into a single syntax tree. Meanwhile
+```rs
+struct FooBar { // Which bracket is the closing bracket?
+  a: f32,
+#ifdef some_condition
+}
+#else
+  b: f32
+}
+#endif
+```
+is very hard to turn into a single syntax tree. Juggling two separate syntax trees in a linker or language server is a whole lot of extra effort, so nobody does it.
+This example in particular also breaks one IDE feature: Jump-to-matching-bracket
+
+### Argument 3: structured is as expressive as unstructured in real-world use-cases.
+
+@if is equally powerful as #ifdef. Proof:
+
+    Assume all combinations of conditions are valid
+    Expand the #ifdef into all of the combinations
+    Encode each combination in a separate @if
+
+This proof uses code duplication. But in real-world scenarios, one can get around this by decorating with `@if`s only smallest element possible (aka. a struct member instead of the whole struct).
 
 ## Syntax extension: using WGSL attributes
 
