@@ -1,164 +1,111 @@
-# Simple Generics for WGSL
+# Generic Functions and Modules
 
-(TBD)
+I would like to reduce to the maximum the added syntax and semantics in our extensions.
+After all, we are writing an extension, not a different language!
+It should look and feel just like the original stuff and extensions should be straight forward, self-explanatory even.
 
-Generic programming is useful for wgsl, particularly for libraries.
-With generics, wgsl functions like `reduce` or `prefixSum`
-don’t need to be manually rewritten for each combination of element type and binary operation.
-I’m hoping we can find a fairly minimal design for generics
-that is easy for programmers to learn and supportable with modest effort in wesl tools.
+Well, that would be the ideal case ofc.
 
-To ease implementation effort, I imagine we’ll want to avoid type inference
-or type constraints on generics. But without type inference, 
-specifying generic types at every call site to a generic function gets verbose and tedious. To avoid that verbosity, let’s allow generic variables on import statements (glslify and wgsl-linker did this too).
+## The proposal
 
-I thought we might start by allowing generics only on functions.
-We’ll want a design that’s extensible to more features (e.g. generic structs)
-of course, 
-but we can start with a minimal implementation and add features as they prove necessary.
+It builds on 3 observations
 
-## Summary
+* WGSL *already* has support for parametric types and functions, they are called [type-generators](https://www.w3.org/TR/WGSL/#type-generator) and [function overloads](https://www.w3.org/TR/WGSL/#builtin-functions). It even has a syntax for them.
+  The issue is, they are not allowed to be declared in user code. This proposal changes this.
+* A *module* is a collection of functions, structs and associated types that share a semantic. Turns out, a WGSL file is just that. This proposal introduces *implicit modules* as files.
+* global value and alias declarations are immutable and must be initialized. What if we could override them? if so, this is a simple mechanism for module specialization.
 
-* angle bracket syntax for generic variable declaration, and generic value specification.
-* declare generic variables on function declarations, e.g.: `fn foo<E>(arg: E) -> E { let e:E = arg; return e; }`
-* within an fn with a generic declaration,
-  generic variables names can be used in place of a wgsl type in both the fn declaration and fn body,
-  or in a function call expression inside the fn body.
-  The generic variable text will be replaced by the generic value text during linking.
-  So if `E` is `f32`  the linked wgsl for foo would be: `fn foo(arg: f32) { let e:f32 = arg; return e; }`.
-* Note that a linker will generate multiple copies of fn foo() in wgsl,
-  one for each unique set of generic arguments. So each fn will have a unique name.
-* generic variable values are supplied on import statements or call statements.
+## Type Hierarchy
 
-      * import with a generic:
-        ```
-        import util/foo<f32> as foo32;
-        main() { foo32(1.0); }
-        ```
-      * or, call with a generic:
-        ```
-        foo<f32>(1.0);
-        ```
+Let's introduce the concept of type hierarchy. From the [conversion ranks](https://www.w3.org/TR/WGSL/#conversion-rank) we can deduce the type hierarchy for built-in types already:
 
-* generic values supplied with imports are single world tokens (typically wgsl type names or function names), 
-  or generic variables declared on that function.
+* `u32` and `i32` are subtypes of `AbstractInt`, because `AbstractInt` can be converted to `u32` and `f32`
+* `f32` and `f16` are subtypes of `AbstractFloat`, because `AbstractInt` can be converted to `u32` and `f32`
+* `AbstractInt` is a subtype of `AbstractFloat`, because `AbstractInt` can be converted to] `AbstractFloat`
+* `VecN<S>` is a subtype of `VecN<T>` if `S` is a subtype of `T`
+* `MatCxR<S>` is a subtype of `MatCxR<T>` if `S` is a subtype of `T`
+* `Array<S,N>` is a subtype of `Array<T,N>` if `S` is a subtype of `T`
 
-## Examples
+And we can add to that list:
+* `atomic<S>` is a subtype of `atomic<T>` if `S` is a subtype of `T`.
+* `ptr<S>` is a subtype of `ptr<T>` if `S` is a subtype of `T`.
+
+We can extend subtyping for user-defined types:
+* structure type `S1` is a subtype of structure type `S2` if, for all members `m` in `S2`: `S1.m` exists and `S1.m` is a subtype of `S2.m`.
+This allows extending structs by narrowing down a member type, or by adding new members.
+
+And finally,
+* `T` is a subtype of `T`
+* `S` is a strict subtype of `T` if `S` is a subtype of `T` and `S` is not `T`
+
+Those types are *leaf types* because they cannot have subtypes: `u32`, `i32`, `f32`, `f16`, `bool`. (or one alternative way to see it, would be that all literal values are also subtypes, then '10' is both an instance of `AbstractInt` and a subtype of it. But it doesn't matter here.)
+
+## Type Constraints
+
+First, we need to constrain a bit what can be a generic function parameter, because in the spec it is way too constrained. Consider this:
+
+```rs
+@const @must_use fn array<T, N>(e1 : T, ..., eN : T) -> array<T, N>
+@must_use fn arrayLength(p: ptr<storage, array<E>, AM>) -> u32
+```
+This is the spec definition of built-in `array` constructor and function `arrayLength`.
+`array` is parameterized by `T` and `N`. `arrayLength` is parameterized by `E` and `AM`.
+
+* `T` and `E` must be one of: a `scalar`, `vector`, `matrix`, `atomic`, `array`, structure[^1].
+* `N` must be an override-expression that evaluates to a `i32` or `u32`, and greater than 0[^2].
+* `AM` must be a value of enumerant [`access mode`](https://www.w3.org/TR/WGSL/#access-mode)[^3].
+
+So obviously, this level of constraining is too high to express in the grammar.
+
+Instead, we could specify these constraints:
+* Unconstrained: probably not very useful in real-world as we can do nothing with them, except zero-initialize.
+* Constrained by: a user-defined struct, `vec`, `mat`, `array`, `atomic`, `ptr`, `AbstractInt` or `AbstractFloat`: Must be specialized by a constructible subtype.
+* Constrained by a leaf type: `u32`, `i32`, `f32`, `f16`, `bool`: Must be specialized with a instance of that type (like the `N` parameter).
+
+## Generic Functions
+
+### Declaring generic functions
+
+We can introduce a `@generic` attribute to define the generic parameters and constraints.
+```rs
+@generic(Num: AbstractFloat, T: MyStruct, N: u32)
+fn my_fn(x: Num, t: T) -> array<Num>
+```
+The generic types can appear in the function formal parameter types, the return type and the function body.
+They are not *required* to appear in the formal paramters.
+
+TODO: Should they be allowed to be completely unused? Like Rust's PhantomData?
+
+### Calling generic functions
+
+Seems that explicit specialization is way simpler to implement.
+Problem is, WGSL only has implicit specialization with the [overload resolution algorighm](https://www.w3.org/TR/WGSL/#overload-resolution-section).
+We could also implement that in the future, but it's far from trivial.
+
+explicit:
+```
+let res: MyStruct = my_fn<u32, MyStructExt, 10>(5, my_struct_inst);
+```
+
+## Generic Modules
+
+TODO
+
+## Remaining questions to answer
+
+* Discord @mighdoll:
+  > Is it true that vars are ok to duplicate? If a package has a var <workgroup> foo array<u32, 256>;, we wouldn't want two foos just because the package is used by two other packages.
+
+* Do we want inline (explicit) modules too? if so, how do we resolve imports? -> this is the reason why Rust has the `mod` declaration afaik. In Rust, the tree of modules is built somewhat independently from the filesystem.
+
+## Possible future extensions
+
+* variadic function parameters are supported by the built-in functions, e.g. [the array constructor](https://www.w3.org/TR/WGSL/#array-builtin). We could support them too.
+* the `@const` and `@must_use` function attributes are not allowed in user code either. We could support them too.
+* Accepting `AbstractInt`/`AbstractFloat` and returning them from functions? It could make sense in some cases.
 
 
-Simple Example:
 
-* ```
-  ./util.wgsl:
-
-  @export fn workgroupMin<E>(elems: array<E, 4>) -> E { }  // E is a generic parameter
-  ```
-
-* ```
-  ./main.wgsl:
-
-  import ./util/workgroupMin<f32> as workMin; // substitutes f32 for E
-
-  fn main() {
-    workMin(a1);  // no generic variables required at the call site 
-    workMin(a2);
-  }
-  ```
-
-Here’s a more complicated case. reduce is parameterized by an element type (e.g. u32) and a binary operation, e.g. max()
-
-* ```
-    ./util.wgsl:
-
-    export<E, BinOp> 
-    fn reduce(elems: array<E, 2>) -> E { 
-      return BinOp(elems[0], elems[1]); 
-    }
-
-* ```
-    ./main.wgsl:
-
-    import ./ops/binOpMax<f32> as binOpMax;
-    import ./util/reduce<f32, binOpMax> as maxF32; 
-
-    fn main() {
-      maxF32(a1);
-    }
-    ```
-
-Note that you can import a generic function w/o providing parameters:
-
-* ```
-    ./util.wgsl:
-
-    import binOpMax from ./ops;   // no generic variable specified yet
-
-    export fn reduceMax<E>(elems: array<E, 2>) -> E { 
-      return binOpMax<E>(elems[0], elems[1]); // generic value applied at call site
-    }
-    ```
-
-Re-exporting generics is allowed (presuming we allow re-exporting in general, see [Visibility](./Visiblity.md)):
-
-* ```
-    ./lib.wgsl:
-    export reduce from util/reduce.wgsl; // re-export at package root level
-
-    ./util/reduce.wgsl:
-    export<E, BinOp> fn reduce(elems: array<E, 2>) -> E { }
-    ```
-
-## Questions and possible extensions
-
-* Do angle brackets conflict or comport with wgsl templates?
-* Can you export a generic function after variable substitution too? or only the generic version
-* Allow generic values to be pulled from runtime parameters?
-  wgsl-linker currently recognizes an `ext.` prefix to get variable values from the runtime caller.
-  e.g. ext.workgroupSize would patch in runtime variables at link time.
-  Hopefully we can address that with runtime #define, we’ll see.
-* Currently there are no type constraints available for generic variable declarations..
-  Simply substituting parameters and letting dawn or naga typecheck at runtime seems ok for now.
-  A future type checker could check annotation uses are valid by substituting generic parameters
-  and type checking the expanded wgsl.
-  And of course a future version of wgsl or wesl generics could add explicit type constraints on generic variables.
-
-* Generics on structs too?
-
-  * ```
-      ./util.wgsl:
-      export struct Point<T> { position: vec2<T>, color vec3f } 
-
-      ./main.wgsl
-      import Point<u32> as UPoint from ./util
-
-      fn main() {
-        let p = UPoint(vec2u(0, 0), vec3f(.5, .5, .5));
-      }
-      ```
-
-* The reduce example makes me think whether we could call a generic function recursively,
-  and what would that do.
-  In theory, the following would unroll to N nested function calls.
-  The wgsl compilers may be good at flattening this.
-
-* ```
-    fn accumulate<E, Op, N>(acc: E, elems: array<E, N>) -> E {
-      if N >= 2 {
-        return accumulate<E, Op, N-1>(accumulateBinOp(E, elems[N-1]), elems);
-      else {
-        return acc;
-      }
-    }
-
-    fn op_add<E>(e1: E, e2: E) {
-      return e1 + e2;
-    }
-
-    fn array_sum<E, N>(elems: array<E, N>) -> E {
-      return accumulate<E, op_add<E>, N>(0, elems);
-    }
-  ```
-
-  Array_sum has a nested generic! This is cool.
-  
-  Also, some SFINAE I guess: because 0 is AbstractInt, it can subtitute E with u32 or i32, BUT not f32 afaik, because 0 is not AbstractFloat. This is somewhat disappointing. 
+[^1]: https://www.w3.org/TR/WGSL/#array-types
+[^2]: https://www.w3.org/TR/WGSL/#array-builtin
+[^3]: https://www.w3.org/TR/WGSL/#arrayLength-builtin
