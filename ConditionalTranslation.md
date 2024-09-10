@@ -65,7 +65,12 @@ The grammar is extended to allow attributes in several locations previously not 
    * all statements that did not allow attributes:
      * assignment statements
      * increment and decrement statements
-     * control flow statements (if/else if/else, switch, loop, for, while, break, continue, continuing, return, discard)
+     * break statements
+     * break-if statements
+     * continue statements
+     * continuing statements
+     * return statements
+     * discard statements
      * function call statements
      * const assertion statements
 
@@ -183,20 +188,110 @@ The conditional translation phase *should* be the first phase to run in the full
 
 ## Appendix: Updated grammar
 
-(TBD)
+The following non-terminals are added or modified:
+
+    diagnostic_directive :
+     attribute * 'diagnostic' diagnostic_control ';'
+
+    enable_directive :
+     attribute * 'enable' enable_extension_list ';'
+
+    requires_directive :
+     attribute * 'requires' software_extension_list ';'
 
     variable_or_value_statement :
-       variable_decl
-     | variable_decl '=' expression
-     | attribute * 'let' optionally_typed_ident '=' expression
-     | attribute * 'const' optionally_typed_ident '=' expression
-
+      variable_decl
+    | variable_decl '=' expression
+    | attribute * 'let' optionally_typed_ident '=' expression
+    | attribute * 'const' optionally_typed_ident '=' expression
 
     variable_decl :
      attribute * 'var' _disambiguate_template template_list ? optionally_typed_ident
 
-
     global_value_decl :
-       attribute * 'const' optionally_typed_ident '=' expression
-     | attribute * 'override' optionally_typed_ident ( '=' expression ) ?
+      attribute * 'const' optionally_typed_ident '=' expression
+    | attribute * 'override' optionally_typed_ident ( '=' expression ) ?
 
+    assignment_statement :
+      attribute * lhs_expression ( '=' | compound_assignment_operator ) expression
+    | attribute * '_' '=' expression
+
+    increment_statement :
+     attribute * lhs_expression '++'
+
+    decrement_statement :
+     attribute * lhs_expression '--'
+
+    else_if_clause :
+     attribute * 'else' 'if' expression compound_statement
+
+    else_clause :
+     attribute * 'else' compound_statement
+
+    case_clause :
+     attribute * 'case' case_selectors ':' ? compound_statement
+
+    default_alone_clause :
+     attribute * 'default' ':' ? compound_statement
+
+    break_statement :
+     attribute * 'break'
+
+    break_if_statement :
+     attribute * 'break' 'if' expression ';'
+
+    continue_statement :
+     attribute * 'continue'
+
+    return_statement :
+     attribute * 'return' expression ?
+    
+    discard_statement:
+     attribute * 'discard'
+
+    func_call_statement :
+     attribute * call_phrase
+
+    const_assert_statement :
+     attribute * 'const_assert' expression
+
+    statement :
+      ';'
+    | return_statement ';'
+    | if_statement
+    | switch_statement
+    | loop_statement
+    | for_statement
+    | while_statement
+    | func_call_statement ';'
+    | variable_or_value_statement ';'
+    | break_statement ';'
+    | continue_statement ';'
+    | discard_statement ';'
+    | variable_updating_statement ';'
+    | compound_statement
+    | const_assert_statement ';'
+
+    attribute :
+      '@' ident_pattern_token argument_expression_list ?
+    | align_attr
+    | binding_attr
+    | blend_src_attr
+    | builtin_attr
+    | const_attr
+    | diagnostic_attr
+    | group_attr
+    | id_attr
+    | interpolate_attr
+    | invariant_attr
+    | location_attr
+    | must_use_attr
+    | size_attr
+    | workgroup_size_attr
+    | vertex_attr
+    | fragment_attr
+    | compute_attr
+    | if_attr
+
+    if_attr:
+    '@' 'if' '(' expression ',' ? ')'
