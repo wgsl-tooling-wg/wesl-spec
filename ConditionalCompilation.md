@@ -61,6 +61,7 @@ The grammar is extended to allow attributes in several locations previously not 
   * variable declarations
   * directives
   * switch clauses
+  * else if clauses and else clauses
   * all statements that did not allow attributes:
     * assignment statements
     * increment and decrement statements
