@@ -51,23 +51,42 @@ fn main() -> vec4 {
 
 ## Location of *Compile-time attributes*
 
-(TODO: this needs more reflexion)
+A compile-time attribute can appear in all places where the WGSL grammar allows attributes, except if removal of the decorated syntax node would lead to syntactically incorrect code.
+The grammar is extended to allow attributes in several locations previously not allowed by the WGSL grammar. These extensions are specified in section [updated grammar](#updated-grammar).
 
-A Compile-time attribute CAN decorate the following syntax nodes:
-* structure declarations
-* structure members
-* function declarations
-* ?? function formal parameter declarations ?? (is this needed?)
-* variable declarations and value declarations
-* all statements, except those disallowed below
-* directives
+### Summary
 
-Because eliminating the decorated node would lead to invalid code, a Compile-time attribute CANNOT decorate the following syntax nodes:
-* bodies of function declarations, switch statements, switch clauses, loop statements, for statements, while statements, if/else statements
+1. The grammar is extended to allow *compile-time attributes* before the following syntax nodes:
+  * const value declarations
+  * variable declarations
+  * directives
+  * switch clauses
+  * all statements that did not allow attributes:
+    * assignment statements
+    * increment and decrement statements
+    * control flow statements (if/else if/else, switch, loop, for, while, break, continue, continuing, return, discard)
+    * function call statements
+    * const assertion statements
+
+2. A Compile-time attribute CAN decorate the following syntax nodes:
+  * structure declarations
+  * structure members
+  * function declarations
+  * function formal parameter declarations
+  * variable declarations and value declarations
+  * all statements, except those disallowed
+  * directives
+
+3. A Compile-time attribute CANNOT decorate the following syntax nodes, even if the WGSL grammar allows attributes before these syntax nodes:
 * function return types
- 
-> Note: The WGSL grammar currently does not allow attributes in front of const value declarations, variable declarations, directives, switch clauses and several statements. We would extend the syntax to allow them.
-> Which exacly we will enable is subject to discussion. Enabling them before all statements is perhaps undesirable.
+* the body (part surrounded by curly braces) of:
+  * function declarations
+  * switch statements
+  * switch clauses
+  * loop statements
+  * for statements
+  * while statements
+  * if/else statements
 
 ## `@if` attribute
 
@@ -92,7 +111,7 @@ fn f() { ... }
 
 The conditional compilation phase *should* be the first phase to run in the full WESL compilation pipeline.
 
-> Note: The conditional compilation was designed to be incremental. In case some features can only be resolved at runtime, the compiler can be invoked in two passes:
+> NOTE: The conditional compilation was designed to be incremental. In case some features can only be resolved at runtime, the compiler can be invoked in two passes:
 > The first pass is invoked with compile-time features and returns a partially compiled WESL source. The second pass is invoked with the runtime features and returns a fully compiled WGSL source.
 
 1. The compiler is invoked with a list of features to *enable* or *disable*.
@@ -155,3 +174,23 @@ import accel/bvh_acceleration_structure as scene_struct;
 @else
 import accel/default_acceleration_structure as scene_struct;
 ```
+
+## Appendix: Updated grammar
+
+(TBD)
+
+    variable_or_value_statement :
+       variable_decl
+     | variable_decl '=' expression
+     | attribute * 'let' optionally_typed_ident '=' expression
+     | attribute * 'const' optionally_typed_ident '=' expression
+
+
+    variable_decl :
+     attribute * 'var' _disambiguate_template template_list ? optionally_typed_ident
+
+
+    global_value_decl :
+       attribute * 'const' optionally_typed_ident '=' expression
+     | attribute * 'override' optionally_typed_ident ( '=' expression ) ?
+
