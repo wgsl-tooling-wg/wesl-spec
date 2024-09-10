@@ -1,6 +1,6 @@
 > Corresponding spec: [ConditionalCompilation.md](ConditionalCompilation.md)
 
-## Initial reflexions
+## Initial reflections
 
 * `#if #else #endif` (or perhaps `#ifdef`) in the style of a C preprocessor 
   is the approach that comes first to mind.
