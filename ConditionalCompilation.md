@@ -8,7 +8,7 @@ Conditional compilation is a mechanism to modify the source code based on parame
 This specificaton extends the [*attribute* syntax](https://www.w3.org/TR/WGSL/#attributes) with three new attributes: `@if`, `@elif`, `@else`.
 These attributes indicate that the syntax node they decorate can be removed by the compiler based on feature flags.
 
-> Note: This implementation is similar to the `#[cfg(feature = "")]` syntax in rust.
+> NOTE: This implementation is similar to the `#[cfg(feature = "")]` syntax in rust.
 
 ### Usage Example
 
@@ -36,56 +36,55 @@ fn main() -> vec4 {
 
 ## Definitions
 
- * **Compile-time expression**: A *compile-time expression* is evaluated by the compiler before the rest of the program. It lives in the *compile-time scope*.
-   Its grammar is a subset of normal WGSL [expressions](https://www.w3.org/TR/WGSL/#expressions). it must be one of:
-   * a *compile-time feature*,
-   * a [logical expression](https://www.w3.org/TR/WGSL/#logical-expr): logical not (`!`), short-circuiting AND (`&&`), short-circuiting OR (`||`),
-   * a [parenthesized expression](https://www.w3.org/TR/WGSL/#parenthesized-expressions),
-   * a boolean literal value (`true` or  `false`).
+* **Compile-time expression**: A *compile-time expression* is evaluated by the compiler before the rest of the program. It lives in the *compile-time scope*.
+ Its grammar is a subset of normal WGSL [expressions](https://www.w3.org/TR/WGSL/#expressions). it must be one of:
+ * a *compile-time feature*,
+ * a [logical expression](https://www.w3.org/TR/WGSL/#logical-expr): logical not (`!`), short-circuiting AND (`&&`), short-circuiting OR (`||`),
+ * a [parenthesized expression](https://www.w3.org/TR/WGSL/#parenthesized-expressions),
+ * a boolean literal value (`true` or  `false`).
 
- * **Compile-time scope**: The *compile-time scope* this is an independent scope from the [*module scope*](https://www.w3.org/TR/WGSL/#module-scope), meaning it cannot see any declarations from the source code, and its identifers are independent.
+* **Compile-time scope**: The *compile-time scope* this is an independent scope from the [*module scope*](https://www.w3.org/TR/WGSL/#module-scope), meaning it cannot see any declarations from the source code, and its identifers are independent.
 
- * **Compile-time feature**: A *compile-time feature* is an identifier that evaluates to a boolean. It is set to `true` if the feature is *enabled* during the compilation phase.
+* **Compile-time feature**: A *compile-time feature* is an identifier that evaluates to a boolean. It is set to `true` if the feature is *enabled* during the compilation phase.
 
- * **Compile-time attribute**: A *compile-time attribute* is parametrized by a *compile-time expression*. It is eliminated after the compilation phase but can affect the syntax node it decorates.
+* **Compile-time attribute**: A *compile-time attribute* is parametrized by a *compile-time expression*. It is eliminated after the compilation phase but can affect the syntax node it decorates.
 
 ## Location of *Compile-time attributes*
 
 (TODO: this needs more reflexion)
 
 A Compile-time attribute CAN decorate the following syntax nodes:
- * structure declarations
- * structure members
- * function declarations
- * ?? function formal parameter declarations ?? (is this needed?)
- * variable declarations and value declarations
- * all statements, except those disallowed below
- * directives
+* structure declarations
+* structure members
+* function declarations
+* ?? function formal parameter declarations ?? (is this needed?)
+* variable declarations and value declarations
+* all statements, except those disallowed below
+* directives
 
 Because eliminating the decorated node would lead to invalid code, a Compile-time attribute CANNOT decorate the following syntax nodes:
- * bodies of function declarations, switch statements, switch clauses, loop statements, for statements, while statements, if/else statements
- * function return types
+* bodies of function declarations, switch statements, switch clauses, loop statements, for statements, while statements, if/else statements
+* function return types
  
 > Note: The WGSL grammar currently does not allow attributes in front of const value declarations, variable declarations, directives, switch clauses and several statements. We would extend the syntax to allow them.
 > Which exacly we will enable is subject to discussion. Enabling them before all statements is perhaps undesirable.
 
-## `@if`, `@elif` and `@else` attributes
+## `@if` attribute
 
-Three new *compile-time attributes* are introduced.
+A new *compile-time attributes* is introduced.
 * An `@if` attribute takes a single parameter. It marks the decorated node for removal if the parameter evaluates to `false`.
-* An `@elif` attribute decorates the next sibling of a syntax node decorated by a `@if` or an `@elif`. It takes one parameter.
-   It marks the decorated node for removal if its parameter evaluates to `true` AND if the previous `@if` and `@elif` attribute parameters evaluate to false.
-* An `@else` attribute decorates the next sibling of a syntax node decorated by a `@if` or an `@elif`. It does not take any parameter.
-   It marks the decorated node for removal if the previous `@if` and `@elif` attribute parameters evaluate to false.
+
+> NOTE: See the [possible future extensions](#possible-future-extensions) for the attributes `@elif` and `@else`.
+> They may be introduced in the specification in a future version if deemed useful.
 
 *Example*
 
 ```rs
 @if(feature_1 && (!feature_2 || feature_3))
 fn f() { ... }
-@elif(!feature_1)
+@if(!feature_1)                               // corresponds to @elif(!feature_1)
 fn f() { ... }
-@else
+@if(feature_1 && !(!feature_2 || feature_3))  // corresponds to @else
 fn f() { ... }
 ```
 
@@ -112,6 +111,25 @@ The conditional compilation phase *should* be the first phase to run in the full
 ## Possible future extensions
 
 > This section is non-normative
+
+* `@else` and `@elif` attributes:
+  * An `@elif` attribute decorates the next sibling of a syntax node decorated by a `@if` or an `@elif`. It takes one parameter.
+     It marks the decorated node for removal if its parameter evaluates to `true` AND if the previous `@if` and `@elif` attribute parameters evaluate to false.
+  * An `@else` attribute decorates the next sibling of a syntax node decorated by a `@if` or an `@elif`. It does not take any parameter.
+     It marks the decorated node for removal if the previous `@if` and `@elif` attribute parameters evaluate to false.
+
+The `@else` attribute has the nice property that all cases lead to generating a node, and *could* therefore be used in places where the node is required (e.g. expressions)
+
+*Example*
+
+```rs
+@if(feature_1 && (!feature_2 || feature_3))
+fn f() { ... }
+@elif(!feature_1)
+fn f() { ... }
+@else
+fn f() { ... }
+```
 
 * High-complexity *compile-time expressions*: if we end up implementing other compile-time attributes, such as loops (e.g. `@for`, `@repeat`), or [compile-time-evaluable](https://zig.guide/language-basics/comptime/) expressions, then we would need to extend the grammar of *compile-time expressions*. It would also affect this proposal.
 
