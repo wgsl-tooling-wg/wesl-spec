@@ -36,18 +36,18 @@ fn main() -> vec4 {
 
 ## Definitions
 
-* **Translate-time expression**: A *translate-time expression* is evaluated by the WESL translator before the rest of the program. It lives in the *translate-time scope*.
- Its grammar is a subset of normal WGSL [expressions](https://www.w3.org/TR/WGSL/#expressions). it must be one of:
- * a *translate-time feature*,
- * a [logical expression](https://www.w3.org/TR/WGSL/#logical-expr): logical not (`!`), short-circuiting AND (`&&`), short-circuiting OR (`||`),
- * a [parenthesized expression](https://www.w3.org/TR/WGSL/#parenthesized-expressions),
- * a boolean literal value (`true` or  `false`).
+* **Translate-time expression**: A *translate-time expression* is evaluated by the WESL translator and eliminated after the translation. It lives in the *translate-time scope*.
+  Its grammar is a subset of normal WGSL [expressions](https://www.w3.org/TR/WGSL/#expressions). it must be one of:
+  * a *translate-time feature*,
+  * a [logical expression](https://www.w3.org/TR/WGSL/#logical-expr): logical not (`!`), short-circuiting AND (`&&`), short-circuiting OR (`||`),
+  * a [parenthesized expression](https://www.w3.org/TR/WGSL/#parenthesized-expressions),
+  * a boolean literal value (`true` or  `false`).
 
 * **Translate-time scope**: The *translate-time scope* this is an independent scope from the [*module scope*](https://www.w3.org/TR/WGSL/#module-scope), meaning it cannot see any declarations from the source code, and its identifers are independent.
 
-* **Translate-time feature**: A *translate-time feature* is an identifier that evaluates to a boolean. It is set to `true` if the feature is *enabled* during the translation phase.
+* **Translate-time feature**: A *translate-time feature* is an identifier that evaluates to a boolean. It is set to `true` if the feature is *enabled* during the translation phase and `false` if the feature is *disabled*.
 
-* **Translate-time attribute**: A *translate-time attribute* is parametrized by a *translate-time expression*. It is eliminated after the translation phase but can affect the syntax node it decorates.
+* **Translate-time attribute**: A *translate-time attribute* is parametrized by a *translate-time expression*. It is eliminated after the translation but can affect the syntax node it decorates.
 
 ## Location of *Translate-time attributes*
 
@@ -57,41 +57,41 @@ The grammar is extended to allow attributes in several locations previously not 
 ### Summary
 
 1. The grammar is extended to allow *translate-time attributes* before the following syntax nodes:
-  * const value declarations
-  * variable declarations
-  * directives
-  * switch clauses
-  * else if clauses and else clauses
-  * all statements that did not allow attributes:
-    * assignment statements
-    * increment and decrement statements
-    * control flow statements (if/else if/else, switch, loop, for, while, break, continue, continuing, return, discard)
-    * function call statements
-    * const assertion statements
+   * const value declarations
+   * variable declarations
+   * directives
+   * switch clauses
+   * else if clauses and else clauses
+   * all statements that did not allow attributes:
+     * assignment statements
+     * increment and decrement statements
+     * control flow statements (if/else if/else, switch, loop, for, while, break, continue, continuing, return, discard)
+     * function call statements
+     * const assertion statements
 
 2. A *translate-time attribute* CAN decorate the following syntax nodes:
-  * structure declarations
-  * structure members
-  * function declarations
-  * function formal parameter declarations
-  * variable declarations and value declarations
-  * all statements, except those disallowed
-  * directives
+   * structure declarations
+   * structure members
+   * function declarations
+   * function formal parameter declarations
+   * variable declarations and value declarations
+   * all statements, except those disallowed
+   * directives
 
 3. A *translate-time attribute* CANNOT decorate the following syntax nodes, even if the WGSL grammar allows attributes before these syntax nodes:
-* function return types
-* the body (part surrounded by curly braces) of:
-  * function declarations
-  * switch statements
-  * switch clauses
-  * loop statements
-  * for statements
-  * while statements
-  * if/else statements
+   * function return types
+   * the body (part surrounded by curly braces) of:
+     * function declarations
+     * switch statements
+     * switch clauses
+     * loop statements
+     * for statements
+     * while statements
+     * if/else statements
 
 ## `@if` attribute
 
-A new *translate-time attributes* is introduced.
+A new *translate-time attribute* is introduced.
 * An `@if` attribute takes a single parameter. It marks the decorated node for removal if the parameter evaluates to `false`.
 
 > NOTE: See the [possible future extensions](#possible-future-extensions) for the attributes `@elif` and `@else`.
@@ -117,17 +117,21 @@ The conditional translation phase *should* be the first phase to run in the full
 > A second pass is invoked with features determined at run-runtime and returns a fully translated WGSL source.
 
 1. The *WESL translator* is invoked with a list of features to *enable* or *disable*.
+
 2. The source file is parsed.
+
 3. The *translate-time features* in *translate-time expressions* are resolved:
-    * If the feature is not present in the *WESL translator*'s feature list, it is unchanged.
-    * If the feature is *enabled*, the identifier is replaced with `true`.
-    * If the feature is *disabled*, the identifier is replaced with `false`.
+   * If the feature is not present in the *WESL translator*'s feature list, it is unchanged.
+   * If the feature is *enabled*, the identifier is replaced with `true`.
+   * If the feature is *disabled*, the identifier is replaced with `false`.
    
    The expression is *fully resolved* if all its *translate-time features* have been replaced by `true` or `false`.
-5. *Translate-time attributes* which have *fully resolved expressions* are evaluated:
-    * If the decorated syntax node is marked for removal: it is eliminated from the source code along with the attribute.
-    * Otherwise, only the attribute is eliminated from the source code.
-4. The updated source code is passed to the next translation phase. (e.g. import resolution)
+
+4. *Translate-time attributes* which have *fully resolved expressions* are evaluated:
+   * If the decorated syntax node is marked for removal: it is eliminated from the source code along with the attribute.
+   * Otherwise, only the attribute is eliminated from the source code.
+
+5. The updated source code is passed to the next translation phase. (e.g. import resolution)
 
 ## Possible future extensions
 
@@ -138,44 +142,44 @@ The conditional translation phase *should* be the first phase to run in the full
      It marks the decorated node for removal if its parameter evaluates to `true` AND if the previous `@if` and `@elif` attribute parameters evaluate to false.
   * An `@else` attribute decorates the next sibling of a syntax node decorated by a `@if` or an `@elif`. It does not take any parameter.
      It marks the decorated node for removal if the previous `@if` and `@elif` attribute parameters evaluate to false.
-
-The `@else` attribute has the nice property that all cases lead to generating a node, and *could* therefore be used in places where the node is required (e.g. expressions)
-
-*Example*
-
-```rs
-@if(feature_1 && (!feature_2 || feature_3))
-fn f() { ... }
-@elif(!feature_1)
-fn f() { ... }
-@else
-fn f() { ... }
-```
+  
+  The `@else` attribute has the nice property that all cases lead to generating a node, and *could* therefore be used in places where the node is required (e.g. expressions)
+  
+  *Example*
+  
+  ```rs
+  @if(feature_1 && (!feature_2 || feature_3))
+  fn f() { ... }
+  @elif(!feature_1)
+  fn f() { ... }
+  @else
+  fn f() { ... }
+  ```
 
 * High-complexity *translate-time expressions*: if we end up implementing other *translate-time attributes*, such as loops (e.g. `@for`, `@repeat`), or [translate-time-evaluable](https://zig.guide/language-basics/comptime/) expressions, then we would need to extend the grammar of *translate-time expressions*. It would also affect this proposal.
 
-*Example*
-
-```rs
-@comptime
-fn response_to_the_ultimate_question() -> u32 {
-  return 42;
-}
-
-@if(response_to_the_ultimate_question() == 42)
-fn f() { ... }
-```
+  *Example*
+  
+  ```rs
+  @comptime
+  fn response_to_the_ultimate_question() -> u32 {
+    return 42;
+  }
+  
+  @if(response_to_the_ultimate_question() == 42)
+  fn f() { ... }
+  ```
 
 * Decorating other WESL language extensions: import statements could be decorated with *translate-time attributes* too.
 
-*Example*
-
-```rs
-@if(use_bvh)
-import accel/bvh_acceleration_structure as scene_struct;
-@else
-import accel/default_acceleration_structure as scene_struct;
-```
+  *Example*
+  
+  ```rs
+  @if(use_bvh)
+  import accel/bvh_acceleration_structure as scene_struct;
+  @else
+  import accel/default_acceleration_structure as scene_struct;
+  ```
 
 ## Appendix: Updated grammar
 
