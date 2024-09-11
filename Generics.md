@@ -1,6 +1,6 @@
 # Generic Declarations and Generic Modules
 
-I would like to reduce to the maximum the added syntax and semantics in our extensions.
+I would like to limit as much as possible the amount of additional syntax and semantics in our extensions.
 After all, we are writing an extension, not a different language!
 It should look and feel just like the original stuff and extensions should be straight forward, self-explanatory even.
 
@@ -14,9 +14,9 @@ It builds on 3 observations
 * global value and alias declarations are immutable and must be initialized. What if we could override them? if so, this is a simple mechanism for module specialization.
   What if we also could override struct and functions declarations? In fact, all declarations?
 
-It proposes two extensions: **Function Generics** and **Module Generics** (+ an optional **Module-as-Types**).
-They are orthogonal bu they share the concepts of *Type Hierarchy* and *Type Constraints* formalized below.
-We could support one of the two and achieve the same expressivity AFAIK. But not the same ergonomics.
+It proposes two extensions: **Function Generics** and **Module Generics** (+ optional **Function-as-Type** **Module-as-Type**).
+They are orthogonal but they share the concepts of *Type Hierarchy* and *Type Constraints* formalized below.
+We could support only one of the two and achieve the same expressivity AFAIK. But not the same ergonomics.
 
 ## Type Hierarchy
 
@@ -87,7 +87,7 @@ Note that compared to the WGSL spec, we need to constrain a bit more what can be
 So obviously, this level of constraining is too high to express in the grammar.
 
 TL;DR instead, we could specify these constraints:
-* Unconstrained.
+* Unconstrained (or implicitly constrained by [AllTypes](https://www.w3.org/TR/WGSL/#alltypes-type).
 * Constrained by: a user-defined struct, `vec`, `mat`, `array`, `atomic`, `ptr`, `AbstractInt` or `AbstractFloat`: Must be specialized by a *constructible* subtype.
 * Constrained by a leaf type: `u32`, `i32`, `f32`, `f16`, `bool`: Must be specialized with a instance of that type (like the `N` parameter).
 
@@ -120,6 +120,35 @@ fn rotate(point: Point2D<T>, angle: f32) -> Point2D<T> {}
 
 alias mat4x4f = matrix<f32, 4, 4>;
 ```
+
+## (optional) Function-as-Type
+
+Since a function signature now has a well-defined type and subtyping, we *could* support "function pointers" via genericity.
+
+You cannot pass by value a function pointer, instead it is passed as a specialization of the generic parameter.
+
+This can be implemented simply by substitution of the generic type, like the rest of the generics. No extra work needed except for the type-checking.
+
+```rs
+@generic(T)
+fn callback_signature(arg: T) -> f32; // just define an abstract function, this serves only the purpose of expliciting the signature.
+
+@generic(T, F: callback_signature<T>)
+fn my_fn() -> f32 {
+  // ...
+  return F(val2); // call the generic function (similar to a function pointer).
+}
+
+fn callback_implementor(arg: u32) -> f32 { // this function signature is a subtype of callback_signature
+  // ...
+}
+
+fn main() {
+  my_fn<u32, callback_implementor>();
+}
+```
+
+See [the map reduce example](#map-reduce).
 
 ## Generic Modules
 
@@ -194,7 +223,7 @@ const linkerOptions = {
 let wgsl_source = linker.link("main.wesl", linkerOptions)
 ```
 
-## (optional) Module-as-Types
+## (optional) Module-as-Type
 
 We can allow a module to be passed as a type constraint. Then, a declaration with a module generic can be specialized with any other module that overrides all uninitialized declarations. This can help implement object-oriented or interface semantics.
 
@@ -255,7 +284,9 @@ A compile-time linker or a IDE linter/langserver should implement type checking.
 
 ## Examples
 
-This example uses function generics, module generics and module-as-types.
+### Object Oriented
+
+This example uses function generics, module generics and module-as-type.
 
 ```rs
 // file shape.rs: it acts as an interface (or a base class in OOP).
@@ -306,6 +337,46 @@ fn frag_main(@builtin(position) clip_pos) -> vec4f {
 }
 ```
 
+### Map Reduce
+
+This example uses function generics and function-as-type
+
+```rs
+@generic(T)
+fn map_fn(x: T) -> T; // just here to provide the type signature, doesn't have to be implemented.
+
+@generic(T, N: u32, F: map_fn<T>)
+fn array_map(arr: array<T, N>) -> array<T, N> {
+  for (var i = 0u; i < N; i++) {
+    arr[i] = F(arr[i]);
+  }
+  return arr;
+}
+
+@generic(T, U)
+fn reduce_fn(acc: U, x: T) -> U; // just here to provide the type signature, doesn't have to be implemented.
+
+@generic(T, U, N: u32, F: reduce_fn<T, U>)
+fn array_reduce(init: U, arr: array<T, N>) -> U {
+  var acc = init;
+  for (var i = 0u; i < N; i++) {
+    acc = F(acc, arr[i]);
+  }
+  return acc
+}
+
+@generic(T: AbstractFloat)
+fn times_two(val: T) -> T { return val * 2.0; }
+
+@generic(T: AbstractFloat)
+fn sum(a: T, b: T) -> T { return a + b; }
+
+fn main() {
+  let arr = array(1.0, 2.0, 3.0, 4.0);
+  let mapped = array_map<f32, 4u, times_two>(arr);
+  let summed = array_reduce<f32, f32, sum>(0.0);
+}
+```
 
 [^1]: https://www.w3.org/TR/WGSL/#array-types
 [^2]: https://www.w3.org/TR/WGSL/#array-builtin
