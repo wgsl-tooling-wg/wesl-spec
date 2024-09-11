@@ -282,6 +282,7 @@ A compile-time linker or a IDE linter/langserver should implement type checking.
 * the `@const` and `@must_use` function attributes are not allowed in user code either. We could support them too.
 * Accepting `AbstractInt`/`AbstractFloat` and returning them from functions? It could make sense in some cases.
 * Should we also allow using the generic parameters explicitly for built-in functions, for coherence?
+* Should we allow implicit parameter specialization, like WGSL does with the [overload resolution algorigthm](https://www.w3.org/TR/WGSL/#overload-resolution-section)?
 * Do we want to forbid overriding certain declarations? Perhaps a `@final` attribute?
 
 ## Examples
