@@ -14,13 +14,13 @@ It builds on 3 observations
 * global value and alias declarations are immutable and must be initialized. What if we could override them? if so, this is a simple mechanism for module specialization.
   What if we also could override struct and functions declarations? In fact, all declarations?
 
-It proposes two extensions: **Function Generics** and **Module Generics** (+ optional **Function-as-Type** **Module-as-Type**).
-They are orthogonal but they share the concepts of *Type Hierarchy* and *Type Constraints* formalized below.
+It proposes two extensions: [**Generic Declarations**](#generic-declarations) and [**Generic Modules**](#generic-modules) (+ optional [**Function-as-Type**](#function-as-type) [**Module-as-Type**](#module-as-type)).
+They are orthogonal but they share the concepts of [*Type Hierarchy*](formalism-type-hierarchy) and [*Generic Type*](#formalism-generic-type) formalized below.
 We could support only one of the two and achieve the same expressivity AFAIK. But not the same ergonomics.
 
-## Type Hierarchy
+## Formalism: Type Hierarchy
 
-Let's introduce some formalism with the concept of type hierarchy. From the [conversion ranks](https://www.w3.org/TR/WGSL/#conversion-rank) we can deduce the type hierarchy for built-in types already:
+Let's introduce the concept of type hierarchy. From the [conversion ranks](https://www.w3.org/TR/WGSL/#conversion-rank) we can deduce the type hierarchy for built-in types already:
 
 * `u32` and `i32` are subtypes of `AbstractInt`, because `AbstractInt` can be converted to `u32` and `f32`
 * `f32` and `f16` are subtypes of `AbstractFloat`, because `AbstractInt` can be converted to `u32` and `f32`
@@ -49,13 +49,15 @@ And finally some conventions:
 Those types are *leaf types* because they cannot have subtypes: `u32`, `i32`, `f32`, `f16`, `bool`.
 > (or one alternative way to see it, would be that all literal values are also subtypes, then '10' is both an instance of `AbstractInt` and a subtype of it. But it doesn't matter here.)
 
-## Generic Types and Type Constraints
+## Formalism: Generic Type
 
 A generic type is associated with a type constraint. It can be replaced by any other type that is a subtype of the constraint.
 
 Said formally: Let `T` be a generic type and `C` its constraint (`T: C`). Then `U` can *specialize* `T` if `U: C`.
 
-### Using generic types
+A [generic declaration](#generic-declarations) (or built-in *type generator*) can be specialized with a generic type. That specialized type is also a generic type, e.g. `array<T>` is a generic type.
+
+### Operations on generic types
 
 In generic code, the following operations are possible:
 * instantiating a `T` with the zero-valued constructor,
@@ -91,7 +93,7 @@ TL;DR instead, we could specify these constraints:
 * Constrained by: a user-defined struct, `vec`, `mat`, `array`, `atomic`, `ptr`, `AbstractInt` or `AbstractFloat`: Must be specialized by a *constructible* subtype.
 * Constrained by a leaf type: `u32`, `i32`, `f32`, `f16`, `bool`: Must be specialized with a instance of that type (like the `N` parameter).
 
-### Declaring generic types
+## Generic Declarations
 
 We introduce a `@generic` attribute to define the generic parameters and constraints.
 ```rs
