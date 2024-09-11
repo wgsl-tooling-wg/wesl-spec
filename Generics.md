@@ -375,8 +375,8 @@ fn sum(a: T, b: T) -> T { return a + b; }
 
 fn main() {
   let arr = array(1.0, 2.0, 3.0, 4.0);
-  let mapped = array_map<f32, 4u, times_two>(arr);
-  let summed = array_reduce<f32, f32, sum>(0.0);
+  let mapped = array_map<f32, 4u, times_two<f32>>(arr);
+  let summed = array_reduce<f32, f32, sum<f32>>(0.0);
 }
 ```
 
