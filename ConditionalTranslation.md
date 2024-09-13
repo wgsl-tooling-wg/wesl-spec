@@ -257,6 +257,9 @@ The following non-terminals are added or modified:
 
     continue_statement :
      attribute * 'continue'
+     
+    continuing_statement :
+     attribute * 'continuing' continuing_compound_statement
 
     return_statement :
      attribute * 'return' expression ?
