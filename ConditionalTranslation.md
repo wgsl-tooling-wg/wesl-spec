@@ -129,24 +129,21 @@ fn f() { ... }
 
 ## Execution of the conditional translation phase
 
-The conditional translation phase *should* be the first phase to run in the full WESL-to-WGSL translation pipeline.
+The conditional translation phase must be the first phase to run in the full WESL-to-WGSL translation pipeline.
 
-> NOTE: The conditional translation was designed to be incremental. In case some features can only be resolved at runtime, the *WESL translator* can be invoked in multiple passes:
-> A first pass is invoked with features determined at compile-time and returns a partially translated WESL source.
+> NOTE: In case some features can only be resolved at runtime, a *WESL translator* implementation can support feature specialization in two phases:
+> A first pass is invoked with features determined at compile-time and returns a partially translated WESL source, replacing some of the *translate-time features* with `true` or `false`.
 > A second pass is invoked with features determined at run-runtime and returns a fully translated WGSL source.
 
-1. The *WESL translator* is invoked with a list of features to *enable* or *disable*.
+1. The *WESL translator* is invoked with the list of features to *enable* or *disable*.
 
 2. The source file is parsed.
 
 3. The *translate-time features* in *translate-time expressions* are resolved:
-   * If the feature is not present in the *WESL translator*'s feature list, it is unchanged.
    * If the feature is *enabled*, the identifier is replaced with `true`.
    * If the feature is *disabled*, the identifier is replaced with `false`.
-   
-   The expression is *fully resolved* if all its *translate-time features* have been replaced by `true` or `false`.
 
-4. *Translate-time attributes* which have *fully resolved expressions* are evaluated:
+4. *Translate-time attributes* are evaluated:
    * If the decorated syntax node is marked for removal: it is eliminated from the source code along with the attribute.
    * Otherwise, only the attribute is eliminated from the source code.
 
