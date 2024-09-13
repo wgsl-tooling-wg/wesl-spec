@@ -51,10 +51,22 @@ fn main() -> vec4 {
 
 ## Location of *Translate-time attributes*
 
-A *translate-time attribute* can appear in all places where the WGSL grammar allows attributes, except if removal of the decorated syntax node would lead to syntactically incorrect code.
-The grammar is extended to allow attributes in several locations previously not allowed by the WGSL grammar. These extensions are specified in section [updated grammar](#updated-grammar).
+A *translate-time attribute* can appear before the following syntax nodes:
+* [directives](https://www.w3.org/TR/WGSL/#directives)
+* [global variable and value declarations](https://www.w3.org/TR/WGSL/#var-and-value)
+* [type alias declarations](https://www.w3.org/TR/WGSL/#type-alias)
+* [const assertions](https://www.w3.org/TR/WGSL/#const-assert-statement)
+* [function declarations](https://www.w3.org/TR/WGSL/#function-declaration-sec)
+* [structure declarations](https://www.w3.org/TR/WGSL/#struct-types)
+* [statements](https://www.w3.org/TR/WGSL/#statements)
+* [else and else-if clauses](https://www.w3.org/TR/WGSL/#if-statement)
+* [switch clauses](https://www.w3.org/TR/WGSL/#switch-statement)
 
-### Summary
+### Update to the WGSL grammar
+
+The WGSL grammar allows attributes in several locations where *translate-time attribute* are not allowed. Conversely, the WGSL grammar does not allow attributes in several locations where *translate-time attribute* are allowed.
+
+Refer to section [updated grammar](#updated-grammar) for the list of updated non-terminals.
 
 1. The grammar is extended to allow *translate-time attributes* before the following syntax nodes:
    * const value declarations
