@@ -36,7 +36,7 @@ fn main() -> vec4 {
 
 ## Definitions
 
-* **Translate-time expression**: A *translate-time expression* is evaluated by the WESL translator and eliminated after the translation. It lives in the *translate-time scope*.
+* **Translate-time expression**: A *translate-time expression* is evaluated by the *WESL translator* and eliminated after translation. It lives in the *translate-time scope*.
   Its grammar is a subset of normal WGSL [expressions](https://www.w3.org/TR/WGSL/#expressions). it must be one of:
   * a *translate-time feature*,
   * a [logical expression](https://www.w3.org/TR/WGSL/#logical-expr): logical not (`!`), short-circuiting AND (`&&`), short-circuiting OR (`||`),
@@ -47,7 +47,7 @@ fn main() -> vec4 {
 
 * **Translate-time feature**: A *translate-time feature* is an identifier that evaluates to a boolean. It is set to `true` if the feature is *enabled* during the translation phase and `false` if the feature is *disabled*.
 
-* **Translate-time attribute**: A *translate-time attribute* is parametrized by a *translate-time expression*. It is eliminated after the translation but can affect the syntax node it decorates.
+* **Translate-time attribute**: A *translate-time attribute* is parametrized by a *translate-time expression*. It is eliminated after translation but can affect the syntax node it decorates.
 
 ## Location of *Translate-time attributes*
 
@@ -62,11 +62,13 @@ A *translate-time attribute* can appear before the following syntax nodes:
 * [else and else-if clauses](https://www.w3.org/TR/WGSL/#if-statement)
 * [switch clauses](https://www.w3.org/TR/WGSL/#switch-statement)
 
+> NOTE: *translate-time attributes* are not allowed in places where removal of the syntax node would lead to syntactically incorrect code. The current set of *translate-time attribute* locations guarantees that the code is syntactically correct after specialization. This is why *translate-time attributes* are not allowed before expressions.
+
 ### Update to the WGSL grammar
 
 The WGSL grammar allows attributes in several locations where *translate-time attribute* are not allowed. Conversely, the WGSL grammar does not allow attributes in several locations where *translate-time attribute* are allowed.
 
-Refer to section [updated grammar](#updated-grammar) for the list of updated non-terminals.
+Refer to section [updated grammar](#updated-grammar) for the list of updated grammar non-terminals.
 
 1. The grammar is extended to allow *translate-time attributes* before the following syntax nodes:
    * const value declarations
