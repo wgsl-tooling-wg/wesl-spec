@@ -74,6 +74,7 @@ Refer to section [updated grammar](#updated-grammar) for the list of updated gra
    * const value declarations
    * variable declarations
    * directives
+   * struct declarations
    * switch clauses
    * else if clauses and else clauses
    * all statements that did not allow attributes:
@@ -209,6 +210,9 @@ The following non-terminals are added or modified:
 
     requires_directive :
      attribute * 'requires' software_extension_list ';'
+
+    struct_decl :
+     attribute * 'struct' ident struct_body_decl
 
     variable_or_value_statement :
       variable_decl
