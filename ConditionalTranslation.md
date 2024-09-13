@@ -213,6 +213,9 @@ The following non-terminals are added or modified:
 
     struct_decl :
      attribute * 'struct' ident struct_body_decl
+     
+    type_alias_decl :
+     attribute * 'alias' ident '=' type_specifier
 
     variable_or_value_statement :
       variable_decl
