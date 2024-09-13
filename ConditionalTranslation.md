@@ -222,6 +222,9 @@ The following non-terminals are added or modified:
 
     variable_decl :
      attribute * 'var' _disambiguate_template template_list ? optionally_typed_ident
+     
+    global_variable_decl :
+     variable_decl ( '=' expression ) ?
 
     global_value_decl :
       attribute * 'const' optionally_typed_ident '=' expression
