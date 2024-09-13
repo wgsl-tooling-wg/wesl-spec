@@ -1,6 +1,7 @@
 # Glossary of WGSL Importing terms
 
 - WESL: The extended WGSL language, and is pronounced like "weasel". Stands for WGSL Extended Shading Language
+- WESL translator: a program that implements the WESL specification and converts WESL source code to WGSL 
 - Importable item
   - Structs
   - Functions 
