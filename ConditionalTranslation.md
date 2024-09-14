@@ -56,49 +56,23 @@ A *translate-time attribute* can appear before the following syntax nodes:
 * [global variable and value declarations](https://www.w3.org/TR/WGSL/#var-and-value)
 * [type alias declarations](https://www.w3.org/TR/WGSL/#type-alias)
 * [const assertions](https://www.w3.org/TR/WGSL/#const-assert-statement)
-* [function declarations](https://www.w3.org/TR/WGSL/#function-declaration-sec)
-* [structure declarations](https://www.w3.org/TR/WGSL/#struct-types)
-* [statements](https://www.w3.org/TR/WGSL/#statements)
-* [else and else-if clauses](https://www.w3.org/TR/WGSL/#if-statement)
+* [function declarations](https://www.w3.org/TR/WGSL/#function-declaration-sec) and function formal parameter declarations
+* [structure declarations](https://www.w3.org/TR/WGSL/#struct-types) an structure member declarations
+* [compound statements](https://www.w3.org/TR/WGSL/#compound-statement-section)
+* [control flow statements](https://www.w3.org/TR/WGSL/#control-flow)
+* [function call statements](https://www.w3.org/TR/WGSL/#function-call-statement)
+* [const assertion statements](https://www.w3.org/TR/WGSL/#const-assert-statement)
 * [switch clauses](https://www.w3.org/TR/WGSL/#switch-statement)
-
+  
 > NOTE: *translate-time attributes* are not allowed in places where removal of the syntax node would lead to syntactically incorrect code. The current set of *translate-time attribute* locations guarantees that the code is syntactically correct after specialization. This is why *translate-time attributes* are not allowed before expressions.
 
 ### Update to the WGSL grammar
 
-The WGSL grammar allows attributes in several locations where *translate-time attribute* are not allowed. Conversely, the WGSL grammar does not allow attributes in several locations where *translate-time attribute* are allowed.
+The WGSL grammar allows attributes in several locations where *translate-time attribute* are not allowed (1). Conversely, the WGSL grammar does not allow attributes in several locations where *translate-time attribute* are allowed (2).
 
 Refer to section [updated grammar](#updated-grammar) for the list of updated grammar non-terminals.
 
-1. The grammar is extended to allow *translate-time attributes* before the following syntax nodes:
-   * const value declarations
-   * variable declarations
-   * directives
-   * struct declarations
-   * switch clauses
-   * else if clauses and else clauses
-   * all statements that did not allow attributes:
-     * assignment statements
-     * increment and decrement statements
-     * break statements
-     * break-if statements
-     * continue statements
-     * continuing statements
-     * return statements
-     * discard statements
-     * function call statements
-     * const assertion statements
-
-2. A *translate-time attribute* CAN decorate the following syntax nodes:
-   * structure declarations
-   * structure members
-   * function declarations
-   * function formal parameter declarations
-   * variable declarations and value declarations
-   * all statements, except those disallowed
-   * directives
-
-3. A *translate-time attribute* CANNOT decorate the following syntax nodes, even if the WGSL grammar allows attributes before these syntax nodes:
+1. A *translate-time attribute* CANNOT decorate the following syntax nodes, even if the WGSL grammar allows attributes before these syntax nodes:
    * function return types
    * the body (part surrounded by curly braces) of:
      * function declarations
@@ -108,6 +82,21 @@ Refer to section [updated grammar](#updated-grammar) for the list of updated gra
      * for statements
      * while statements
      * if/else statements
+
+2. The grammar is extended to allow *translate-time attributes* before the following syntax nodes:
+   * const value declarations
+   * variable declarations
+   * directives
+   * struct declarations
+   * switch clauses
+   * break statements
+   * break-if statements
+   * continue statements
+   * continuing statements
+   * return statements
+   * discard statements
+   * function call statements
+   * const assertion statements
 
 ## `@if` attribute
 
@@ -233,22 +222,6 @@ The following non-terminals are added or modified:
       attribute * 'const' optionally_typed_ident '=' expression
     | attribute * 'override' optionally_typed_ident ( '=' expression ) ?
 
-    assignment_statement :
-      attribute * lhs_expression ( '=' | compound_assignment_operator ) expression
-    | attribute * '_' '=' expression
-
-    increment_statement :
-     attribute * lhs_expression '++'
-
-    decrement_statement :
-     attribute * lhs_expression '--'
-
-    else_if_clause :
-     attribute * 'else' 'if' expression compound_statement
-
-    else_clause :
-     attribute * 'else' compound_statement
-
     case_clause :
      attribute * 'case' case_selectors ':' ? compound_statement
 
@@ -318,4 +291,4 @@ The following non-terminals are added or modified:
     | if_attr
 
     if_attr:
-    '@' 'if' '(' expression ',' ? ')'
+     '@' 'if' '(' expression ',' ? ')'
