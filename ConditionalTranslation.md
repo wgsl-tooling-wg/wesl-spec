@@ -56,8 +56,10 @@ A *translate-time attribute* can appear before the following syntax nodes:
 * [global variable and value declarations](https://www.w3.org/TR/WGSL/#var-and-value)
 * [type alias declarations](https://www.w3.org/TR/WGSL/#type-alias)
 * [const assertions](https://www.w3.org/TR/WGSL/#const-assert-statement)
-* [function declarations](https://www.w3.org/TR/WGSL/#function-declaration-sec) and function formal parameter declarations
-* [structure declarations](https://www.w3.org/TR/WGSL/#struct-types) an structure member declarations
+* [function declarations](https://www.w3.org/TR/WGSL/#function-declaration-sec)
+* function formal parameter declarations
+* [structure declarations](https://www.w3.org/TR/WGSL/#struct-types)
+* structure member declarations
 * [compound statements](https://www.w3.org/TR/WGSL/#compound-statement-section)
 * [control flow statements](https://www.w3.org/TR/WGSL/#control-flow)
 * [function call statements](https://www.w3.org/TR/WGSL/#function-call-statement)
