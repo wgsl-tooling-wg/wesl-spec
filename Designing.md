@@ -22,7 +22,7 @@ We're guided by demonstrated needs in community projects.
 We're willing to work harder on tools to make the experience feel more natural
 to the programmer.
 
-## Who are Enhanced WGSL Programmers?
+## Who are WESL Programmers?
 
 **Vanilla WGSL programmers first**.
 Our programmers will learn WGSL before learning our extensions.
@@ -69,8 +69,8 @@ polished, proven in use, tested, and well documented.
 
 The tools we're developing (e.g. the linker/transpilers)
 will be a good base to build out new enhancement ideas.
-It should be easy to implement and try out new wgsl enhancements on
-local wgsl projects.
+It should be easy to implement and try out new WESL enhancements on
+local WESL projects.
 
 Experimental enhancements aren't intended be supported across tools,
 and don't need to be compatible with other experiments.
@@ -91,7 +91,7 @@ unexpectedly changing the meaning of a keyword.
 It's not as clear whether we should avoid using all the keywords
 [reserved by WGSL](https://www.w3.org/TR/WGSL/#reserved-words)
 for future use.
-Some WESL enhancements may serve as beta versions of future
+Some WESL enhancements may serve as prototypes for future
 WGSL features, and it'll be easier for programmers if the syntax
 stays the same.
 

@@ -1,4 +1,4 @@
-# A Community Standard for Enhanced WGSL
+# WESL - A Community Standard for Enhanced WGSL
 
 We propose building an enhanced version of WebGPU's
 [WGSL](https://www.w3.org/TR/WGSL/) shading language
@@ -8,33 +8,26 @@ We want to enable a WGSL library ecosystem.
 
 Many community projects have independently uncovered
 a need for WGSL enhancements like module composition,
-conditional compilation,
-and simple templating.
-Fancier features like virtual functions and generics
-have also proven valuable.
+conditional compilation, and simple templating.
+Fancier features like generics are also of interest in the community.
 By evolving a shared community set of WGSL enhancement definitions,
 we can build common tools.
+
 Better tooling benefits everyone,
 including smaller projects that can't afford to build
 their own enhancements and associated tools.
-
-We'd like to
-enable authors to publish resusable WGSL libraries
+And a shared standard can enable resusable WGSL libraries
 on npm and crates.io.
-Sharing of WGSL code is limited today,
-partly because users need to manually rewrite copy-pasted code fragments.
-By combining a standardized and versioned set of extensions
-with some packaging standards, we can
-make it easy to publish and automatic to use WGSL libraries.
-A standard community library format is key to enable an WGSL library ecosystem.
 
-Join us on [github](https://github.com/wgsl-tooling-wg/wgsl-import-spec)
+Join us on [github](https://github.com/wgsl-tooling-wg/wesl-spec)
 or [discord](https://discord.gg/Ng5FWmHuSv) to help.
 
 ## Goals
 
-Our ambition is to create a modestly improved, practical variant of WGSL.
-The result should feel like WGSL with a few things added.
+Our ambition is to create a modestly improved, practical variant of WGSL
+called WESL (WGSL Enhanced Shading Language, pronounced like 'weasel').
+
+WESL should feel like WGSL with a few useful things added.
 
 ## WGSL Enhancements
 
@@ -46,7 +39,7 @@ The simple enhancements we want to find will take some time to stabilize.
 Adventerous projects will be able to opt in to experimental enhancements
 to try alongside stable features.
 
-A WGSL enhancement for `import` statements
+A WESL enhancement for `import` statements
 to enable importing WGSL elements like functions from other files is our first priority to
 stabilize. See spec draft here: **[imports](./Imports.md)**.
 
@@ -57,12 +50,12 @@ are on the [roadmap](#wgsl-enhancements-roadmap).
 
 We'll build and promote tools to support community standard WGSL.
 
-**Linking** - Tools to bundle wgsl files together
-while translating extended WGSL into vanilla W3C WGSL.
+**Linking** - Tools to bundle WESL files together
+while translating WESL into vanilla W3C WGSL.
 
 **Test Cases** - A collection of examples to help tools interoperate.
 
-**WGSL Language Servers** - Enable syntax directed editing in IDEs.
+**WESL Language Servers** - Enable syntax directed editing in IDEs.
 Shader development with IDEs should be well supported.
 
 **Syntax Highlighters** - Display pretty extended WGSL on web pages with
@@ -80,12 +73,12 @@ we can iterate quickly on experimental WGSL features.
 
 Stabilized features will be grouped in periodic releases
 with backwards compatibilty with the aim of
-nurturing an ecosystem of wgsl libraries.
+nurturing an ecosystem of enhanced wgsl libraries.
 
 ## Filename extension
 
 Source files containing
-the community variant of wgsl-enhanced files
+WESL files
 should have the `.wesl` extension
 to distinguish them from vanilla W3C WGSL.
 
@@ -97,12 +90,11 @@ Several other features are queued up for discussion.
 Many projects already need these features:
 
 * **[imports](./Imports.md)** -
-`import` enhanced WGSL fragments from other files and eventually from libraries.
+`import` WESL code from other files and eventually from libraries.
 
 * **[conditional compilation](./ConditionalCompilation.md)** -
-Select blocks of WGSL to enable based on external variables.
-e.g. `#if MOBILE_CLASS_GPU`
-or `#[cfg gpu_class="mobile")]`.
+Select blocks of WESL to enable based on external variables.
+e.g. `@if(mobile_gpu)`
 
 * **[simple templating](./SimpleTemplating.md)** -
 Insert runtime
@@ -115,7 +107,7 @@ Package enhanced WGSL for crates.io and npm.
 Several projects have identified these features as valuable to be shared more broadly:
 
 * **[visibility control](./Visibility.md)** -
-Define the public parts of wgsl.
+Define the public parts of wesl.
 e.g. `export`, `public`.
 
 * **[generics](./Generics.md)** -
@@ -128,20 +120,20 @@ Other features to consider include:
 
 * **[extends](./Extends.md)** - Struct inheritance.
 
-* **[versioning](./Versioning.md)** - Feature levels for enhanced WGSL, e.g. `version WESL2024`.
+* **[versioning](./Versioning.md)** - Feature levels for WESL, e.g. `enable wesl_2025`.
 
 For guidance on contributing
 to the design of WGSL extensions, see **[Designing](./Designing.md)**.
 
 ## Relationship to W3C WGSL and WebGPU
 
-Enhanced WGSL features are invisible to WebGPU engines
+WESL enhancements features are invisible to WebGPU engines
 like Dawn and wgpu.
-All WGSL enhancements are translated to vanilla WGSL
+All WESL enhancements are translated to vanilla WGSL
 before being passed to WebGPU calls
 such as [`createShaderModule()`](https://developer.mozilla.org/en-US/docs/Web/API/GPUDevice/createShaderModule).
 
-Hopefully community WGSL enhancements will
+Hopefully community WESL enhancements will
 help inform future versions of W3C standard WGSL.
 But designing changes to W3C standard WGSL is
 beyond the scope of this project.
