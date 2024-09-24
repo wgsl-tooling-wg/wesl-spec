@@ -13,7 +13,7 @@ Typically the the host code passes a record of name-value pairs, and correspondi
 are replaced in the WGSL code.
 
 WGSL supports `override` declarations for a similar purpose, but overrides are not applicable
-everywhere in wgsl.
+everywhere in WGSL.
 
 Issues
 
@@ -21,7 +21,7 @@ Issues
 * `#define`?
 * special syntax for names to be replaced, e.g. `#{WORKGROUP_SIZE}` or just an all caps convention like C?
 * Process as a preprocessor step, before other WESL processing.
-* Runtime modifiable variables are visible to the host, and so changes to names affect the api of the wgsl package.
+* Runtime modifiable variables are visible to the host, and so changes to names affect the api of the WESL package.
   Can we make the list of names available so that host code can autocomplete and validate names?
 * Are values opaque strings
 * should we somehow be integrating or extending override?

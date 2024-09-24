@@ -29,7 +29,7 @@ The syntax is also heavily inspired by [Gleam](https://gleam.run/).
 
 By placing an import at the very top of a file, one can either import an entire module, or only specific importable items, such as functions, structs or types.
 
-```
+```wgsl
 // Importing a single item using a relative path
 import ./lighting/pbr;
 
@@ -42,7 +42,7 @@ import bevy_ui/*;
 
 These can then be used anywhere in the source code.
 
-```
+```wgsl
 fn main() {
     bevy_ui.quad(vec2f(0.0, 1.0), 1.0);
     let a = draw(3);
@@ -56,7 +56,7 @@ or the extension we use for extended wgsl syntax (possibly `.wesl`).
 
 Recursive import definitions are also supported, which leads to short and succinct import statements.
 
-```
+```wgsl
 import bevy_pbr/{
   forward_io/VertexOutput,
   pbr_types/{PbrInput, pbr_input_new},
@@ -74,7 +74,7 @@ Imports must appear as the first items in a WGSL file. They import "importable i
 
 An import statement is parsed as follows, with spaces and comments allowed between tokens:
 
-```
+```wgsl
 main:  
 | 'import' import_relative? import_path ';'  
 
@@ -127,7 +127,7 @@ To compare it to the more widely known Typescript syntax, here are some examples
 <tr>
 <td>
 
-```
+```wgsl
 import ../geom/sphere/{draw, default_radius as foobar};
 ```
 
@@ -143,7 +143,7 @@ import { draw, default_radius as foobar } from '../geom/sphere.wgsl';
 <tr>
 <td>
 
-```
+```wgsl
 import bevy_ui/*;
 ```
 
@@ -159,7 +159,7 @@ import * as bevy_ui from 'bevy_ui.wgsl';
 <tr>
 <td>
 
-```
+```wgsl
 import bevy_pbr/{ 
     forward_io/VertexOutput, 
     pbr_types/{PbrInput, pbr_input_new}, 
@@ -248,7 +248,7 @@ The steps of identifier resolution are as follows:
 
 For example, given two modules
 
-```
+```wgsl
 // lighting.wgsl
 struct Light {
     color: vec3;
@@ -258,7 +258,7 @@ struct LightSources {
 }
 ```
 
-```
+```wgsl
 // main.wgsl
 import lighting::{ LightSources };
 

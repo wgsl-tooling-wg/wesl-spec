@@ -6,14 +6,14 @@
   is the approach that comes first to mind.
 * conditional compilation runs after simple templating but before import processing..
   * (note that we may want to disable code that may not be correct so parsing first is iffy)
-* best to define default values in the wgsl for all conditionals
-  * IDE tools can't assume any definitions that aren't in the wgsl.
+* best to define default values in the WGSL for all conditionals
+  * IDE tools can't assume any definitions that aren't in the WGSL.
 * alternately, consider some kind of [cfg] on elements instead? 
   * More structured: ties to source elements not lines
     * Perhaps some optimization potential..
       * For example could parse/lower certain functions ahead of 
         time and easily remove them from the IR vs #if #else which operates on a source level.
-    * Is it an wgsl attribute? syntax makes sense but wgsl 
+    * Is it an WGSL attribute? syntax makes sense but WGSL
 * what are some examples of things to conditionally compile?
   * function variants e.g. select which function variant to use based on condition
   * struct fields e.g. include fields only if condition is set
@@ -21,7 +21,7 @@
 * how do we support build time vs runtime linking?
   * e.g. some projects will want prebuilt versions for various mobile configurations.
     * ref [unity shader conditionals](https://docs.unity3d.com/Manual/shader-conditionals.html)
-  * should the wesl code distinguish conditions that are settable at compile time from those that are settable at runtime?
+  * should the WESL code distinguish conditions that are settable at compile time from those that are settable at runtime?
 
 ## Structured VS. Unstructured
 

@@ -2,32 +2,32 @@
 
 (TBD)
 
-The section will discuss packaging extended wgsl in reusable crates or npm packages.
+The section will discuss packaging WESL in reusable crates or npm packages.
 
 See also [Visiblity Control](Visiblity.md).
 
 
 * What goes in `package.json`?
   * at runtime in the browser, the linker needs
-    wgsl strings and relative paths for every needed wgsl file, from every every package.
+    WESL strings and relative paths for every needed WESL file, from every every package.
     * (this so the linker can resolve imports)
-  * something needs to tell javascript bundlers to include needed wgsl files in the bundle:
-    * we could ask package publishers to produce a javascript file containing a map of relative paths and wgsl strings
-    * perhaps better would be to have a vite/rollup plugin trace from the source wgsl to the needed package wgsl files (using the linker as a library to parse wgsl)
-      * this would avoid requiring publishers to manually publish string maps of wgsl text, 
+  * something needs to tell javascript bundlers to include needed WESL files in the bundle:
+    * we could ask package publishers to produce a javascript file containing a map of relative paths and WESL strings
+    * perhaps better would be to have a vite/rollup plugin trace from the source WESL to the needed package WESL files (using the linker as a library to parse WESL)
+      * this would avoid requiring publishers to manually publish string maps of WESL text, 
         instead publishers would just publish files in dist. 
         * the consumer plugin tool would bundle files into strings.
       * corner case issue: runtime conditional compilation could potentially change the imported
         files required. Perhaps we'll need some workaround markers in this rare case, so tree shaking can still work.
-    * note that the wgsl-linker already has this problem of bundling local wgsl files, 
-      and asks users to 'self package' wgsl using import.meta.glob
-      (which bundles files into [file path, wgsl string] pairs)
+    * note that the wgsl-linker already has this problem of bundling local WGSL files
+      and asks users to 'self package' WGSL using import.meta.glob
+      (which bundles files into [file path, WGSL string] pairs)
   * what other metadata should be available to the linker?
     * name of package.
-    * host visible bits from wgsl? e.g. entry points, runtime variables, overrides, binding groups, uniforms?
+    * host visible bits from WGSL? e.g. entry points, runtime variables, overrides, binding groups, uniforms?
       An IDE tool could use that data to typecheck/autocomplete host calls.
-      Things like entry points are computable from the wgsl,
-      but it's a lot to ask of a language server to parse through all the wgsl in advance to find them.
+      Things like entry points are computable from the WGSL,
+      but it's a lot to ask of a language server to parse through all the WGSL in advance to find them.
       Probably better to put it into the metadata if we need it.
       * these are parts of the API of the package as a whole and can reduce bugs by making them visible
   * how do we handle packages with multiple entry points e.g. stoneberry/reduce stoneberry/prefixSum.
@@ -54,8 +54,8 @@ We are planning on taking advantage of existing package managers, such as `cargo
 ### Unresolved questions
 
 * Is .toml the best file format for the `wgsl.toml`? Some alternatives would be JSON/JSON5 and StrictYAML.
-* do we need to put paths for every package's wgsl in wgsl.toml?
+* do we need to put paths for every package's WGSL in wgsl.toml?
   * Fine to get started that way if need be, but its a maintenance burden every user..
-  * Better if we could get the language servers to find the wgsl in packages in node_modules.
-* Do we need to list the wgsl package names in wgsl.toml?
+  * Better if we could get the language servers to find the WGSL in packages in node_modules.
+* Do we need to list the WGSL package names in wgsl.toml?
   They'll already be listed in as cargo.toml / package.json..

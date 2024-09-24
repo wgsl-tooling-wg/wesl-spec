@@ -1,12 +1,13 @@
-# Simple Generics for WGSL
+# Simple Generics for WESL
 
-(TBD)
+_Note: this is one of several Generics proposals we're considering.
+See also PR #34 and PR #20 for more feature rich generics proposals._
 
-Generic programming is useful for wgsl, particularly for libraries.
-With generics, wgsl functions like `reduce` or `prefixSum`
+Generic programming is useful for WESL, particularly for libraries.
+With generics, WESL functions like `reduce` or `prefixSum`
 don’t need to be manually rewritten for each combination of element type and binary operation.
 I’m hoping we can find a fairly minimal design for generics
-that is easy for programmers to learn and supportable with modest effort in wesl tools.
+that is easy for programmers to learn and supportable with modest effort in WESL tools.
 
 To ease implementation effort, I imagine we’ll want to avoid type inference
 or type constraints on generics. But without type inference, 
@@ -22,25 +23,27 @@ but we can start with a minimal implementation and add features as they prove ne
 * angle bracket syntax for generic variable declaration, and generic value specification.
 * declare generic variables on function declarations, e.g.: `fn foo<E>(arg: E) -> E { let e:E = arg; return e; }`
 * within an fn with a generic declaration,
-  generic variables names can be used in place of a wgsl type in both the fn declaration and fn body,
+  generic variables names can be used in place of a WESL type in both the fn declaration and fn body,
   or in a function call expression inside the fn body.
   The generic variable text will be replaced by the generic value text during linking.
-  So if `E` is `f32`  the linked wgsl for foo would be: `fn foo(arg: f32) { let e:f32 = arg; return e; }`.
-* Note that a linker will generate multiple copies of fn foo() in wgsl,
+  So if `E` is `f32`  the linked WESL for foo would be: `fn foo(arg: f32) { let e:f32 = arg; return e; }`.
+* Note that a linker will generate multiple copies of fn foo() in WESL,
   one for each unique set of generic arguments. So each fn will have a unique name.
 * generic variable values are supplied on import statements or call statements.
+  * import with a generic:
 
-      * import with a generic:
-        ```
+      ```wgsl
         import util/foo<f32> as foo32;
         main() { foo32(1.0); }
-        ```
-      * or, call with a generic:
-        ```
-        foo<f32>(1.0);
-        ```
+      ```
 
-* generic values supplied with imports are single world tokens (typically wgsl type names or function names), 
+  * or, call with a generic:
+
+      ```wgsl
+      foo<f32>(1.0);
+      ```
+
+* generic values supplied with imports are single world tokens (typically WESL type names or function names),
   or generic variables declared on that function.
 
 ## Examples
@@ -48,14 +51,14 @@ but we can start with a minimal implementation and add features as they prove ne
 
 Simple Example:
 
-* ```
-  ./util.wgsl:
+```wgsl
+  ./util.wesl:
 
   @export fn workgroupMin<E>(elems: array<E, 4>) -> E { }  // E is a generic parameter
   ```
 
-* ```
-  ./main.wgsl:
+```wgsl
+  ./main.wesl:
 
   import ./util/workgroupMin<f32> as workMin; // substitutes f32 for E
 
@@ -67,50 +70,51 @@ Simple Example:
 
 Here’s a more complicated case. reduce is parameterized by an element type (e.g. u32) and a binary operation, e.g. max()
 
-* ```
-    ./util.wgsl:
+```wgsl
+  ./util.wesl:
 
-    export<E, BinOp> 
-    fn reduce(elems: array<E, 2>) -> E { 
-      return BinOp(elems[0], elems[1]); 
-    }
+  export<E, BinOp> 
+  fn reduce(elems: array<E, 2>) -> E { 
+    return BinOp(elems[0], elems[1]); 
+  }
+```
 
-* ```
-    ./main.wgsl:
+```wgsl
+  ./main.wesl:
 
-    import ./ops/binOpMax<f32> as binOpMax;
-    import ./util/reduce<f32, binOpMax> as maxF32; 
+  import ./ops/binOpMax<f32> as binOpMax;
+  import ./util/reduce<f32, binOpMax> as maxF32; 
 
-    fn main() {
-      maxF32(a1);
-    }
-    ```
+  fn main() {
+    maxF32(a1);
+  }
+```
 
 Note that you can import a generic function w/o providing parameters:
 
-* ```
-    ./util.wgsl:
+```wgsl
+  ./util.wesl:
 
-    import binOpMax from ./ops;   // no generic variable specified yet
+  import binOpMax from ./ops;   // no generic variable specified yet
 
-    export fn reduceMax<E>(elems: array<E, 2>) -> E { 
-      return binOpMax<E>(elems[0], elems[1]); // generic value applied at call site
-    }
-    ```
+  export fn reduceMax<E>(elems: array<E, 2>) -> E { 
+    return binOpMax<E>(elems[0], elems[1]); // generic value applied at call site
+  }
+```
 
 Re-exporting generics is allowed (presuming we allow re-exporting in general, see [Visibility](./Visiblity.md)):
 
-* ```
-    ./lib.wgsl:
-    export reduce from util/reduce.wgsl; // re-export at package root level
+```wgsl
+  ./lib.wesl:
+  export reduce from ./util/reduce; // re-export at package root level
 
-    ./util/reduce.wgsl:
-    export<E, BinOp> fn reduce(elems: array<E, 2>) -> E { }
-    ```
+  ./util/reduce.wgsl:
+  export<E, BinOp> fn reduce(elems: array<E, 2>) -> E { }
+```
 
 ## Questions and possible extensions
 
-* Do angle brackets conflict or comport with wgsl templates?
+* Do angle brackets conflict or comport with WGSL templates?
 * Can you export a generic function after variable substitution too? or only the generic version
 * Allow generic values to be pulled from runtime parameters?
   wgsl-linker currently recognizes an `ext.` prefix to get variable values from the runtime caller.
@@ -119,29 +123,29 @@ Re-exporting generics is allowed (presuming we allow re-exporting in general, se
 * Currently there are no type constraints available for generic variable declarations..
   Simply substituting parameters and letting dawn or naga typecheck at runtime seems ok for now.
   A future type checker could check annotation uses are valid by substituting generic parameters
-  and type checking the expanded wgsl.
-  And of course a future version of wgsl or wesl generics could add explicit type constraints on generic variables.
+  and type checking the expanded WGSL.
+  And of course a future version of WGSL or WESL generics could add explicit type constraints on generic variables.
 
 * Generics on structs too?
 
-  * ```
-      ./util.wgsl:
-      export struct Point<T> { position: vec2<T>, color vec3f } 
+  ```wgsl
+    ./util.wgsl:
+    export struct Point<T> { position: vec2<T>, color vec3f } 
 
-      ./main.wgsl
-      import Point<u32> as UPoint from ./util
+    ./main.wgsl
+    import Point<u32> as UPoint from ./util
 
-      fn main() {
-        let p = UPoint(vec2u(0, 0), vec3f(.5, .5, .5));
-      }
-      ```
+    fn main() {
+      let p = UPoint(vec2u(0, 0), vec3f(.5, .5, .5));
+    }
+  ```
 
 * The reduce example makes me think whether we could call a generic function recursively,
   and what would that do.
   In theory, the following would unroll to N nested function calls.
-  The wgsl compilers may be good at flattening this.
+  The WGSL compilers may be good at flattening this.
 
-* ```
+  ```wgsl
     fn accumulate<E, Op, N>(acc: E, elems: array<E, N>) -> E {
       if N >= 2 {
         return accumulate<E, Op, N-1>(accumulateBinOp(E, elems[N-1]), elems);
@@ -161,4 +165,4 @@ Re-exporting generics is allowed (presuming we allow re-exporting in general, se
 
   Array_sum has a nested generic! This is cool.
   
-  Also, some SFINAE I guess: because 0 is AbstractInt, it can subtitute E with u32 or i32, BUT not f32 afaik, because 0 is not AbstractFloat. This is somewhat disappointing. 
+  Also, some SFINAE I guess: because 0 is AbstractInt, it can subtitute E with u32 or i32, BUT not f32 afaik, because 0 is not AbstractFloat. This is somewhat disappointing.
