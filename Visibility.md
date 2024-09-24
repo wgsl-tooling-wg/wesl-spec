@@ -2,13 +2,13 @@
 
 (TBD)
 
-This section will describe wgsl enhancements to control which WGSL elements are visible to importers.
+This section will describe WESL enhancements to control which WGSL elements are visible to importers.
 
 * how to re-export elements so that they're visible with a different path or name?
 * controlling host visible names like entry points and overrides?
 * Should export allow `as` renaming?
 * Why not export struct Foo?
-  * Many current wgsl parsers (including wgpu's naga) would
+  * Many current WGSL parsers (including wgpu's naga) would
     choke on the unknown attribute as is and feels like having
     two export forms is a bit inconsistent.
 * Consider changing to public by default for imports within the package only.
@@ -35,19 +35,19 @@ There are two variations of exports, which could be combined like in Typescript
 A standalone export statement simply specifies which globals are exported.
 Then, imports can be checked against the list of exports. This is very easy to parse and implement.
 
-```
+```wgsl
 export { foo, bar };
 ```
 
 And when one wants to export everything defined in the current file, they can use the `*` syntax.
 
-```
+```wgsl
 export *;
 ```
 
 To re-export an item, one can use the same syntax.
 
-```
+```wgsl
 import my/lighting/{ pbr };
 
 export { pbr };
@@ -57,7 +57,7 @@ export { pbr };
 
 Exports can also be added as an attribute to the item itself.
 
-```
+```wgsl
 @export
 struct Foo {
     x: f32;

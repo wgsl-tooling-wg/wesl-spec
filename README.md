@@ -107,7 +107,7 @@ Package enhanced WGSL for crates.io and npm.
 Several projects have identified these features as valuable to be shared more broadly:
 
 * **[visibility control](./Visibility.md)** -
-Define the public parts of wesl.
+Define the public parts of WESL.
 e.g. `export`, `public`.
 
 * **[generics](./Generics.md)** -
