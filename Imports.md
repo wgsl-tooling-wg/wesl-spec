@@ -2,12 +2,6 @@
 
 We propose adding an importing mechanism to the WGSL shading language as an extension.
 
-## TBD
-
-* Require braces for wgsl items? e.g. `import ./lighting/{ pbr };`
-  * If we require braces for wgsl items, could do `import ./foo/bar` instead of `import ./foo/bar/*`?
-* Add example for recursive imports
-
 # Motivation
 
 When writing bigger WGSL shaders, one tends to **split the code into reusable pieces**. Examples are re-using a set of lighting calculation functions and sharing a struct between two compute shaders and.
@@ -20,45 +14,39 @@ Finally, we want **multiple tools** which can compile WGSL-with-imports down to 
 
 ## Guide-level explanation
 
-The `import` statement extension is designed to appear somewhat familiar to TypeScript syntax,
-but with a Rust like recursive grammar to make importing
-multiple importable items less verbose.
-The syntax is also heavily inspired by [Gleam](https://gleam.run/).
-
-By placing an import at the very top of a file, one can either import an entire module, or only specific importable items, such as functions, structs or types.
+The `import` statement extension brings items or entire modules into scope. To find the location of the imported items, it goes over the segments of the path, one by one.
 
 ```wgsl
-// Importing a single item using a relative path
-import ./lighting/pbr;
+// Importing a single function using a relative path
+import self::lighting::pbr;
 
 // Importing multiple items
-import my/geom/sphere/{ draw, default_radius as foobar };
+import my::geom::sphere::{ draw, default_radius as foobar };
 
-// Imports a whole module. Use it with `bevy_ui.name`
-import bevy_ui/*;
+// Imports a whole module. Use it with `bevy_ui::name`
+import bevy_ui;
 ```
 
 These can then be used anywhere in the source code.
 
 ```wgsl
 fn main() {
-    bevy_ui.quad(vec2f(0.0, 1.0), 1.0);
+    bevy_ui::quad(vec2f(0.0, 1.0), 1.0);
     let a = draw(3);
 }
 ```
 
 Both `bevy_ui` and `my` are packages in the current project. Language servers and related tools can look in a `wgsl.toml` file to find the location of the packages. This lets libraries be published to package managers, and users can import them with a simple syntax.
 
-The first part is the file path, which is assumed to have a either `.wgsl` file extension,
-or the extension we use for extended wgsl syntax (possibly `.wesl`).
+The first part is the file path, which is assumed to have a `.wesl` file extension.
 
-Recursive import definitions are also supported, which leads to short and succinct import statements.
+Recursive import definitions are also supported, which leads to shorter import statements.
 
 ```wgsl
-import bevy_pbr/{
-  forward_io/VertexOutput,
-  pbr_types/{PbrInput, pbr_input_new},
-  pbr_bindings/*
+import bevy_pbr::{
+  forward_io::VertexOutput,
+  pbr_types::{PbrInput, pbr_input_new},
+  pbr_bindings
 };
 
 fn main() {
@@ -68,22 +56,24 @@ fn main() {
 
 # Reference-level explanation
 
-Imports must appear as the first items in a WGSL file. They import "importable items" (see [GLOSSARY.md](./GLOSSARY.md)).
+A WESL program is composed of a tree of WESL modules.
+
+Imports must appear as the first items in a WESL file. They can import entire modules or individual  "importable items" (see [GLOSSARY.md](./GLOSSARY.md)).
 
 An import statement is parsed as follows, with spaces and comments allowed between tokens:
 
-```wgsl
-main:  
+```ebnf
+translation_unit:
+| import_statement* global_directive* global_decl* 
+
+import_statement:  
 | 'import' import_relative? import_path ';'  
 
-import_relative:  
-| ('.' | '..') '/' ('..' '/')*  
+import_relative:
+| ('self' | 'crate' | 'super') '::' ('super' '::')* 
 
-import_path:  
-| ident '/' (import_path | import_collection | item_import | star_import)  
-
-star_import:
-| '*' ('as' ident)?
+import_path:
+| (ident '::')+ (import_collection | item_import)  
 
 item_import:
 | ident ('as' ident)?
@@ -92,23 +82,39 @@ import_collection:
 | '{' (import_path | item_import) (',' (import_path | item_import))* ','? '}'
 ```
 
-Where `ident` is defined in the WGSL grammar.
+Where `translation_unit` and `ident` are defined in the WGSL grammar.
 
-An import consists of
-
-- A path part, which either is a relative path ('.' and '..'), or points at a known package (ident).
-
-  - Nested path segments are joined.
-  - Everything before the final slash is part of the path.
-  - The final part is the file name.
-
-- Items to import.
-
-A star import behaves like a star import in Typescript, except that the name can be inferred from the file name. **Notably**, it does *not* import all the items individually. Instead, it groups them all under a single name!
 
 An item import imports a single item. The item can be renamed with the `as` keyword.
 
 An import collection imports multiple items, and allows for nested imports.
+
+To resolve the import, the recursive structure is flattened out. Then, one iterates over each segment, and looks it up one by one.
+
+1. We start with the first segment. 
+    - `self` refers to the current module.
+    - `super` refers to the parent module.
+    - `crate` refers to the top level module of the current package.
+    - `ident` must be a known package, usually found in the `wgsl.toml` file. It refers to the top level module of that package.
+2. We take that as the "current module".
+3. We repeatedly look at the next segment.
+    1. Item in current module: Take that item. We must be at the last segment, otherwise it's an error.
+    2. (Else if re-exported or inline module in current module: We continue with that module.)
+    3. Elso go to `current module path/ident.wesl`
+       - File found: We take that file as the current module.
+       - File not found: We assume an empty module as the current module, and continue with that.
+       - (Re-exporting changes the path.)
+       - (Inline modules do not have a path.)
+
+For example
+
+<!---->
+
+#### Design Notes
+
+- The same syntax `import_relative? import_path` can be used inline.
+- Re-exports are planned for, which means that we have to traverse over the hierarchy from the root to the leaf.
+- Item imports and module imports cannot be distinguished from just the syntax.
 
 ## Examples
 
@@ -179,38 +185,53 @@ import * as pbr_b from 'bevy_pbr/pbr_bindings.wgsl';
 </tbody>
 </table>
 
-## Parsing module.importable_item in the source code
+## Parsing module::importable_item in the source code
 
-For tools that are parsing WGSL,
-here's how to extend the
-[WGSL grammar](https://www.w3.org/TR/WGSL/#grammar-recursive-descent)
-to parse imports:
+The syntax can also be used inline. To do so, we extend 
+the [WGSL grammar](https://www.w3.org/TR/WGSL/#grammar-recursive-descent) as follows.
 
-About extending the grammar:
-This one gets an additional meaning. A module property can also be a component.
-component_or_swizzle_specifier:
-| '.' member_ident component_or_swizzle_specifier ?
+We introduce 
 
-This needs to be extended to support ident.ident
-for_init:
-| ident.ident func_call_statement.post.ident
+```ebnf
+full_ident:
+| ident ('::' ident)*
+```
+
+and then replace `ident` with `full_ident` in the following places:
+
+```ebnf
+core_lhs_expression:
+| full_ident
+| ...
+
+for_init: 
+| full_ident func_call_statement.post.ident
+| ...
 
 for_update:
-| ident.ident func_call_statement.post.ident
+| full_ident func_call_statement.post.ident
+| ...
 
-global_decl:
-| attribute _ 'fn' ident ... '->' attribute _ ident.ident
-| 'alias' ident '=' ident.ident template_elaborated_ident.post.ident ';'
+global_decl: 
+| attribute* 'fn' ident '(' ( attribute* full_ident ...
+| ...
+| 'alias' ident '=' full_ident ...
+| ...
 
-primary_expression:
-| ident.ident template_elaborated_ident.post.ident
-| ident.ident template_elaborated_ident.post.ident argument_expression_list
+primary_expression: 
+| full_ident template_elaborated_ident.post.ident
+| full_ident template_elaborated_ident.post.ident argument_expression_list
+| ...
 
-statement:
-| ident.ident template_elaborated_ident.post.ident argument_expression_list ';'
+statement: 
+| ...
+| full_ident template_elaborated_ident.post.ident argument_expression_list ';'
+| ...
 
 type_specifier:
-| ident.ident ...
+| full_ident ...
+```
+
 
 ## Behaviour-changing items
 
