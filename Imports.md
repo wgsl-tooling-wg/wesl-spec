@@ -14,7 +14,7 @@ Finally, we want **multiple tools** which can compile WGSL-with-imports down to 
 
 ## Guide-level explanation
 
-The `import` statement extension brings items or entire modules into scope. To find the location of the imported items, it goes over the segments of the path, one by one.
+The `import` statement extension brings items or entire modules into scope. Import statements map to files with minimal searching.
 
 ```wgsl
 // Importing a single function using a relative path
@@ -38,8 +38,6 @@ fn main() {
 
 Both `bevy_ui` and `my` are packages in the current project. Language servers and related tools can look in a `wgsl.toml` file to find the location of the packages. This lets libraries be published to package managers, and users can import them with a simple syntax.
 
-The first part is the file path, which is assumed to have a `.wesl` file extension.
-
 Recursive import definitions are also supported, which leads to shorter import statements.
 
 ```wgsl
@@ -53,6 +51,13 @@ fn main() {
 
 }
 ```
+
+To find the relevant items, the following algorithm is used:
+
+Proceding left to right through the path segments, consider the segments `prev` and `seg`.
+1. if `prev.wesl` exists and includes WESL elements, check if `seg` is one of those elements, e.g. `fn seg` or `namespace seg`.
+1. else if the directory `prev/` exists, check to see if the file `seg.wesl` or the directory `seg/` is in the `prev/` directory;
+1. error if a `seg` is not found. 
 
 # Reference-level explanation
 
@@ -70,7 +75,7 @@ import_statement:
 | 'import' import_relative? import_path ';'  
 
 import_relative:
-| ('self' | 'crate' | 'super') '::' ('super' '::')* 
+| ('self' | 'crate' | 'super') '::' ('super' '::')*
 
 import_path:
 | (ident '::')+ (import_collection | item_import)  
@@ -100,7 +105,7 @@ To resolve the import, the recursive structure is flattened out. Then, one itera
 3. We repeatedly look at the next segment.
     1. Item in current module: Take that item. We must be at the last segment, otherwise it's an error.
     2. (Else if re-exported or inline module in current module: We continue with that module.)
-    3. Elso go to `current module path/ident.wesl`
+    3. Else go to `current module path/ident.wesl`
        - File found: We take that file as the current module.
        - File not found: We assume an empty module as the current module, and continue with that.
        - (Re-exporting changes the path.)
@@ -108,82 +113,12 @@ To resolve the import, the recursive structure is flattened out. Then, one itera
 
 For example
 
-<!---->
-
-#### Design Notes
-
-- The same syntax `import_relative? import_path` can be used inline.
-- Re-exports are planned for, which means that we have to traverse over the hierarchy from the root to the leaf.
-- Item imports and module imports cannot be distinguished from just the syntax.
-
-## Examples
-
-To compare it to the more widely known Typescript syntax, here are some examples.
-
-<table>
-<thead>
-<tr>
-<th>WGSL</th>
-<th>Typescript</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-
 ```wgsl
-import ../geom/sphere/{draw, default_radius as foobar};
+import bevy_pbr::forward_io::VertexOutput;
 ```
-
-</td>
-<td>
-
-```ts
-import { draw, default_radius as foobar } from '../geom/sphere.wgsl';
-```
-
-</td>
-</tr>
-<tr>
-<td>
-
-```wgsl
-import bevy_ui/*;
-```
-
-</td>
-<td>
-
-```ts
-import * as bevy_ui from 'bevy_ui.wgsl';
-```
-
-</td>
-</tr>
-<tr>
-<td>
-
-```wgsl
-import bevy_pbr/{ 
-    forward_io/VertexOutput, 
-    pbr_types/{PbrInput, pbr_input_new}, 
-    pbr_bindings/* as pbr_b
-};
-```
-
-</td>
-<td>
-
-```ts
-import { VertexOutput } from 'bevy_pbr/forward_io.wgsl';
-import { PbrInput, pbr_input_new } from 'bevy_pbr/pbr_types.wgsl';
-import * as pbr_b from 'bevy_pbr/pbr_bindings.wgsl';
-```
-
-</td>
-</tr>
-</tbody>
-</table>
+first looks for `bevy_pbr.wesl`.
+`bevy_pbr.wesl` is found, and doesn't contain an item named `forward_io`.
+Thus, we go to `bevy_pbr/forward_io.wesl`. It contains a struct named `VertexOutput`.
 
 ## Parsing module::importable_item in the source code
 
@@ -194,7 +129,7 @@ We introduce
 
 ```ebnf
 full_ident:
-| ident ('::' ident)*
+| import_relative? ident ('::' ident)*
 ```
 
 and then replace `ident` with `full_ident` in the following places:
@@ -232,6 +167,7 @@ type_specifier:
 | full_ident ...
 ```
 
+TODO: Those sections need updating
 
 ## Behaviour-changing items
 
@@ -251,10 +187,32 @@ but noting current behaviour that is being used in the wild.)
 
 ## Preserved items
 
-These items are preserved when importing a module. They are not imported, but will land in the final module with a mangled name.
+These items are preserved when importing a module. Their name must be preserved. They will land in the final module, if they are being referenced.
 
 - [Entry points](https://www.w3.org/TR/WGSL/#entry-points)
 - [Pipeline overridable constants](https://www.w3.org/TR/WGSL/#override-decls)
+
+
+## `const_assert`
+
+Generally, WGSL elements are included if they are recursively referenced from the root module (use analysis). But `const_assert` statements are also included if they are in the same module or namespace as a referenced element.
+
+-   ```wgsl
+    // main.wgsl:
+    import  foo/bar;
+    fn main() { bar(); }
+
+    // foo.wgsl:
+    import ./zig;
+    const_assert(1 > 0); // included in link because bar is used
+    fn bar() { }
+    fn miz() { zig.zag() }
+
+    // zig.wgsl:
+    const_assert(2 < 0); // not included in link
+    fn zag() { }
+    ```
+
 
 ## Identifier Resolution
 
@@ -264,37 +222,6 @@ The steps of identifier resolution are as follows:
 2. Bring the imported items into scope. All other items that the imported items depend on are also imported, _but not user-accessible in the current scope_.
    For example when importing `Foo` from `struct Foo { x: Bar; }`, we would import `Bar` as well. If the user types `Bar` in the source code, then that is an error.
 3. Parse the WGSL.
-
-For example, given two modules
-
-```wgsl
-// lighting.wgsl
-struct Light {
-    color: vec3;
-}
-struct LightSources {
-    lights: array<Light>;
-}
-```
-
-```wgsl
-// main.wgsl
-import lighting::{ LightSources };
-
-// LightSources can be used
-fn clear_lights(lights: LightSources) -> LightSources {
-    for (var i = 0; i < lights.lights.length(); i = i + 1) {
-        // We can access everything inside of LightSources
-        let light = lights.lights[i];
-
-        // However, the user cannot use the type "Light"
-        // let light: Light <== error, Light is not imported
-
-        light.color = vec3(0.0, 0.0, 0.0);
-    }
-    return lights;
-}
-```
 
 ## Producing the final module
 
