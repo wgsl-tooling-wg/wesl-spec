@@ -15,7 +15,7 @@ This attribute indicates that the syntax node it decorates can be removed by the
 ```rs
 // global variables and bindings...
 @if(textured)
-@group(0) @binding(0) var my_textuer: texture_2d<f32>;
+@group(0) @binding(0) var my_texture: texture_2d<f32>;
 
 // structs declarations and struct members...
 struct Ray {
@@ -53,7 +53,7 @@ fn main() -> vec4 {
 
 A *translate-time attribute* can appear before the following syntax nodes:
 * [directives](https://www.w3.org/TR/WGSL/#directives)
-* [global variable and value declarations](https://www.w3.org/TR/WGSL/#var-and-value)
+* [variable and value declarations](https://www.w3.org/TR/WGSL/#var-and-value)
 * [type alias declarations](https://www.w3.org/TR/WGSL/#type-alias)
 * [const assertions](https://www.w3.org/TR/WGSL/#const-assert-statement)
 * [function declarations](https://www.w3.org/TR/WGSL/#function-declaration-sec)
@@ -147,9 +147,9 @@ The conditional translation phase must be the first phase to run in the full WES
 
 * `@else` and `@elif` attributes:
   * An `@elif` attribute decorates the next sibling of a syntax node decorated by a `@if` or an `@elif`. It takes one parameter.
-     It marks the decorated node for removal if its parameter evaluates to `true` AND if the previous `@if` and `@elif` attribute parameters evaluate to false.
+     It marks the decorated node for removal if its parameter evaluates to `false` OR any of if the previous `@if` and `@elif` attribute parameters evaluate to `true`.
   * An `@else` attribute decorates the next sibling of a syntax node decorated by a `@if` or an `@elif`. It does not take any parameter.
-     It marks the decorated node for removal if the previous `@if` and `@elif` attribute parameters evaluate to false.
+     It marks the decorated node for removal if any of the previous `@if` and `@elif` attribute parameters evaluate to `true`.
   
   The `@else` attribute has the nice property that all cases lead to generating a node, and *could* therefore be used in places where the node is required (e.g. expressions)
   
