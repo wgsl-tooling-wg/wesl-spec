@@ -199,7 +199,8 @@ TODO: https://github.com/wgsl-tooling-wg/wesl-spec/issues/71
 
 ## Entry points and pipeline overridable constants
 
-These items are preserved when importing a module. Their name must be preserved. They will land in the final module, if they are being referenced.
+These items are preserved when importing a module. Their name must be preserved. 
+They will land in the final module, if they are statically accessed.
 
 - [Entry points](https://www.w3.org/TR/WGSL/#entry-points)
 - [Pipeline overridable constants](https://www.w3.org/TR/WGSL/#override-decls)
