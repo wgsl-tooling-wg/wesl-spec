@@ -352,7 +352,7 @@ We hope that namespaces will be added to WGSL itself. Then, the importing mechan
 
 We encourage tooling authors to also implement source maps when implementing imports. This aids
 - Error Reporting. When Naga or Tint report an error in the generated WGSL code, we want to map the error location back to the WESL code.
-- Debugging. Eventually we hope to have a full toolchain of WESL ==generates a sourcemap==> WGSL ==generates a source map==> SPIR-V ==> RenderDoc shows WESL code
+- Debugging. Eventually we hope to have a full toolchain of WESL to WGSL to SPIR-V, with source maps at each step. In the end, it should be possible for RenderDoc to show the original WESL code.
 
 ## Preprocessor
 
