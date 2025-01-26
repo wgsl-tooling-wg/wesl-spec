@@ -109,6 +109,12 @@ To resolve the import, the recursive structure is flattened out. Then, one itera
        - (Re-exporting changes the path.)
        - (Inline modules do not have a path.)
 
+- `super`
+- `package`
+- `ident`
+
+
+
 For example
 
 ```wgsl
@@ -351,7 +357,6 @@ We encourage tooling authors to also implement source maps when implementing imp
 - Error Reporting. When Naga or Tint report an error in the generated WGSL code, we want to map the error location back to the WESL code.
 - Debugging. Eventually we hope to have a full toolchain of WESL ==generates a sourcemap==> WGSL ==generates a source map==> SPIR-V ==> RenderDoc shows WESL code
 
-
 ## Preprocessor
 
 How a preprocessor would interact with this proposal is an open question for a future proposal.
@@ -360,3 +365,7 @@ See [Conditional Compilation](./ConditionalCompilation.md).
 ## Scoped imports
 
 Allow imports that are only active within one function?
+
+## Importing `.wgsl` files
+
+Currently only `.wesl` files are importable. This restriction may be relaxed in the future.
