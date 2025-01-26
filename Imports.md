@@ -287,7 +287,7 @@ Another drawback is that using the same name twice is impossible. In C-land, thi
 A future drawback is that "privacy" or "visibility" becomes very difficult to implement. Everything that is imported is automatically public and easily accessible.
 In C-land, the workaround is using header files. In other languages, such as Python, the convention ends up being "anything prefixed with an underscore `_` is private".
 
-## Typescript-like imports
+## TypeScript-like imports
 
 The Bevy team, with a large shader codebase, had a few wishes
 
@@ -335,7 +335,7 @@ automating shader composition for users.
 
 # Implementation
 
-This will be implemented in the [Javascript](https://github.com/wgsl-tooling-wg/wesl-js) and [Rust](https://github.com/wgsl-tooling-wg/wesl-rs) linkers.
+This will be implemented in the [JavaScript](https://github.com/wgsl-tooling-wg/wesl-js) and [Rust](https://github.com/wgsl-tooling-wg/wesl-rs) linkers.
 
 # Test cases
 
