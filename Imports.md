@@ -96,7 +96,7 @@ An import collection imports multiple items, and allows for nested imports.
 To resolve the import, the recursive structure is flattened out. Then, one iterates over each segment, and looks it up one by one.
 
 1. We start with the first segment.
-    - `super` refers to the parent module.
+    - `super` refers to the parent module. Can be repeated to go up multiple parent modules. Exiting the root is an error.
     - `package` refers to the top level module of the current package.
     - `ident` must be a known package, usually found in the `wgsl.toml` file. It refers to the top level module of that package.
 2. We take that as the "current module".
@@ -109,11 +109,8 @@ To resolve the import, the recursive structure is flattened out. Then, one itera
        - (Re-exporting changes the path.)
        - (Inline modules do not have a path.)
 
-- `super`
-- `package`
-- `ident`
-
-
+To get an absolute path to a module, one follows the algorithm above. In step 1, one takes the known absolute path of the `super` module, or the package.
+The absolute path of the `super` module is always known, since the first loaded WESL file must always be the root module, and children are only discovered from there.
 
 For example
 
