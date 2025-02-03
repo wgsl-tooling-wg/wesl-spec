@@ -68,7 +68,7 @@ translation_unit:
 | import_statement* global_directive* global_decl* 
 
 import_statement:  
-| 'import' (import_relative | import_package) (import_collection | item_import | import_path) ';'  
+| 'import' (import_relative | import_package) (import_collection | import_path | item_import) ';'  
 
 import_relative:
 | ('package' | 'super') '::' ('super' '::')*
@@ -83,10 +83,11 @@ item_import:
 | ident ('as' ident)?
 
 import_collection:
-| '{' (item_import | import_path) (',' (item_import | import_path))* ','? '}'
+| '{' (import_path | item_import) (',' (import_path | item_import))* ','? '}'
 ```
 
-Where `translation_unit` and `ident` are defined in the WGSL grammar.
+Where `translation_unit` and `ident` are defined in the WGSL grammar. 
+`ident`s are subject to the usual restrictions, meaning they cannot be keywords or reserved words.
 
 
 An item import imports a single item. The item can be renamed with the `as` keyword.
@@ -129,6 +130,19 @@ import super::shadowmapping;
 ```
 Assume that the current module lives at `shaders/lighting.wesl`. We first go to the super module at `shaders.wesl`. We then look for an item called `shadowmapping` in `shaders.wesl`.
 After not finding it, we look for a module `shadowmapping` at `shaders/shadowmapping.wesl`.
+
+## Filesystem Resolution
+
+To resolve a module on a filesystem, one follows the algorithm above. 
+The root folder, or the root module, needs to be provided to the linker. This is currently a linker-specific API, and may change once we introduce a `wesl.toml`.
+
+Linkers are allowed to fall back to `.wgsl` files when a `.wesl` file cannot be found *in user code*.
+Published libraries will only contain `.wesl` files. Thus, linkers should rename `.wgsl` files to `.wesl` for publishing.
+
+Due to filesystem limitations, it can happen that WESL idents are invalid file or folder names.
+Notable examples are `CON, PRN, AUX, NUL, COM1 - COM9, LPT1 - LPT9` on Windows, and Windows being case-insensitive
+We do not take these restrictions into account, instead we just recommend that WESL programmers avoid these special names.
+
 
 ## Inline Usage
 
@@ -362,7 +376,3 @@ See [Conditional Compilation](./ConditionalCompilation.md).
 ## Scoped imports
 
 Allow imports that are only active within one function?
-
-## Importing `.wgsl` files
-
-Currently only `.wesl` files are importable. This restriction may be relaxed in the future.
