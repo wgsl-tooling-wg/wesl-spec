@@ -86,6 +86,27 @@ import_collection:
 | '{' (import_path | item_import) (',' (import_path | item_import))* ','? '}'
 ```
 
+Equivalent LL(1) grammar for easier parsing
+```ebnf
+translation_unit:
+| import_statement* global_directive* global_decl* 
+
+import_statement:  
+| 'import' (import_relative | import_package) (import_collection | import_path_or_item) ';'  
+
+import_relative:
+| ('package' | 'super') '::' ('super' '::')*
+
+import_package:
+| ident '::'
+
+import_path_or_item:
+| ident ('::' (import_collection | import_path_or_item) | 'as' ident)?
+
+import_collection:
+| '{' (import_path_or_item) (',' (import_path_or_item))* ','? '}'
+```
+
 Where `translation_unit` and `ident` are defined in the WGSL grammar. 
 `ident`s are subject to the usual restrictions, meaning they cannot be keywords or reserved words.
 
