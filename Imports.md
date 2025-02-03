@@ -71,7 +71,7 @@ import_statement:
 | 'import' (import_relative | import_package) (import_collection | import_path | item_import) ';'  
 
 import_relative:
-| ('package' | 'super') '::' ('super' '::')*
+| 'package' '::' | 'super' '::' ('super' '::')*
 
 import_package:
 | ident '::'
@@ -95,7 +95,7 @@ import_statement:
 | 'import' (import_relative | import_package) (import_collection | import_path_or_item) ';'  
 
 import_relative:
-| ('package' | 'super') '::' ('super' '::')*
+| 'package' '::' | 'super' '::' ('super' '::')*
 
 import_package:
 | ident '::'
