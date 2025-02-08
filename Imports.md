@@ -2,12 +2,6 @@
 
 We propose adding an importing mechanism to the WGSL shading language as an extension.
 
-## TBD
-
-* Require braces for wgsl items? e.g. `import ./lighting/{ pbr };`
-  * If we require braces for wgsl items, could do `import ./foo/bar` instead of `import ./foo/bar/*`?
-* Add example for recursive imports
-
 # Motivation
 
 When writing bigger WGSL shaders, one tends to **split the code into reusable pieces**. Examples are re-using a set of lighting calculation functions and sharing a struct between two compute shaders and.
@@ -20,268 +14,254 @@ Finally, we want **multiple tools** which can compile WGSL-with-imports down to 
 
 ## Guide-level explanation
 
-The `import` statement extension is designed to appear somewhat familiar to TypeScript syntax,
-but with a Rust like recursive grammar to make importing
-multiple importable items less verbose.
-The syntax is also heavily inspired by [Gleam](https://gleam.run/).
-
-By placing an import at the very top of a file, one can either import an entire module, or only specific importable items, such as functions, structs or types.
+The `import` statement extension brings items or entire modules into scope. Import statements map to files with minimal searching.
 
 ```wgsl
-// Importing a single item using a relative path
-import ./lighting/pbr;
+// Importing a single function using a relative path
+import super::lighting::pbr;
 
 // Importing multiple items
-import my/geom/sphere/{ draw, default_radius as foobar };
+import my::geom::sphere::{ draw, default_radius as foobar };
 
-// Imports a whole module. Use it with `bevy_ui.name`
-import bevy_ui/*;
+// Imports a whole module. Use it with `bevy_ui::name`
+import bevy_ui;
 ```
 
 These can then be used anywhere in the source code.
 
 ```wgsl
 fn main() {
-    bevy_ui.quad(vec2f(0.0, 1.0), 1.0);
+    bevy_ui::quad(vec2f(0.0, 1.0), 1.0);
     let a = draw(3);
 }
 ```
 
-Both `bevy_ui` and `my` are packages in the current project. Language servers and related tools can look in a `wgsl.toml` file to find the location of the packages. This lets libraries be published to package managers, and users can import them with a simple syntax.
+Both `bevy_ui` and `my` are packages in the current project. Language servers and related tools can look in a `wesl.toml` file to find the location of the packages. This lets libraries be published to package managers, and users can import them with a simple syntax.
 
-The first part is the file path, which is assumed to have a either `.wgsl` file extension,
-or the extension we use for extended wgsl syntax (possibly `.wesl`).
-
-Recursive import definitions are also supported, which leads to short and succinct import statements.
+Recursive import definitions are also supported, which leads to shorter import statements.
 
 ```wgsl
-import bevy_pbr/{
-  forward_io/VertexOutput,
-  pbr_types/{PbrInput, pbr_input_new},
-  pbr_bindings/*
+import bevy_pbr::{
+  forward_io::VertexOutput,
+  pbr_types::{PbrInput, pbr_input_new},
+  pbr_bindings
 };
-
-fn main() {
-
-}
 ```
+
+To find the relevant items, the following algorithm is used:
+
+Proceding left to right through the path segments, consider the segments `prev` and `seg`.
+1. if `prev.wesl` exists and includes WESL elements, check if `seg` is one of those elements, e.g. `fn seg` or `namespace seg`.
+1. else if the directory `prev/` exists, check to see if the file `seg.wesl` or the directory `seg/` is in the `prev/` directory;
+1. error if a `seg` is not found. 
 
 # Reference-level explanation
 
-Imports must appear as the first items in a WGSL file. They import "importable items" (see [GLOSSARY.md](./GLOSSARY.md)).
+A WESL program is composed of a tree of WESL modules.
 
-An import statement is parsed as follows, with spaces and comments allowed between tokens:
+Imports must appear as the first items in a WESL file. They can import entire modules or individual  "importable items" (see [GLOSSARY.md](./GLOSSARY.md)).
 
-```wgsl
-main:  
-| 'import' import_relative? import_path ';'  
+An import statement is parsed with the following  grammar, with spaces and comments allowed between tokens:
+```ebnf
+translation_unit:
+| import_statement* global_directive* global_decl* 
 
-import_relative:  
-| ('.' | '..') '/' ('..' '/')*  
+import_statement:  
+| 'import' import_relative? (import_collection | import_path_or_item) ';'  
 
-import_path:  
-| ident '/' (import_path | import_collection | item_import | star_import)  
+import_relative:
+| 'package' '::' | 'super' '::' ('super' '::')*
 
-star_import:
-| '*' ('as' ident)?
-
-item_import:
+import_path_or_item:
+| ident '::' (import_collection | import_path_or_item) 
 | ident ('as' ident)?
 
 import_collection:
-| '{' (import_path | item_import) (',' (import_path | item_import))* ','? '}'
+| '{' (import_path_or_item) (',' (import_path_or_item))* ','? '}'
 ```
 
-Where `ident` is defined in the WGSL grammar.
+Where `translation_unit` and `ident` are defined in the WGSL grammar. 
+`ident`s are subject to the usual restrictions, meaning they cannot be keywords or reserved words.
 
-An import consists of
-
-- A path part, which either is a relative path ('.' and '..'), or points at a known package (ident).
-
-  - Nested path segments are joined.
-  - Everything before the final slash is part of the path.
-  - The final part is the file name.
-
-- Items to import.
-
-A star import behaves like a star import in Typescript, except that the name can be inferred from the file name. **Notably**, it does *not* import all the items individually. Instead, it groups them all under a single name!
 
 An item import imports a single item. The item can be renamed with the `as` keyword.
 
 An import collection imports multiple items, and allows for nested imports.
 
-## Examples
+To resolve the import, the recursive structure is flattened out. This means turning every `import_collection` into multiple separate imports, ending with the items. 
+For instance, `import a::{b, c::{d, e as f}};` would be turned into 
+```
+import a::b;
+import a::c::d;
+import a::c::e as f;
+```
 
-To compare it to the more widely known Typescript syntax, here are some examples.
 
-<table>
-<thead>
-<tr>
-<th>WGSL</th>
-<th>Typescript</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
+Then, one iterates over each segment from left to right, and looks it up one by one.
+
+1. We start with the first segment.
+    - `super` refers to the parent module. Can be repeated to go up multiple parent modules. Exiting the root is an error.
+    - `package` refers to the top level module of the current package.
+    - `ident` must be a known package, usually found in the `wgsl.toml` file. It refers to the top level module of that package.
+2. We take that as the "current module".
+3. We repeatedly look at the next segment.
+    1. Item in current module: Take that item. We must be at the last segment, otherwise it's an error.
+    2. (Else if re-exported or inline module in current module: We continue with that module.)
+    3. Else go to `current module path/ident.wesl`
+       - File found: We take that file as the current module.
+       - File not found: We assume an empty module as the current module, and continue with that.
+       - (Re-exporting changes the path.)
+       - (Inline modules do not have a path.)
+
+To get an absolute path to a module, one follows the algorithm above. In step 1, one takes the known absolute path of the `super` module, or the package.
+The absolute path of the `super` module is always known, since the first loaded WESL file must always be the root module, and children are only discovered from there.
+
+For example
 
 ```wgsl
-import ../geom/sphere/{draw, default_radius as foobar};
+import bevy_pbr::forward_io::VertexOutput;
 ```
+This first looks for `bevy_pbr.wesl`.
+`bevy_pbr.wesl` is found, and doesn't contain an item named `forward_io`.
+Thus, we go to `bevy_pbr/forward_io.wesl`. It contains a struct named `VertexOutput`.
 
-</td>
-<td>
 
-```ts
-import { draw, default_radius as foobar } from '../geom/sphere.wgsl';
-```
-
-</td>
-</tr>
-<tr>
-<td>
+Another example
 
 ```wgsl
-import bevy_ui/*;
+import super::shadowmapping;
+```
+Assume that the current module lives at `shaders/lighting.wesl`. We first go to the super module at `shaders.wesl`. We then look for an item called `shadowmapping` in `shaders.wesl`.
+After not finding it, we look for a module `shadowmapping` at `shaders/shadowmapping.wesl`.
+
+## Filesystem Resolution
+
+To resolve a module on a filesystem, one follows the algorithm above. 
+The root folder, or the root module, needs to be provided to the linker. This is currently a linker-specific API, and may change once we introduce a `wesl.toml`.
+
+Linkers are allowed to fall back to `.wgsl` files when a `.wesl` file cannot be found *in user code*.
+Published libraries will only contain `.wesl` files. Thus, linkers should change `wgsl` files to `wesl` for publishing, if applicable.
+
+Due to filesystem limitations, it can happen that WESL idents are invalid file or folder names.
+Notable examples are `CON, PRN, AUX, NUL, COM1 - COM9, LPT1 - LPT9` on Windows, and Windows being case-insensitive
+We do not take these restrictions into account, instead we just recommend that WESL programmers avoid these special names.
+
+
+## Inline Usage
+
+The syntax can also be used inline. To do so, we extend 
+the [WGSL grammar](https://www.w3.org/TR/WGSL/#grammar-recursive-descent) as follows.
+
+We introduce 
+
+```ebnf
+full_ident:
+| import_relative? ident ('::' ident)*
 ```
 
-</td>
-<td>
+and then replace `ident` with `full_ident` in the following places:
 
-```ts
-import * as bevy_ui from 'bevy_ui.wgsl';
-```
+```ebnf
+core_lhs_expression:
+| full_ident
+| ...
 
-</td>
-</tr>
-<tr>
-<td>
-
-```wgsl
-import bevy_pbr/{ 
-    forward_io/VertexOutput, 
-    pbr_types/{PbrInput, pbr_input_new}, 
-    pbr_bindings/* as pbr_b
-};
-```
-
-</td>
-<td>
-
-```ts
-import { VertexOutput } from 'bevy_pbr/forward_io.wgsl';
-import { PbrInput, pbr_input_new } from 'bevy_pbr/pbr_types.wgsl';
-import * as pbr_b from 'bevy_pbr/pbr_bindings.wgsl';
-```
-
-</td>
-</tr>
-</tbody>
-</table>
-
-## Parsing module.importable_item in the source code
-
-For tools that are parsing WGSL,
-here's how to extend the
-[WGSL grammar](https://www.w3.org/TR/WGSL/#grammar-recursive-descent)
-to parse imports:
-
-About extending the grammar:
-This one gets an additional meaning. A module property can also be a component.
-component_or_swizzle_specifier:
-| '.' member_ident component_or_swizzle_specifier ?
-
-This needs to be extended to support ident.ident
-for_init:
-| ident.ident func_call_statement.post.ident
+for_init: 
+| full_ident func_call_statement.post.ident
+| ...
 
 for_update:
-| ident.ident func_call_statement.post.ident
+| full_ident func_call_statement.post.ident
+| ...
 
-global_decl:
-| attribute _ 'fn' ident ... '->' attribute _ ident.ident
-| 'alias' ident '=' ident.ident template_elaborated_ident.post.ident ';'
+global_decl: 
+| attribute* 'fn' ident '(' ( attribute* full_ident ...
+| ...
+| 'alias' ident '=' full_ident ...
+| ...
 
-primary_expression:
-| ident.ident template_elaborated_ident.post.ident
-| ident.ident template_elaborated_ident.post.ident argument_expression_list
+primary_expression: 
+| full_ident template_elaborated_ident.post.ident
+| full_ident template_elaborated_ident.post.ident argument_expression_list
+| ...
 
-statement:
-| ident.ident template_elaborated_ident.post.ident argument_expression_list ';'
+statement: 
+| ...
+| full_ident template_elaborated_ident.post.ident argument_expression_list ';'
+| ...
 
 type_specifier:
-| ident.ident ...
+| full_ident ...
+```
 
-## Behaviour-changing items
+## Cyclic Imports
 
-These items cannot be imported, but they affect module behavior:
+Cyclic imports are allowed.
 
-- [Extensions](https://www.w3.org/TR/WGSL/#extensions)
-- [Global diagnostic filters](https://www.w3.org/TR/WGSL/#global-diagnostic-directive)
+However, the following is still illegal. 
+```
+// foo.wesl
+import bar::b;
+const a = b + 1;
+```
+```
+// bar.wesl
+import foo::a;
+const b = a + 1;
+```
+(a depends on b which depends on a)
 
-These are always set at the very top in the main module, and affect all imported modules. They come before the imports.
+Basic linker implementations do not need to check for this. Generating broken code and letting the underlying shader compiler throw an error is fine.
 
-When, during parsing of imported modules, we encounter an extension or a global diagnostic filter, we check if the main module enables it, or sets the filter.
-If yes, everything is fine. If not, we throw an error.
+## Directives
 
-(In naga-oil entrypoints are lowered to normal functions.
-Not clear we should preserve that, it's against the spec,
-but noting current behaviour that is being used in the wild.)
+TODO: https://github.com/wgsl-tooling-wg/wesl-spec/issues/71
 
-## Preserved items
+## Entry points and pipeline overridable constants
 
-These items are preserved when importing a module. They are not imported, but will land in the final module with a mangled name.
+These items are preserved when importing a module. Their name must be preserved. 
+They will land in the final module, if they are statically accessed.
 
 - [Entry points](https://www.w3.org/TR/WGSL/#entry-points)
 - [Pipeline overridable constants](https://www.w3.org/TR/WGSL/#override-decls)
 
-## Identifier Resolution
+TODO: This will probably be improved after M1.
 
-The steps of identifier resolution are as follows:
+TODO: https://github.com/wgsl-tooling-wg/wesl-spec/issues/65
 
-1. Parse the import statements. Resolve the paths to the concrete file paths.
-2. Bring the imported items into scope. All other items that the imported items depend on are also imported, _but not user-accessible in the current scope_.
-   For example when importing `Foo` from `struct Foo { x: Bar; }`, we would import `Bar` as well. If the user types `Bar` in the source code, then that is an error.
-3. Parse the WGSL.
 
-For example, given two modules
+## `const_assert`
+
+Generally, WGSL elements are included if they are recursively referenced from the root module (use analysis). But `const_assert` statements are also included if they are in the same module or namespace as a referenced element.
 
 ```wgsl
-// lighting.wgsl
-struct Light {
-    color: vec3;
-}
-struct LightSources {
-    lights: array<Light>;
-}
+​​​​// main.wesl:
+​​​​import foo::bar;
+​​​​fn main() { bar(); }
+
+​​​​// foo.wesl:
+​​​​import zig::zag;
+​​​​const_assert(1 > 0); // included in link because bar is used
+​​​​fn bar() { }
+​​​​fn miz() { zag() }
+
+​​​​// zig.wesl:
+​​​​const_assert(2 < 0); // not included in link
+​​​​fn zag() { }
 ```
 
-```wgsl
-// main.wgsl
-import lighting::{ LightSources };
+TODO: https://github.com/wgsl-tooling-wg/wesl-spec/issues/66
 
-// LightSources can be used
-fn clear_lights(lights: LightSources) -> LightSources {
-    for (var i = 0; i < lights.lights.length(); i = i + 1) {
-        // We can access everything inside of LightSources
-        let light = lights.lights[i];
+## Name Mangling
 
-        // However, the user cannot use the type "Light"
-        // let light: Light <== error, Light is not imported
+See [Name Mangling](./NameMangling.md)
 
-        light.color = vec3(0.0, 0.0, 0.0);
-    }
-    return lights;
-}
-```
+## Dead Code Elimination
 
-## Producing the final module
+Linkers may choose to do dead code elimination, but it is a not-observable implementation detail. 
 
-The final module is produced by taking each imported module (in topological order, with the main module last), resolving and mangling all the globals, and joining the resulting pieces of code together.
-
-All entry points and pipeline overridable constants from the imported modules are also mangled and land in the output.
-
-Dead code elimination is allowed, but not required.
+`const_assert` statements inside of functions will need special treatment.
+TODO: https://github.com/wgsl-tooling-wg/wesl-spec/issues/68
 
 # Drawbacks
 
@@ -292,11 +272,6 @@ Are there reasons as to why we should we not do this?
 - Paths in import statements must consist of valid WGSL identifiers, which can be limiting. This limitation could be lifted by allowing arbitrary strings in import paths, but would make the implementation more complex.
 
 # Rationale and alternatives
-
-- Why is this design the best in the space of possible designs?
-- What other designs have been considered and what is the rationale for not choosing them?
-- What is the impact of not doing this?
-- If this is a language proposal, could this be done in a library or macro instead? Does the proposed change make Rust code easier or harder to read, understand, and maintain?
 
 ## Not agreeing on a standard
 
@@ -330,13 +305,19 @@ Another drawback is that using the same name twice is impossible. In C-land, thi
 A future drawback is that "privacy" or "visibility" becomes very difficult to implement. Everything that is imported is automatically public and easily accessible.
 In C-land, the workaround is using header files. In other languages, such as Python, the convention ends up being "anything prefixed with an underscore `_` is private".
 
-## Typescript-like imports
+## TypeScript-like imports
 
-TODO: Main reason is just that they're more verbose
+The Bevy team, with a large shader codebase, had a few wishes
+
+- A short syntax
+- Inline usage
 
 ## Rust-like imports
 
-TODO: Needs something akin to a `mod` statement, otherwise ambiguity.
+To fully copy Rust's importing syntax, one needs something akin to a `mod` statement.
+The rules have carefully been architected to imitate the Rust style, while not requiring an explicit `mod` statement. 
+
+In Rust, `use foo::bar;` could either map to "import an item called `bar` from `foo.rs`" or it could map to "import the module `foo/bar.rs`". Rust uses the explicit `mod` statement to disambiguate. We instead check for the presence of an item.
 
 ## Putting exports in comments
 
@@ -370,30 +351,14 @@ For example, a linker can identify imports
 that are needed by other imports,
 automating shader composition for users.
 
-<!--
-# Future: Prior art
-
-Discuss prior art, both the good and the bad, in relation to this proposal. A few examples of what this can include are:
-
-- For language, library, cargo, tools, and compiler proposals: Does this feature exist in other programming languages and what experience have their community had?
-- For community proposals: Is this done by some other community and what were their experiences with it?
-- For other teams: What lessons can we learn from what other communities have done here?
-- Papers: Are there any published papers or great posts that discuss this? If you have some relevant papers to refer to, this can serve as a more detailed theoretical background.
-
-This section is intended to encourage you as an author to think about the lessons from other languages, provide readers of your RFC with a fuller picture. If there is no prior art, that is fine - your ideas are interesting to us whether they are brand new or if it is an adaptation from other languages.
-
-Note that while precedent set by other languages is some motivation, it does not on its own motivate an RFC. Please also take into consideration that rust sometimes intentionally diverges from common language features.
--->
-
 # Implementation
 
-We are slowly working on adopting and adjusting the specification.
-This work is happening in multiple tools, including [a WGSL language server](https://github.com/dannymcgee/vscode-wgsl/), a [Typescript WGSL linker](https://github.com/mighdoll/wgsl-linker) and [Bevy's WGSL-imports library](https://github.com/bevyengine/naga_oil).
+This will be implemented in the [JavaScript](https://github.com/wgsl-tooling-wg/wesl-js) and [Rust](https://github.com/wgsl-tooling-wg/wesl-rs) linkers.
 
 # Test cases
 
 Test cases will be available on
-[github](https://github.com/wgsl-tooling-wg/wgsl-import-spec).
+[github](https://github.com/wgsl-tooling-wg/wesl-testsuite).
 
 # Future possibilities
 
@@ -401,18 +366,11 @@ Test cases will be available on
 
 We hope that namespaces will be added to WGSL itself. Then, the importing mechanism can be extended to fully support namespaces, for example by treating each file as introducing its own namespace.
 
-## Documentation comments
-
-This proposal works nicely with documentation comments in WGSL. This would allow library authors to document their shaders, which would be very useful for consumers.
-
 ## Source maps
 
-We encourage tooling authors to also implement source maps when implementing imports.
-
-## Preprocessor
-
-How a preprocessor would interact with this proposal is an open question for a future proposal.
-See [Conditional Compilation](./ConditionalCompilation.md).
+We encourage tooling authors to also implement source maps when implementing imports. This aids
+- Error Reporting. When Naga or Tint report an error in the generated WGSL code, we want to map the error location back to the WESL code.
+- Debugging. Eventually we hope to have a full toolchain of WESL to WGSL to SPIR-V, with source maps at each step. In the end, it should be possible for RenderDoc to show the original WESL code.
 
 ## Scoped imports
 
