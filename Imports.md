@@ -249,9 +249,10 @@ See [Name Mangling](./NameMangling.md)
 
 ## Dead Code Elimination
 
-Linkers may choose to do dead code elimination, but it is a not-observable implementation detail.   
-`const_assert` statements inside of functions need special treatment. Either those functions have to be kept, 
-or rewritten to only keep the `const_assert`-relevant parts.
+Linkers may choose to do dead code elimination, but it is a not-observable implementation detail. 
+
+`const_assert` statements inside of functions will need special treatment.
+TODO: https://github.com/wgsl-tooling-wg/wesl-spec/issues/68
 
 # Drawbacks
 
