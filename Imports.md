@@ -218,7 +218,7 @@ They will land in the final module, if they are statically accessed.
 
 TODO: This will probably be improved after M1.
 
-TODO: Do we have an issue that I can link to?
+TODO: https://github.com/wgsl-tooling-wg/wesl-spec/issues/65
 
 
 ## `const_assert`
