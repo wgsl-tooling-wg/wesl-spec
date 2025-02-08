@@ -88,7 +88,16 @@ An item import imports a single item. The item can be renamed with the `as` keyw
 
 An import collection imports multiple items, and allows for nested imports.
 
-To resolve the import, the recursive structure is flattened out. Then, one iterates over each segment, and looks it up one by one.
+To resolve the import, the recursive structure is flattened out. This means turning every `import_collection` into multiple separate imports, ending with the items. 
+For instance, `import a::{b, c::{d, e as f}};` would be turned into 
+```
+import a::b;
+import a::c::d;
+import a::c::e as f;
+```
+
+
+Then, one iterates over each segment from left to right, and looks it up one by one.
 
 1. We start with the first segment.
     - `super` refers to the parent module. Can be repeated to go up multiple parent modules. Exiting the root is an error.
