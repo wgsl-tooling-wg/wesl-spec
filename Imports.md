@@ -61,7 +61,7 @@ A WESL program is composed of a tree of WESL modules.
 
 Imports must appear as the first items in a WESL file. They can import entire modules or individual  "importable items" (see [GLOSSARY.md](./GLOSSARY.md)).
 
-An import statement is parsed with the following LL(1) grammar, with spaces and comments allowed between tokens:
+An import statement is parsed with the following  grammar, with spaces and comments allowed between tokens:
 ```ebnf
 translation_unit:
 | import_statement* global_directive* global_decl* 
@@ -73,7 +73,8 @@ import_relative:
 | 'package' '::' | 'super' '::' ('super' '::')*
 
 import_path_or_item:
-| ident ('::' (import_collection | import_path_or_item) | 'as' ident)?
+| ident '::' (import_collection | import_path_or_item) 
+| ident ('as' ident)?
 
 import_collection:
 | '{' (import_path_or_item) (',' (import_path_or_item))* ','? '}'
