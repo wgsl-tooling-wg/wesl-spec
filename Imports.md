@@ -139,8 +139,7 @@ After not finding it, we look for a module `shadowmapping` at `shaders/shadowmap
 To resolve a module on a filesystem, one follows the algorithm above. 
 The root folder, or the root module, needs to be provided to the linker. This is currently a linker-specific API, and may change once we introduce a `wesl.toml`.
 
-Linkers are allowed to fall back to `.wgsl` files when a `.wesl` file cannot be found *in user code*.
-Published libraries will only contain `.wesl` files. Thus, linkers should change `wgsl` files to `wesl` for publishing, if applicable.
+Linkers should fall back to `.wgsl` files when a `.wesl` file cannot be found.
 
 Due to filesystem limitations, it can happen that WESL idents are invalid file or folder names.
 Notable examples are `CON, PRN, AUX, NUL, COM1 - COM9, LPT1 - LPT9` on Windows, and Windows being case-insensitive
