@@ -2,13 +2,15 @@
 
 ## Overview
 
+> [!WARNING]
 > This section is non-normative
 
 Conditional translation is a mechanism to modify the output source code based on parameters passed to the *WESL translator*.
 This specificaton extends the [*attribute* syntax](https://www.w3.org/TR/WGSL/#attributes) with a new `@if` attribute.
 This attribute indicates that the syntax node it decorates can be removed by the *WESL translator* based on feature flags.
 
-> NOTE: This implementation is similar to the `#[cfg(feature = "")]` syntax in rust.
+> [!NOTE]
+> This implementation is similar to the `#[cfg(feature = "")]` syntax in rust.
 
 ### Usage Example
 
@@ -65,8 +67,9 @@ A *translate-time attribute* can appear before the following syntax nodes:
 * [function call statements](https://www.w3.org/TR/WGSL/#function-call-statement)
 * [const assertion statements](https://www.w3.org/TR/WGSL/#const-assert-statement)
 * [switch clauses](https://www.w3.org/TR/WGSL/#switch-statement)
-  
-> NOTE: *translate-time attributes* are not allowed in places where removal of the syntax node would lead to syntactically incorrect code. The current set of *translate-time attribute* locations guarantees that the code is syntactically correct after specialization. This is why *translate-time attributes* are not allowed before expressions.
+
+> [!NOTE]
+> *Translate-time attributes* are not allowed in places where removal of the syntax node would lead to syntactically incorrect code. The current set of *translate-time attribute* locations guarantees that the code is syntactically correct after specialization. This is why *translate-time attributes* are not allowed before expressions.
 
 ### Update to the WGSL grammar
 
@@ -105,7 +108,8 @@ Refer to section [updated grammar](#updated-grammar) for the list of updated gra
 A new *translate-time attribute* is introduced.
 * An `@if` attribute takes a single parameter. It marks the decorated node for removal if the parameter evaluates to `false`.
 
-> NOTE: See the [possible future extensions](#possible-future-extensions) for the attributes `@elif` and `@else`.
+> [!NOTE]
+> See the [possible future extensions](#possible-future-extensions) for the attributes `@elif` and `@else`.
 > They may be introduced in the specification in a future version if deemed useful.
 
 *Example*
@@ -123,7 +127,8 @@ fn f() { ... }
 
 The conditional translation phase must be the first phase to run in the full WESL-to-WGSL translation pipeline.
 
-> NOTE: In case some features can only be resolved at runtime, a *WESL translator* implementation can support feature specialization in two phases:
+> [!NOTE]
+> In case some features can only be resolved at runtime, a *WESL translator* implementation can support feature specialization in two phases:
 > A first pass is invoked with features determined at compile-time and returns a partially translated WESL source, replacing some of the *translate-time features* with `true` or `false`.
 > A second pass is invoked with features determined at run-runtime and returns a fully translated WGSL source.
 
@@ -143,6 +148,7 @@ The conditional translation phase must be the first phase to run in the full WES
 
 ## Possible future extensions
 
+> [!WARNING]
 > This section is non-normative
 
 * `@else` and `@elif` attributes:
