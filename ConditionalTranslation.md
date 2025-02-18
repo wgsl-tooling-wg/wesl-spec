@@ -36,18 +36,37 @@ fn main() -> vec4 {
 }
 ```
 
+Quirky examples
+```rs
+// attribute order does not matter.
+@compute @if(feature) fn main() { }
+// ... is equivalent to 
+@if(feature) @compute fn main() { }
+
+// multiple @if attributes behave like an AND.
+@if(feature1) @if(feature2 || feature3) fn main() { }
+// ... is equivalent to
+@if(feature1 && (feature2 || feature3)) fn main() { }
+
+// feature names live in their own namespace, i.e. they cannot shadow, or be shadowed by declarations.
+const feature1 = 10;
+@if(feature1) fn main() -> u32 { // 'feature1' in @if does not refer to the const-declaration.
+    return feature1*2;           // 'feature1' in return statement does not refer to the feature flag.
+}
+```
+
 ## Definitions
 
-* **Translate-time expression**: A *translate-time expression* is evaluated by the *WESL translator* and eliminated after translation. It lives in the *translate-time scope*.
+* **Translate-time expression**: A *translate-time expression* is evaluated by the *WESL translator* and eliminated after translation.
   Its grammar is a subset of normal WGSL [expressions](https://www.w3.org/TR/WGSL/#expressions). it must be one of:
   * a *translate-time feature*,
   * a [logical expression](https://www.w3.org/TR/WGSL/#logical-expr): logical not (`!`), short-circuiting AND (`&&`), short-circuiting OR (`||`),
   * a [parenthesized expression](https://www.w3.org/TR/WGSL/#parenthesized-expressions),
-  * a boolean literal value (`true` or  `false`).
+  * a boolean literal value (`true` or `false`).
 
 * **Translate-time scope**: The *translate-time scope* this is an independent scope from the [*module scope*](https://www.w3.org/TR/WGSL/#module-scope), meaning it cannot see any declarations from the source code, and its identifers are independent.
 
-* **Translate-time feature**: A *translate-time feature* is an identifier that evaluates to a boolean. It is set to `true` if the feature is *enabled* during the translation phase and `false` if the feature is *disabled*.
+* **Translate-time feature**: A *translate-time feature* is an identifier that evaluates to a boolean. It is set to `true` if the feature is *enabled* during the translation phase and `false` if the feature is *disabled*. It lives in the *Translate-time scope*.
 
 * **Translate-time attribute**: A *translate-time attribute* is parametrized by a *translate-time expression*. It is eliminated after translation but can affect the syntax node it decorates.
 
@@ -105,8 +124,13 @@ Refer to section [updated grammar](#updated-grammar) for the list of updated gra
 
 ## `@if` attribute
 
-A new *translate-time attribute* is introduced.
-* An `@if` attribute takes a single parameter. It marks the decorated node for removal if the parameter evaluates to `false`.
+The `@if` *translate-time attribute* is introduced. It takes a single parameter. It marks the decorated node for removal if the parameter evaluates to `false`.
+
+If a syntax node has multiple `@if` attributes, they are all evaluated and the resulting evaluation is the AND of all `@if` attributes. The following declarations are equivalent:
+```rs
+@if(feature1) @if(feature2) const decl: u32 = 0;
+@if(feature1 && feature2)   const decl: u32 = 0;
+```
 
 > [!NOTE]
 > See the [possible future extensions](#possible-future-extensions) for the attributes `@elif` and `@else`.
@@ -125,13 +149,6 @@ fn f() { ... }
 
 ## Execution of the conditional translation phase
 
-The conditional translation phase must be the first phase to run in the full WESL-to-WGSL translation pipeline.
-
-> [!NOTE]
-> In case some features can only be resolved at runtime, a *WESL translator* implementation can support feature specialization in two phases:
-> A first pass is invoked with features determined at compile-time and returns a partially translated WESL source, replacing some of the *translate-time features* with `true` or `false`.
-> A second pass is invoked with features determined at run-runtime and returns a fully translated WGSL source.
-
 1. The *WESL translator* is invoked with the list of features to *enable* or *disable*.
 
 2. The source file is parsed.
@@ -145,6 +162,17 @@ The conditional translation phase must be the first phase to run in the full WES
    * Otherwise, only the attribute is eliminated from the source code.
 
 5. The updated source code is passed to the next translation phase. (e.g. import resolution)
+
+### Incremental translation
+In case some features can only be resolved at runtime, a *WESL translator* can *optionally* support feature specialization in multiple passes:
+* In the initial passes, the *WESL translator* is invoked with some of the feature flags. It replaces their occurences in *translate-time attributes* with either `true` or `false`.
+  These passes return a partially-translated WESL code.
+* After the final pass, the resulting code must be valid WGSL. it is an *link-time error* if any used *Translate-time features* was not provided to the linker.
+
+If the *WESL translator* does not support incremental translation, it is an *link-time error* if any used *Translate-time features* was not provided to the linker.
+
+> [!NOTE]
+> It is not an error to provide unused feature flags to the linker. However, an implementation may choose to display a warning in that case.
 
 ## Possible future extensions
 
