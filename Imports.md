@@ -229,7 +229,12 @@ TODO: https://github.com/wgsl-tooling-wg/wesl-spec/issues/65
 
 ## `const_assert`
 
-Generally, WGSL elements are included if they are recursively referenced from the root module (use analysis). But `const_assert` statements are also included if they are in the same module or namespace as a referenced element.
+Generally, WGSL elements are included if they are recursively used from the root module ([statically accessed](https://www.w3.org/TR/WGSL/#statically-accessed)). 
+An import statement by itself doesn't have any side effects. It does not bring in `const_assert`s.
+    
+`const_assert` statements are also included if they are in the same module or namespace as a used element.
+This only refers to the exact module that an element is in, and not any of the parent modules.
+`let a = bevy_pbr::lighting::shadows::SHADOW_DEPTH;` would bring in the `const_assert`s of the `shadows` module.
 
 ```wgsl
 ​​​​// main.wesl:
@@ -247,7 +252,9 @@ Generally, WGSL elements are included if they are recursively referenced from th
 ​​​​fn zag() { }
 ```
 
-TODO: https://github.com/wgsl-tooling-wg/wesl-spec/issues/66
+`const_assert`s inside functions are treated specially! They can get eliminated during dead-code elimination, which is an observable side-effect.
+[WESL deviates from WGSL here](https://github.com/wgsl-tooling-wg/wesl-spec/issues/93).
+
 
 ## Name Mangling
 
