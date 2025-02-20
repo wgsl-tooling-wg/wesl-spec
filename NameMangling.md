@@ -31,27 +31,17 @@ To rename all references to a declaration, one has to walk the syntax tree while
 Compiled WGSL files have a few exposed parts, namely the names of the entry functions and pipeline overridable constants (together called "host-visible names").
 
 
-## Length-prefixed mangling
+## Underscore-count mangling
 
 For sharing tests, we need a stable and predictable scheme. This one is also reversible and human-readable.
 
 For name mangling, we introduce the concept of a **fully qualified path**.
 This is the absolute path to the module, plus the item. e.g. `bevy_pbr::lighting::main`
 
-1. Split into segments (`bevy_pbr`, `lighting`, `main`)
-2. Every segment is prefixed by the number of Unicode codepoints it has. (`8bevy_pbr`, `8lighting`, `4main`)
-3. The result is joined, and prefixed with an `_`. (`_8bevy_pbr8lighting4main`)
-
-
-Example implementation (non-normative)
-```js
-function lengthPrefixMangle(qualifiedName) {
-  function codepointCount(text) {
-    return [...text].length;
-  }
-  return "_" + qualifiedName.map(v => codepointCount(v) + v).join("");
-}
-```
+1. `_` is the path separator
+2. Split into segments (`bevy_pbr`, `lighting`, `main`)
+3. If a segment contains `_`, prefix it with `_n` where `n`  the number of underscores it contains. (`_1bevy_pbr`, `lighting`, `main`)
+3. The result is joined with `_`. (`_1bevy_pbr_lighting_main`)
 
 ## Only-conflict mangling
 
