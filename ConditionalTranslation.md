@@ -43,11 +43,6 @@ Quirky examples
 // ... is equivalent to 
 @if(feature) @compute fn main() { }
 
-// multiple @if attributes behave like an AND.
-@if(feature1) @if(feature2 || feature3) fn main() { }
-// ... is equivalent to
-@if(feature1 && (feature2 || feature3)) fn main() { }
-
 // feature names live in their own namespace, i.e. they cannot shadow, or be shadowed by declarations.
 const feature1 = 10;
 @if(feature1) fn main() -> u32 { // 'feature1' in @if does not refer to the const-declaration.
@@ -126,9 +121,9 @@ Refer to section [updated grammar](#updated-grammar) for the list of updated gra
 
 The `@if` *translate-time attribute* is introduced. It takes a single parameter. It marks the decorated node for removal if the parameter evaluates to `false`.
 
-If a syntax node has multiple `@if` attributes, they are all evaluated and the resulting evaluation is the AND of all `@if` attributes. The following declarations are equivalent:
+A syntax node may at most have a single `@if` attributes. This keeps the way open for a `@else` attribute introduction in the future.
+Checking for multiple features is done with an `&&`
 ```rs
-@if(feature1) @if(feature2) const decl: u32 = 0;
 @if(feature1 && feature2)   const decl: u32 = 0;
 ```
 
