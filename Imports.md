@@ -264,8 +264,14 @@ See [Name Mangling](./NameMangling.md)
 
 Linkers may choose to do dead code elimination, but it is a not-observable implementation detail. 
 
-`const_assert` statements inside of functions will need special treatment.
-TODO: https://github.com/wgsl-tooling-wg/wesl-spec/issues/68
+`const_assert` statements inside of functions need special treatment, see relevant section.
+
+## Visibility
+
+Everything is public by default. 
+
+Future proposals will introduce visibility (privacy) for items and/or modules.
+
 
 # Drawbacks
 
