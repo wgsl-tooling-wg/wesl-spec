@@ -227,15 +227,16 @@ TODO: This will probably be improved after M1.
 TODO: https://github.com/wgsl-tooling-wg/wesl-spec/issues/65
 
 
-## `const_assert`
+## Side-effects and `const_assert`
 
 Generally, WGSL elements are included if they are recursively used from the root module ([statically accessed](https://www.w3.org/TR/WGSL/#statically-accessed)). 
 An import statement by itself doesn't have any side effects. It does not bring in `const_assert`s.
-    
+
 `const_assert` statements are also included if they are in the same module or namespace as a used element.
 This only refers to the exact module that an element is in, and not any of the parent modules.
 `let a = bevy_pbr::lighting::shadows::SHADOW_DEPTH;` would bring in the `const_assert`s of the `shadows` module.
 
+Example:
 ```wgsl
 ​​​​// main.wesl:
 ​​​​import foo::bar;
@@ -250,6 +251,14 @@ This only refers to the exact module that an element is in, and not any of the p
 ​​​​// zig.wesl:
 ​​​​const_assert(2 < 0); // not included in link
 ​​​​fn zag() { }
+```
+
+Example
+```wgsl
+import foo::bar;
+
+// Only the foo::bar::baz module would bring in its const assertions
+const a: u32 = bar::baz::hello; 
 ```
 
 `const_assert`s inside functions are treated specially! They can get eliminated during dead-code elimination, which is an observable side-effect.
