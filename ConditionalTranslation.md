@@ -101,6 +101,7 @@ Refer to section [updated grammar](#updated-grammar) for the list of updated gra
      * for statements
      * while statements
      * if/else statements
+     * continuing statements
 
 2. The grammar is extended to allow *translate-time attributes* before the following syntax nodes:
    * const value declarations
