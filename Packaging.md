@@ -4,7 +4,7 @@
 
 The section will discuss packaging WESL in reusable crates or npm packages.
 
-See also [Visiblity Control](Visiblity.md).
+See also [Visiblity](Visibility.md).
 
 
 * What goes in `package.json`?
