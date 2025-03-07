@@ -1,4 +1,4 @@
-> Corresponding spec: [ConditionalTranslation.md](ConditionalTranslation.md)
+*Also see the spec for [Conditional Translation](ConditionalTranslation.md)*
 
 ## Initial reflections
 

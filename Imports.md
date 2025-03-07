@@ -59,7 +59,7 @@ Proceding left to right through the path segments, consider the segments `prev` 
 
 A WESL program is composed of a tree of WESL modules.
 
-Imports must appear as the first items in a WESL file. They can import entire modules or individual  "importable items" (see [GLOSSARY.md](./GLOSSARY.md)).
+Imports must appear as the first items in a WESL file. They can import entire modules or individual  "importable items" (see [GLOSSARY](GLOSSARY.md)).
 
 An import statement is parsed with the following  grammar, with spaces and comments allowed between tokens:
 ```ebnf

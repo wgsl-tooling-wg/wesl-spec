@@ -89,7 +89,7 @@ A *translate-time attribute* can appear before the following syntax nodes:
 
 The WGSL grammar allows attributes in several locations where *translate-time attribute* are not allowed (1). Conversely, the WGSL grammar does not allow attributes in several locations where *translate-time attribute* are allowed (2).
 
-Refer to section [updated grammar](#updated-grammar) for the list of updated grammar non-terminals.
+Refer to the [updated grammar appendix](#appendix-updated-grammar) for the list of updated grammar non-terminals.
 
 1. A *translate-time attribute* CANNOT decorate the following syntax nodes, even if the WGSL grammar allows attributes before these syntax nodes:
    * function return types

@@ -102,7 +102,7 @@ Note that you can import a generic function w/o providing parameters:
   }
 ```
 
-Re-exporting generics is allowed (presuming we allow re-exporting in general, see [Visibility](./Visiblity.md)):
+Re-exporting generics is allowed (presuming we allow re-exporting in general, see [Visibility](Visibility.md)):
 
 ```wgsl
   ./lib.wesl:

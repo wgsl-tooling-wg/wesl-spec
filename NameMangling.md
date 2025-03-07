@@ -2,7 +2,7 @@
 
 Linker will mangle names internally, but we're hoping to keep the mangling details out of the public api.
 
-See also renaming host visible names in [Visibility](./Visiblity.md).
+See also renaming host visible names in [Visibility](./Visibility.md).
 
 (TBD)
 
