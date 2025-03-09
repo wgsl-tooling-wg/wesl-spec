@@ -134,6 +134,10 @@ import super::shadowmapping;
 Assume that the current module lives at `shaders/lighting.wesl`. We first go to the super module at `shaders.wesl`. We then look for an item called `shadowmapping` in `shaders.wesl`.
 After not finding it, we look for a module `shadowmapping` at `shaders/shadowmapping.wesl`.
 
+## `wesl.toml`
+
+A `wesl.toml` file will be added later to help language servers discover libraries, and to help standardize linker configuration.
+
 ## Filesystem Resolution
 
 To resolve a module on a filesystem, one follows the algorithm above. 
