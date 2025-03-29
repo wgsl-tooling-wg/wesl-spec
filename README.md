@@ -1,7 +1,11 @@
-# WESL - A Community Standard for Enhanced WGSL
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/logo/logo-square-dark.svg">
+    <img width="200" height="200" src="assets/logo/logo-square-light.svg" alt="WESL logo" />
+  </picture>
+</p>
 
-<img align="left" width="200" height="200" src="assets/logo-github.svg" alt="WESL logo" />
-
+# WESL – A Community Standard for Enhanced WGSL
 
 We propose building an enhanced version of WebGPU's
 [WGSL](https://www.w3.org/TR/WGSL/) shading language
