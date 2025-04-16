@@ -1,13 +1,11 @@
-# Designing Enhancemnents
+# Designing Enhancemnents for WESL
 
-(TBD)
-
-This section discusses some general design guidelines for creating new WGSL enhancements.
+This section discusses some general design guidelines for creating new shader language enhancements.
 
 ## Goals
 
 We're aiming to create a modestly improved, practical variant of WGSL.
-The result should feel like WGSL with a few things added.
+WESL should feel like WGSL with a few things added.
 
 ## Priorities
 
@@ -88,12 +86,6 @@ will be erased during transpilation to WGSL.
 But we don't want to confuse our programmers by
 unexpectedly changing the meaning of a keyword.
 
-It's not as clear whether we should avoid using all the keywords
-[reserved by WGSL](https://www.w3.org/TR/WGSL/#reserved-words)
-for future use.
 Some WESL enhancements may serve as prototypes for future
-WGSL features, and it'll be easier for programmers if the syntax
-stays the same.
-
-In any case, we'll work with the W3C team
+WGSL features. We'll work with the W3C team
 to be supportive of future WGSL evolution.
