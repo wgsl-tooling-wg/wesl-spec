@@ -95,8 +95,6 @@ This proof uses code duplication. But in real-world scenarios, one can get aroun
 
 We propose to leverage the [*attribute* syntax](https://www.w3.org/TR/WGSL/#attributes) to decorate syntax nodes with conditional compilation attributes.
 
-TODO
-
 ## References
 
 [Wikipedia: "Conditional compilation"](https://en.wikipedia.org/wiki/Conditional_compilation)
