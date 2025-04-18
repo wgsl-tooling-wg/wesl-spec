@@ -2,15 +2,13 @@
 
 ## Overview
 
-> [!WARNING]
-> This section is non-normative
+> _This section is non-normative_
 
 Conditional translation is a mechanism to modify the output source code based on parameters passed to the *WESL translator*.
 This specificaton extends the [*attribute* syntax](https://www.w3.org/TR/WGSL/#attributes) with a new `@if` attribute.
 This attribute indicates that the syntax node it decorates can be removed by the *WESL translator* based on feature flags.
 
-> [!NOTE]
-> This implementation is similar to the `#[cfg(feature = "")]` syntax in rust.
+> _This implementation is similar to the `#[cfg(feature = "")]` syntax in rust._
 
 ### Usage Example
 
@@ -82,8 +80,7 @@ A *translate-time attribute* can appear before the following syntax nodes:
 * [const assertion statements](https://www.w3.org/TR/WGSL/#const-assert-statement)
 * [switch clauses](https://www.w3.org/TR/WGSL/#switch-statement)
 
-> [!NOTE]
-> *Translate-time attributes* are not allowed in places where removal of the syntax node would lead to syntactically incorrect code. The current set of *translate-time attribute* locations guarantees that the code is syntactically correct after specialization. This is why *translate-time attributes* are not allowed before expressions.
+> _*Translate-time attributes* are not allowed in places where removal of the syntax node would lead to syntactically incorrect code. The current set of *translate-time attribute* locations guarantees that the code is syntactically correct after specialization. This is why *translate-time attributes* are not allowed before expressions._
 
 ### Update to the WGSL grammar
 
@@ -128,9 +125,8 @@ Checking for multiple features is done with an `&&`
 @if(feature1 && feature2)   const decl: u32 = 0;
 ```
 
-> [!NOTE]
-> See the [possible future extensions](#possible-future-extensions) for the attributes `@elif` and `@else`.
-> They may be introduced in the specification in a future version if deemed useful.
+> _See the [possible future extensions](#possible-future-extensions) for the attributes `@elif` and `@else`.
+> They may be introduced in the specification in a future version if deemed useful._
 
 *Example*
 
@@ -167,13 +163,11 @@ In case some features can only be resolved at runtime, a *WESL translator* can *
 
 If the *WESL translator* does not support incremental translation, it is an *link-time error* if any used *Translate-time features* was not provided to the linker.
 
-> [!NOTE]
-> It is not an error to provide unused feature flags to the linker. However, an implementation may choose to display a warning in that case.
+> _It is not an error to provide unused feature flags to the linker. However, an implementation may choose to display a warning in that case._
 
 ## Possible future extensions
 
-> [!WARNING]
-> This section is non-normative
+> _This section is non-normative_
 
 * `@else` and `@elif` attributes:
   * An `@elif` attribute decorates the next sibling of a syntax node decorated by a `@if` or an `@elif`. It takes one parameter.
