@@ -236,20 +236,17 @@ Basic linker implementations do not need to check for this. Generating broken co
 
 ## Directives
 
-TODO: https://github.com/wgsl-tooling-wg/wesl-spec/issues/71
+Under discussion, see: https://github.com/wgsl-tooling-wg/wesl-spec/issues/71
 
 ## Entry points and pipeline overridable constants
 
-These items are preserved when importing a module. Their name must be preserved. 
+These items are preserved when importing a module. Their name must be preserved.
 They will land in the final module, if they are statically accessed.
 
 - [Entry points](https://www.w3.org/TR/WGSL/#entry-points)
 - [Pipeline overridable constants](https://www.w3.org/TR/WGSL/#override-decls)
 
-TODO: This will probably be improved after M1.
-
-TODO: https://github.com/wgsl-tooling-wg/wesl-spec/issues/65
-
+For future work, see [@publish GitHub Issue](https://github.com/wgsl-tooling-wg/wesl-spec/issues/65).
 
 ## Side-effects and `const_assert`
 
@@ -396,12 +393,12 @@ automating shader composition for users.
 
 # Implementation
 
-This will be implemented in the [JavaScript](https://github.com/wgsl-tooling-wg/wesl-js) and [Rust](https://github.com/wgsl-tooling-wg/wesl-rs) linkers.
+Implemented in the [JavaScript/TypeScript](https://github.com/wgsl-tooling-wg/wesl-js) and [Rust](https://github.com/wgsl-tooling-wg/wesl-rs) linkers.
 
 # Test cases
 
-Test cases will be available on
-[github](https://github.com/wgsl-tooling-wg/wesl-testsuite).
+Test cases are available on
+[GitHub](https://github.com/wgsl-tooling-wg/wesl-testsuite).
 
 # Future possibilities
 
