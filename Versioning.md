@@ -1,7 +1,5 @@
 # Versioning Enhanced WGSL
 
-(TBD)
-
 As we stabilize for 1.0, we should mark a way for tools (and users) to distinguish our first stable version
 from subsequent releases.
 

@@ -1,7 +1,5 @@
 # Visibility Control
 
-(TBD)
-
 This section will describe WESL enhancements to control which WGSL elements are visible to importers.
 
 * how to re-export elements so that they're visible with a different path or name?
