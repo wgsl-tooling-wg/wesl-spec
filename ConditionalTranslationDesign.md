@@ -53,7 +53,7 @@ Whatever design choice we make now, is potentially a burden in the future. There
 ### Argument 2: structured is better for IDEs and human readers, and is closer to WGSL design choices.
 
 `#ifdef`s are not very readable. They don't match the language syntax style, they don't respect the structure (indentation etc), they are more verbose (require `#endif`) and error-prone.
-WGSL takes inspiration from Rust (all its keywords were borrowed from rust, and some elements of it's strong safety guarantees, such as making dangling pointer impossible.
+WGSL takes inspiration from Rust (all its keywords were borrowed from Rust, and some elements of it's strong safety guarantees, such as making dangling pointer impossible.
 Rust uses structured conditional compilation too, with the `#[cfg()]` attribute, which works very similarly to the `@if` attribute.
 
 Structured is great for IDEs too: with a structured `@if`, one can always generate a unified syntax tree

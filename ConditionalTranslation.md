@@ -8,7 +8,7 @@ Conditional translation is a mechanism to modify the output source code based on
 This specificaton extends the [*attribute* syntax](https://www.w3.org/TR/WGSL/#attributes) with a new `@if` attribute.
 This attribute indicates that the syntax node it decorates can be removed by the *WESL translator* based on feature flags.
 
-> _This implementation is similar to the `#[cfg(feature = "")]` syntax in rust._
+> _This implementation is similar to the `#[cfg(feature = "")]` syntax in Rust._
 
 ### Usage Example
 
