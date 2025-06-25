@@ -81,7 +81,7 @@ e.g.
 * The project as published as package `fooz`.
 * Other projects can write `import fooz/foo/bar;` to use `bar()`.
 
-### lib.WGSL
+### `lib.wgsl`
 
 If there is a file named `lib.wgsl` in the `package_root` directory,
 any public exports in `lib.wgsl` are visible at the root of the module.
