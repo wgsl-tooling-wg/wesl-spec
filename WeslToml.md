@@ -30,6 +30,10 @@ exclude = [ "**/test" ]
 # Inclusion of this field is encouraged.
 package-manager = "npm"
 
+# Automatically read dependencies from the package.json
+# Only supported for some package managers!
+auto-dependencies = true
+
 # Lists all used dependencies
 [dependencies]
 # Shorthand for `foolib = { package = "foolib" }`
@@ -62,6 +66,15 @@ And it must be explicitly limited to one package manager to massively reduce imp
 We also do not have any wesl implementations that would allow for mixing and matching packages from different package managers.
 
 For dual publishing, the expectation is that one would have a primary package manager, and then attempt to mirror the structure for other package managers.
+
+## `auto-dependencies` field
+
+The `auto-dependencies` field is supported for
+
+- npm: enabled by default. 
+
+It is not supported for other package managers.
+
 
 ## Q&A
 
