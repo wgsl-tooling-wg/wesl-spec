@@ -73,7 +73,7 @@ The `auto-dependencies` field is supported for
 
 - npm: enabled by default. 
 
-It is not supported for other package managers.
+It is not supported for other package managers and defaults to `false` for those.
 
 
 ## Q&A
