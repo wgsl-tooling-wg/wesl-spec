@@ -40,7 +40,7 @@ auto-dependencies = true
 foolib = {}
  # Can be used for renaming packages. Now bevy in my code is called "cute_bevy".
 cute_bevy = { package = "bevy" }
-# Local imports, necessary for workspaces made of multiple separate packages.
+# File path to a folder with a wesl.toml. Simplest kind of dependency.
 mylib = { path = "../mylib" }
 ```
 
