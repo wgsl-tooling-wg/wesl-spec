@@ -26,9 +26,9 @@ to the programmer.
 Our programmers will learn WGSL before learning our extensions.
 We should be additive to WGSL, not change semantics.
 
-**Part time shader programmers**. Our programmers will have to relearn any intracacies we introduce over and over again, so keep it simple.
+**Part time shader programmers**. Our programmers will have to relearn any intricacies we introduce over and over again, so keep it simple.
 
-**Medium size teams**. Our progammers work on projects ranging in size from tiny programs
+**Medium size teams**. Our programmers work on projects ranging in size from tiny programs
 up to teams of few dozen programmers.
 
 **General programming knowledge**.
@@ -36,7 +36,7 @@ Our programmers will likely know
 JavaScript/TypeScript or Rust,
 though not both. They'll also have been trained in at least one
 other popular language like Python, Java, or C++.
-Overall, we can expect that our programmers will know general 
+Overall, we can expect that our programmers will know general
 concepts available in most mainstream languages,
 but we can't count on them to know the details from any particular language
 other than WGSL.
@@ -45,8 +45,8 @@ other than WGSL.
 
 Avoid trying to imitate a TypeScript or Rust language feature syntactically
 unless it can fully match the source language semantics.
-If it _looks just like_ a Rust or TypeScript feature, programmers will expect it
-_work like_ the source language.
+If it *looks just like* a Rust or TypeScript feature, programmers will expect it
+*work like* the source language.
 
 But fully matching the source language will often be impossible
 in WGSL, or undesirable for complexity reasons.
