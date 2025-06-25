@@ -30,10 +30,6 @@ exclude = [ "**/test" ]
 # Inclusion of this field is encouraged.
 package-manager = "npm"
 
-# Automatically read dependencies from the package.json
-# Only supported for some package managers!
-auto-dependencies = true
-
 # Lists all used dependencies
 [dependencies]
 # Shorthand for `foolib = { package = "foolib" }`
@@ -67,13 +63,18 @@ We also do not have any wesl implementations that would allow for mixing and mat
 
 For dual publishing, the expectation is that one would have a primary package manager, and then attempt to mirror the structure for other package managers.
 
-## `auto-dependencies` field
+## `dependencies` entry
 
-The `auto-dependencies` field is an ecosystem specific feature. It is supported by
+All used dependencies are explicitly listed here.
 
-- npm: enabled by default. 
+### `dependencies = "auto"`
 
-For other package managers it defaults to `false`. Setting it to `true` in unsupported cases is an error.
+Instead of specifying a list of dependencies, one can specify `dependencies = "auto"`.
+Then, the available dependencies are automatically inferred from the list of installed libraries. 
+
+This is an ecosystem specific feature. It is supported by
+
+- npm: enabled by default. Exact semantics will be figured out.
 
 
 ## Q&A
