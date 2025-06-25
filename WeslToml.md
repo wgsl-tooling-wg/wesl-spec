@@ -5,17 +5,9 @@ WESL shader projects have a standardized `wesl.toml` file, which describes the p
 The format looks as follows. As much of it is optional as possible.
 
 ```toml
-[package] # Following the toml convention of grouping properties.
-
-# Optional, used for specifying the name within wesl shaders.
-# After all, the package manager's naming convention might clash with the WGSL naming conventions.
-# (E.g. camelCase vs snek_case)
-# Also deals with names like `@angular/animations`. Solves https://github.com/wgsl-tooling-wg/wesl-spec/issues/76
-name = "angular_animations" 
-
-# Not optional. Rust initially made it optional and it was a footgun.
-# It ended up being too easy to opt into the semantics of the oldest Rust edition.
-edition = "2025"
+[package]
+# Which wesl edition are we using
+edition = "unstable_2025"
 
 # Description and version fields do not exist.
 # They match the package.json/Cargo.toml.
@@ -26,17 +18,21 @@ edition = "2025"
 # We watch this directory for changes.
 root = "./shaders"
 
-# Some projects have large folders that we shouldn't react to. Globs for excluding them.
+# Optional. Default value is all wesl and wgsl files in the root directory.
+include = [ "shaders/**/*.wesl", "shaders/**/*.wgsl" ]
+
+# Optional.
+# Some projects have large folders that we shouldn't react to. 
 exclude = [ "**/test" ]
 
-# Can be auto-inferred from the existence of a package.json.
+# Optional, can be auto-inferred from the existence of a package.json.
 # Necessary when both a `package.json` and a `Cargo.toml` are present.
-# Inclusion of this field is gently encouraged.
+# Inclusion of this field is encouraged.
 package-manager = "npm"
 
-# Optional dependencies section, automatically obtained from the package manager.
+# Lists all used dependencies
 [dependencies]
- # Has no effect.
+# Shorthand for `foolib = { package = "foolib" }`
 foolib = {}
  # Can be used for renaming packages. Now bevy in my code is called "cute_bevy".
 cute_bevy = { package = "bevy" }
@@ -45,13 +41,29 @@ mylib = { path = "../mylib" }
 ```
 
 
-## FAQ
+[^1]: Linkers are free to offer their own configuration, in addition to supporting the `wesl.toml` format.
+For example, wesl-js in the browser would be configured via a roughly equivalent JSON object. This lets wesl-js avoid bundling a whole toml file format parser.
 
-### Why restrict yourself to exactly one package manager in the `package-manager` field?
 
-It is unreasonable to require a language server to check both package managers for the same dependencies, and run everything twice.
+## Semantics
 
-Tools are, however, free to support this sort of dual-publishing. They would have one primary package manager, and then attempt to mirror the structure for other package managers.
+### `edition` field
+
+Supports all wesl editions. Currently only `unstable_2025` is accepted, since we do not have an edition yet.
+
+### `package-manager` field
+
+Supports
+
+- `npm`
+- `cargo`
+
+And it must be explicitly limited to one package manager to massively reduce implementation complexity.
+We also do not have any wesl implementations that would allow for mixing and matching packages from different package managers.
+
+For dual publishing, the expectation is that one would have a primary package manager, and then attempt to mirror the structure for other package managers.
+
+## Q&A
 
 ### How do language servers find dependencies?
 
@@ -63,9 +75,9 @@ In some cases, a language server can also obtain dependencies by calling the pac
 
 Each wesl implementation will need to work together with language server authors.
 
-### How does wesl find dependencies?
+### How does wesl resolve dependencies?
 
-Wesl implementations get the dependencies this by running a build script.
+Wesl implementations resolve the dependencies this by running a build script.
 
 In Rust, this means running a `build.rs` or a proc macro.
 
@@ -76,12 +88,12 @@ In Javascript, there are multiple flavours of build scripts.
 
 ## Defaults when `wesl.toml` is missing
 
-It is possible to have WESL shaders without a `wesl.toml`. In that case, we default to
+**Creating a `wesl.toml` is recommended.**
+
+However, we support having WESL shaders without a `wesl.toml`. In that case, we default to
 
 - All optional fields work as described above
 - `root` is undefined, therefore the `package::` syntax cannot be used. Only relative imports, like `super::foo` are supported
-- The edition field defaults to ... ?
+- `edition` defaults to the latest wesl edition that *the tool* knows of.
 
-
-[^1]: Linkers are free to offer their own configuration, in addition to supporting the `wesl.toml` format.
-For example, wesl-js in the browser would be configured via a roughly equivalent JSON object. This lets wesl-js avoid bundling a whole toml file format parser.
+Not specifying an edition comes with the explicit risk of *tools no longer understanding your wesl code after an update*.
