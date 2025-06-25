@@ -89,11 +89,13 @@ This example in particular also breaks one IDE feature: Jump-to-matching-bracket
 
 ### Argument 3: structured is as expressive as unstructured in real-world use-cases
 
-@if is equally powerful as #ifdef. Proof:
+`@if` is equally powerful as `#ifdef`. Proof:
 
-    Assume all combinations of conditions are valid
-    Expand the #ifdef into all of the combinations
-    Encode each combination in a separate @if
+```tesxt
+Assume all combinations of conditions are valid
+Expand the #ifdef into all of the combinations
+Encode each combination in a separate @if
+```
 
 This proof uses code duplication. But in real-world scenarios, one can get around this by decorating with `@if`s only smallest element possible (aka. a struct member instead of the whole struct).
 
