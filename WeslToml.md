@@ -69,11 +69,11 @@ For dual publishing, the expectation is that one would have a primary package ma
 
 ## `auto-dependencies` field
 
-The `auto-dependencies` field is supported for
+The `auto-dependencies` field is an ecosystem specific feature. It is supported by
 
 - npm: enabled by default. 
 
-It is not supported for other package managers and defaults to `false` for those.
+For other package managers it defaults to `false`. Setting it to `true` in unsupported cases is an error.
 
 
 ## Q&A
