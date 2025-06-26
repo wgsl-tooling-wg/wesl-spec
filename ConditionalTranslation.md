@@ -2,13 +2,13 @@
 
 ## Overview
 
-> _This section is non-normative_
+> *This section is non-normative*
 
 Conditional translation is a mechanism to modify the output source code based on parameters passed to the *WESL translator*.
-This specificaton extends the [*attribute* syntax](https://www.w3.org/TR/WGSL/#attributes) with a new `@if` attribute.
+This specification extends the [*attribute* syntax](https://www.w3.org/TR/WGSL/#attributes) with a new `@if` attribute.
 This attribute indicates that the syntax node it decorates can be removed by the *WESL translator* based on feature flags.
 
-> _This implementation is similar to the `#[cfg(feature = "")]` syntax in Rust._
+> *This implementation is similar to the `#[cfg(feature = "")]` syntax in Rust.*
 
 ### Usage Example
 
@@ -35,6 +35,7 @@ fn main() -> vec4 {
 ```
 
 Quirky examples
+
 ```rs
 // attribute order does not matter.
 @compute @if(feature) fn main() { }
@@ -57,7 +58,7 @@ const feature1 = 10;
   * a [parenthesized expression](https://www.w3.org/TR/WGSL/#parenthesized-expressions),
   * a boolean literal value (`true` or `false`).
 
-* **Translate-time scope**: The *translate-time scope* this is an independent scope from the [*module scope*](https://www.w3.org/TR/WGSL/#module-scope), meaning it cannot see any declarations from the source code, and its identifers are independent.
+* **Translate-time scope**: The *translate-time scope* this is an independent scope from the [*module scope*](https://www.w3.org/TR/WGSL/#module-scope), meaning it cannot see any declarations from the source code, and its identifiers are independent.
 
 * **Translate-time feature**: A *translate-time feature* is an identifier that evaluates to a boolean. It is set to `true` if the feature is *enabled* during the translation phase and `false` if the feature is *disabled*. It lives in the *Translate-time scope*.
 
@@ -66,6 +67,7 @@ const feature1 = 10;
 ## Location of *Translate-time attributes*
 
 A *translate-time attribute* can appear before the following syntax nodes:
+
 * [directives](https://www.w3.org/TR/WGSL/#directives)
 * [variable and value declarations](https://www.w3.org/TR/WGSL/#var-and-value)
 * [type alias declarations](https://www.w3.org/TR/WGSL/#type-alias)
@@ -80,7 +82,7 @@ A *translate-time attribute* can appear before the following syntax nodes:
 * [const assertion statements](https://www.w3.org/TR/WGSL/#const-assert-statement)
 * [switch clauses](https://www.w3.org/TR/WGSL/#switch-statement)
 
-> _*Translate-time attributes* are not allowed in places where removal of the syntax node would lead to syntactically incorrect code. The current set of *translate-time attribute* locations guarantees that the code is syntactically correct after specialization. This is why *translate-time attributes* are not allowed before expressions._
+> **Translate-time attributes* are not allowed in places where removal of the syntax node would lead to syntactically incorrect code. The current set of *translate-time attribute* locations guarantees that the code is syntactically correct after specialization. This is why *translate-time attributes* are not allowed before expressions.*
 
 ### Update to the WGSL grammar
 
@@ -121,14 +123,15 @@ The `@if` *translate-time attribute* is introduced. It takes a single parameter.
 
 A syntax node may at most have a single `@if` attributes. This keeps the way open for a `@else` attribute introduction in the future.
 Checking for multiple features is done with an `&&`
+
 ```rs
 @if(feature1 && feature2)   const decl: u32 = 0;
 ```
 
-> _See the [possible future extensions](#possible-future-extensions) for the attributes `@elif` and `@else`.
-> They may be introduced in the specification in a future version if deemed useful._
+> *See the [possible future extensions](#possible-future-extensions) for the attributes `@elif` and `@else`.
+> They may be introduced in the specification in a future version if deemed useful.*
 
-*Example*
+Example:
 
 ```rs
 @if(feature_1 && (!feature_2 || feature_3))
@@ -156,18 +159,20 @@ fn f() { ... }
 5. The updated source code is passed to the next translation phase. (e.g. import resolution)
 
 ### Incremental translation
+
 In case some features can only be resolved at runtime, a *WESL translator* can *optionally* support feature specialization in multiple passes:
-* In the initial passes, the *WESL translator* is invoked with some of the feature flags. It replaces their occurences in *translate-time attributes* with either `true` or `false`.
+
+* In the initial passes, the *WESL translator* is invoked with some of the feature flags. It replaces their occurrences in *translate-time attributes* with either `true` or `false`.
   These passes return a partially-translated WESL code.
 * After the final pass, the resulting code must be valid WGSL. it is an *link-time error* if any used *Translate-time features* was not provided to the linker.
 
 If the *WESL translator* does not support incremental translation, it is an *link-time error* if any used *Translate-time features* was not provided to the linker.
 
-> _It is not an error to provide unused feature flags to the linker. However, an implementation may choose to display a warning in that case._
+> *It is not an error to provide unused feature flags to the linker. However, an implementation may choose to display a warning in that case.*
 
 ## Possible future extensions
 
-> _This section is non-normative_
+> *This section is non-normative*
 
 * `@else` and `@elif` attributes:
   * An `@elif` attribute decorates the next sibling of a syntax node decorated by a `@if` or an `@elif`. It takes one parameter.
@@ -217,6 +222,7 @@ If the *WESL translator* does not support incremental translation, it is an *lin
 
 The following non-terminals are added or modified:
 
+```grammar
     diagnostic_directive :
      attribute * 'diagnostic' diagnostic_control ';'
 
@@ -318,3 +324,4 @@ The following non-terminals are added or modified:
 
     if_attr:
      '@' 'if' '(' expression ',' ? ')'
+```

@@ -1,0 +1,15 @@
+{
+	"line-length": false,
+	"no-inline-html": false,
+	"proper-names": {
+		"code_blocks": false,
+		"html_elements": true,
+		"names": [
+			"WESL",
+			"WGSL"
+		]
+	},
+	"emphasis-style": {
+		"style": "asterisk"
+	}
+}
