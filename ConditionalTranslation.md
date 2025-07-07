@@ -1,7 +1,6 @@
 # Conditional Translation
 
 ## Overview
-
 > *This section is non-normative*
 
 Conditional translation is a mechanism to modify the output source code based on parameters passed to the *WESL translator*.
@@ -50,7 +49,6 @@ const feature1 = 10;
 ```
 
 ## Definitions
-
 * **Translate-time expression**: A *translate-time expression* is evaluated by the *WESL translator* and eliminated after translation.
   Its grammar is a subset of normal WGSL [expressions](https://www.w3.org/TR/WGSL/#expressions). it must be one of:
   * a *translate-time feature*,
@@ -65,7 +63,6 @@ const feature1 = 10;
 * **Translate-time attribute**: A *translate-time attribute* is parametrized by a *translate-time expression*. It is eliminated after translation but can affect the syntax node it decorates.
 
 ## Location of *Translate-time attributes*
-
 A *translate-time attribute* can appear before the following syntax nodes:
 
 * [directives](https://www.w3.org/TR/WGSL/#directives)
@@ -86,7 +83,6 @@ A *translate-time attribute* can appear before the following syntax nodes:
 > *Translate-time attributes* are not allowed in places where removal of the syntax node would lead to syntactically incorrect code. The current set of *translate-time attribute* locations guarantees that the code is syntactically correct after specialization. This is why *translate-time attributes* are not allowed before expressions.
 
 ### Update to the WGSL grammar
-
 The WGSL grammar allows attributes in several locations where *translate-time attribute* are not allowed (1). Conversely, the WGSL grammar does not allow attributes in several locations where *translate-time attribute* are allowed (2).
 
 Refer to the [updated grammar appendix](#appendix-updated-grammar) for the list of updated grammar non-terminals.
@@ -119,7 +115,6 @@ Refer to the [updated grammar appendix](#appendix-updated-grammar) for the list 
    * const assertion statements
 
 ## `@if` attribute
-
 The `@if` *translate-time attribute* is introduced. It takes a single parameter. It marks the decorated node for removal if the parameter evaluates to `false`.
 
 A syntax node may at most have a single `@if` attributes. This keeps the way open for a `@else` attribute introduction in the future.
@@ -144,7 +139,6 @@ fn f() { ... }
 ```
 
 ## Execution of the conditional translation phase
-
 1. The *WESL translator* is invoked with the list of features to *enable* or *disable*.
 
 2. The source file is parsed.
@@ -160,7 +154,6 @@ fn f() { ... }
 5. The updated source code is passed to the next translation phase. (e.g. import resolution)
 
 ### Incremental translation
-
 In case some features can only be resolved at runtime, a *WESL translator* can *optionally* support feature specialization in multiple passes:
 
 * In the initial passes, the *WESL translator* is invoked with some of the feature flags. It replaces their occurrences in *translate-time attributes* with either `true` or `false`.
@@ -172,7 +165,6 @@ If the *WESL translator* does not support incremental translation, it is an *lin
 > *It is not an error to provide unused feature flags to the linker. However, an implementation may choose to display a warning in that case.*
 
 ## Possible future extensions
-
 > *This section is non-normative*
 
 * `@else` and `@elif` attributes:
@@ -220,7 +212,6 @@ If the *WESL translator* does not support incremental translation, it is an *lin
   ```
 
 ## Appendix: Updated grammar
-
 The following non-terminals are added or modified:
 
 ```grammar

@@ -7,7 +7,6 @@
 </p>
 
 # WESL – A Community Standard for Enhanced WGSL
-
 We propose building an enhanced version of WebGPU's
 [WGSL](https://www.w3.org/TR/WGSL/) shading language
 using community tooling.
@@ -31,14 +30,12 @@ Join us on [GitHub](https://github.com/wgsl-tooling-wg/wesl-spec)
 or [Discord](https://discord.gg/Ng5FWmHuSv) to help.
 
 ## Goals
-
 Our ambition is to create a modestly improved, practical variant of WGSL
 called WESL (**W**GSL **E**nhanced **S**hading **L**anguage, pronounced like 'weasel'). <!-- spellchecker:disable-line -->
 
 WESL should feel like WGSL with a few useful things added.
 
 ## WGSL Enhancements
-
 We're aiming to prioritize WGSL enhancements that are: 1) important for community projects,
 2) feel natural to the WGSL programmer,
 and 3) not too difficult to integrate into community tools.
@@ -57,7 +54,6 @@ so shaders can be customized based on external flags.
 See spec draft here: **[Conditional Translation]**.
 
 ## Stability
-
 As a community project,
 we can iterate quickly on experimental WGSL features.
 
@@ -66,14 +62,12 @@ with backwards compatibility with the aim of
 nurturing an ecosystem of WESL/WGSL libraries.
 
 ## Filename extension
-
 Source files containing
 WESL files
 should have the `.wesl` extension
 to distinguish them from vanilla W3C WGSL.
 
 ## Enhancements Roadmap
-
 WESL prioritized these features for its first release:
 
 * [Imports] for splitting shaders into modules
@@ -83,7 +77,6 @@ WESL prioritized these features for its first release:
 What would you like to see next?
 
 ## Relationship to W3C WGSL and WebGPU
-
 WESL enhancements features are invisible to WebGPU engines
 like Dawn and wgpu.
 All WESL enhancements are translated to vanilla WGSL
@@ -96,7 +89,6 @@ But designing changes to W3C standard WGSL is
 beyond the scope of this project.
 
 ## License
-
 Except where noted (below and/or in individual files), all code in this repository is dual-licensed under either:
 
 * MIT License ([LICENSE-MIT](LICENSE-MIT) or [http://opensource.org/licenses/MIT](http://opensource.org/licenses/MIT))
@@ -105,7 +97,6 @@ Except where noted (below and/or in individual files), all code in this reposito
 at your option.
 
 ### Your contributions
-
 Unless you explicitly state otherwise,
 any contribution intentionally submitted for inclusion in the work by you,
 as defined in the Apache-2.0 license,

@@ -7,7 +7,7 @@
 	"single-h1": false,
 	"blanks-around-headings": {
 		"lines_above": 1,
-		"lines_below": 1
+		"lines_below": 0
 	},
 	"code-block-style": {
 		"style": "fenced"
@@ -46,6 +46,7 @@
 			"//"
 		]
 	},
+	"blanks-around-lists": false,
 	"link-image-style": {
 		"autolink": true,
 		"collapsed": true,

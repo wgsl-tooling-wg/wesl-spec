@@ -1,9 +1,7 @@
 # Conditional Translation Design
-
 *Also see the spec for [Conditional Translation](ConditionalTranslation.md)*
 
 ## Initial reflections
-
 * `#if #else #endif` (or perhaps `#ifdef`) in the style of a C preprocessor
   is the approach that comes first to mind.
 * conditional compilation runs after simple templating but before import processing..
@@ -26,7 +24,6 @@
   * should the WESL code distinguish conditions that are settable at compile time from those that are settable at runtime?
 
 ## Structured VS. Unstructured
-
 Conditional compilation is a mechanism to modify the source code based on parameters passed to the compiler. We distinguish two kinds:
 
 * **unstructured**: arbitrary code sections can be injected or conditionally included. This is what the C preprocessor and macros do, and a lesser version of that is proposed in [`simple templating`](SimpleTemplating.md).
@@ -38,7 +35,7 @@ Also, a language that has a good expressive power already should not need a way 
 | unstructured | structured |
 |--------------|------------|
 | (+) much easier to implement: just look for the `#word` symbols | (-) harder to implement: requires a full parsing |
-| (+) often language-agnostic (see the [C preprocessor](https://en.wikipedia.org/wiki/C_preprocessor). Familiar to C developers. | (-) a new syntax needs to be taught, not always self-explanatory |
+| (+) often language-agnostic (see the [C preprocessor](https://en.wikipedia.org/wiki/C_preprocessor)). Familiar to C developers. | (-) a new syntax needs to be taught, not always self-explanatory |
 | (-) poorly integrated in the language, harder to read by humans | (+) is a well-designed syntax feature of the language |
 | (+) technically more expressive (e.g. [manipulating identifiers](https://en.wikipedia.org/wiki/C_preprocessor#Token_concatenation)) | (-) can only conditionally include parts of the syntax tree, poor text generation capabilities. |
 | (-) behaves unpredictably, intent and behavior is hidden | (+) intent and behavior is visible at the usage site |
@@ -48,12 +45,10 @@ Also, a language that has a good expressive power already should not need a way 
 ## Why do we prefer structured?
 
 ### Argument 1: structured is sound, and soundness is more important than implementation burden on the long run
-
 Once a couple great and safe linker/compiler implementations for WESL exist, everyone can benefit from them.
 Whatever design choice we make now, is potentially a burden in the future. Therefore, we want a robust design.
 
 ### Argument 2: structured is better for IDEs and human readers, and is closer to WGSL design choices
-
 `#ifdef`s are not very readable. They don't match the language syntax style, they don't respect the structure (indentation etc), they are more verbose (require `#endif`) and error-prone.
 WGSL takes inspiration from Rust (all its keywords were borrowed from Rust, and some elements of its strong safety guarantees, such as making dangling pointer impossible).
 Rust uses structured conditional compilation too, with the `#[cfg()]` attribute, which works very similarly to the `@if` attribute.
@@ -87,7 +82,6 @@ is very hard to turn into a single syntax tree. Juggling two separate syntax tre
 This example in particular also breaks one IDE feature: Jump-to-matching-bracket
 
 ### Argument 3: structured is as expressive as unstructured in real-world use-cases
-
 `@if` is equally powerful as `#ifdef`. Proof:
 
 ```text
@@ -99,11 +93,9 @@ Encode each combination in a separate @if
 This proof uses code duplication. But in real-world scenarios, one can get around this by decorating with `@if`s only smallest element possible (aka. a struct member instead of the whole struct).
 
 ## Syntax extension: using WGSL attributes
-
 We propose to leverage the [*attribute* syntax](https://www.w3.org/TR/WGSL/#attributes) to decorate syntax nodes with conditional compilation attributes.
 
 ## References
-
 [Wikipedia: "Conditional compilation"](https://en.wikipedia.org/wiki/Conditional_compilation)
 
 [C preprocessor](https://en.wikipedia.org/wiki/C_preprocessor)

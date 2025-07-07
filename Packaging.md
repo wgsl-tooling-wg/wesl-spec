@@ -1,5 +1,4 @@
 # Packaging
-
 (TBD)
 
 The section will discuss packaging WESL in reusable crates or npm packages.
@@ -33,7 +32,6 @@ See also [Visibility](Visibility.md).
 * What goes in `cargo.toml`?
 
 ## `wesl.toml` file
-
 The `wesl.toml` file is a configuration file that tells the language server where to find the packages. It is similar to a `Cargo.toml` file in that regard.
 
 ```toml
@@ -51,7 +49,6 @@ In the Javascript world, it is common to have a `node_modules` folder with 10k f
 We are planning on taking advantage of existing package managers, such as `cargo` for Rust, and `npm` for Javascript. This makes it easier for users to consume shaders, and makes sense for ecosystem-specific tools.
 
 ### Unresolved questions
-
 * Is .toml the best file format for the `wesl.toml`? Some alternatives would be JSON/JSON5 and StrictYAML.
 * do we need to put paths for every package's WGSL in `wesl.toml`?
   * Fine to get started that way if need be, but its a maintenance burden every user..
