@@ -50,10 +50,11 @@ import bevy_pbr::{
 
 To find the relevant items, the following algorithm is used:
 
-Proceding left to right through the path segments, consider the segments `prev` and `seg`.
+Proceeding left to right through the path segments, consider the segments `prev` and `seg`.
+
 1. if `prev.wesl` exists and includes WESL elements, check if `seg` is one of those elements, e.g. `fn seg` or `namespace seg`.
-1. else if the directory `prev/` exists, check to see if the file `seg.wesl` or the directory `seg/` is in the `prev/` directory;
-1. error if a `seg` is not found. 
+2. else if the directory `prev/` exists, check to see if the file `seg.wesl` or the directory `seg/` is in the `prev/` directory;
+3. error if a `seg` is not found.
 
 # Reference-level explanation
 
@@ -62,6 +63,7 @@ A WESL program is composed of a tree of WESL modules.
 Imports must appear as the first items in a WESL file. They can import entire modules or individual  "importable items" (see [GLOSSARY](GLOSSARY.md)).
 
 An import statement is parsed with the following  grammar, with spaces and comments allowed between tokens:
+
 ```ebnf
 translation_unit:
 | import_statement* global_directive* global_decl* 
@@ -80,38 +82,37 @@ import_collection:
 | '{' (import_path_or_item) (',' (import_path_or_item))* ','? '}'
 ```
 
-Where `translation_unit` and `ident` are defined in the WGSL grammar. 
+Where `translation_unit` and `ident` are defined in the WGSL grammar.
 `ident`s are subject to the usual restrictions, meaning they cannot be keywords or reserved words.
-
 
 An item import imports a single item. The item can be renamed with the `as` keyword.
 
 An import collection imports multiple items, and allows for nested imports.
 
-To resolve the import, the recursive structure is flattened out. This means turning every `import_collection` into multiple separate imports, ending with the items. 
-For instance, `import a::{b, c::{d, e as f}};` would be turned into 
-```
+To resolve the import, the recursive structure is flattened out. This means turning every `import_collection` into multiple separate imports, ending with the items.
+For instance, `import a::{b, c::{d, e as f}};` would be turned into
+
+```wesl
 import a::b;
 import a::c::d;
 import a::c::e as f;
 ```
 
-
 Then, one iterates over each segment from left to right, and looks it up one by one.
 
 1. We start with the first segment.
-    - `super` refers to the parent module. Can be repeated to go up multiple parent modules. Exiting the root is an error.
-    - `package` refers to the top level module of the current package.
-    - `ident` must be a known package, usually found in the `wesl.toml` file. It refers to the top level module of that package.
+    * `super` refers to the parent module. Can be repeated to go up multiple parent modules. Exiting the root is an error.
+    * `package` refers to the top level module of the current package.
+    * `ident` must be a known package, usually found in the `wesl.toml` file. It refers to the top level module of that package.
 2. We take that as the "current module".
 3. We repeatedly look at the next segment.
     1. Item in current module: Take that item. We must be at the last segment, otherwise it's an error.
     2. (Else if re-exported or inline module in current module: We continue with that module.)
     3. Else go to `current module path/ident.wesl`
-       - File found: We take that file as the current module.
-       - File not found: We assume an empty module as the current module, and continue with that.
-       - (Re-exporting changes the path.)
-       - (Inline modules do not have a path.)
+       * File found: We take that file as the current module.
+       * File not found: We assume an empty module as the current module, and continue with that.
+       * (Re-exporting changes the path.)
+       * (Inline modules do not have a path.)
 
 To get an absolute path to a module, one follows the algorithm above. In step 1, one takes the known absolute path of the `super` module, or the package.
 The absolute path of the `super` module is always known, since the first loaded WESL file must always be the root module, and children are only discovered from there.
@@ -126,16 +127,17 @@ For example
 ```wgsl
 import bevy_pbr::forward_io::VertexOutput;
 ```
+
 This first looks for `bevy_pbr.wesl`.
 `bevy_pbr.wesl` is found, and doesn't contain an item named `forward_io`.
 Thus, we go to `bevy_pbr/forward_io.wesl`. It contains a struct named `VertexOutput`.
-
 
 Another example
 
 ```wgsl
 import super::shadowmapping;
 ```
+
 Assume that the current module lives at `shaders/lighting.wesl`. We first go to the super module at `shaders.wesl`. We then look for an item called `shadowmapping` in `shaders.wesl`.
 After not finding it, we look for a module `shadowmapping` at `shaders/shadowmapping.wesl`.
 
@@ -145,7 +147,7 @@ A `wesl.toml` file will be added later to help language servers discover librari
 
 ## Filesystem Resolution
 
-To resolve a module on a filesystem, one follows the algorithm above. 
+To resolve a module on a filesystem, one follows the algorithm above.
 The root folder, or the root module, needs to be provided to the linker. This is currently a linker-specific API, and may change once we introduce a `wesl.toml`.
 
 Linkers should fall back to `.wgsl` files when a `.wesl` file cannot be found.
@@ -154,13 +156,12 @@ Due to filesystem limitations, it can happen that WESL idents are invalid file o
 Notable examples are `CON, PRN, AUX, NUL, COM1 - COM9, LPT1 - LPT9` on Windows, and Windows being case-insensitive
 We do not take these restrictions into account, instead we just recommend that WESL programmers avoid these special names.
 
-
 ## Inline Usage
 
-The syntax can also be used inline. To do so, we extend 
+The syntax can also be used inline. To do so, we extend
 the [WGSL grammar](https://www.w3.org/TR/WGSL/#grammar-recursive-descent) as follows.
 
-We introduce 
+We introduce
 
 ```ebnf
 full_ident:
@@ -201,12 +202,13 @@ type_specifier:
 ```
 
 When resolving inline imports, we can also use modules that were imported. This means that the import resolution algorithm is extended to
+
 1. We start with the first segment.
-    - ...
-    - `ident` refers to an identifier that is in scope. If it is a module, we start with that. If it is not a module, it is an error. If there is none, we fall back to the packages.
-  
+    * ...
+    * `ident` refers to an identifier that is in scope. If it is a module, we start with that. If it is not a module, it is an error. If there is none, we fall back to the packages.
 
 Examples
+
 ```wesl
 import foo::bar;
 fn main() {
@@ -219,38 +221,41 @@ fn main() {
 
 Cyclic imports are allowed.
 
-However, the following is still illegal. 
-```
+However, the following is still illegal.
+
+```wesl
 // foo.wesl
 import bar::b;
 const a = b + 1;
 ```
-```
+
+```wesl
 // bar.wesl
 import foo::a;
 const b = a + 1;
 ```
+
 (a depends on b which depends on a)
 
 Basic linker implementations do not need to check for this. Generating broken code and letting the underlying shader compiler throw an error is fine.
 
 ## Directives
 
-Under discussion, see: https://github.com/wgsl-tooling-wg/wesl-spec/issues/71
+Under discussion, see: <https://github.com/wgsl-tooling-wg/wesl-spec/issues/71>
 
 ## Entry points and pipeline overridable constants
 
 These items are preserved when importing a module. Their name must be preserved.
 They will land in the final module, if they are statically accessed.
 
-- [Entry points](https://www.w3.org/TR/WGSL/#entry-points)
-- [Pipeline overridable constants](https://www.w3.org/TR/WGSL/#override-decls)
+* [Entry points](https://www.w3.org/TR/WGSL/#entry-points)
+* [Pipeline overridable constants](https://www.w3.org/TR/WGSL/#override-decls)
 
 For future work, see [@publish GitHub Issue](https://github.com/wgsl-tooling-wg/wesl-spec/issues/65).
 
 ## Side-effects and `const_assert`
 
-Generally, WGSL elements are included if they are recursively used from the root module ([statically accessed](https://www.w3.org/TR/WGSL/#statically-accessed)). 
+Generally, WGSL elements are included if they are recursively used from the root module ([statically accessed](https://www.w3.org/TR/WGSL/#statically-accessed)).
 An import statement by itself doesn't have any side effects. It does not bring in `const_assert`s.
 
 `const_assert` statements are also included if they are in the same module or namespace as a used element.
@@ -258,6 +263,7 @@ This only refers to the exact module that an element is in, and not any of the p
 `let a = bevy_pbr::lighting::shadows::SHADOW_DEPTH;` would bring in the `const_assert`s of the `shadows` module.
 
 Example:
+
 ```wgsl
 ​​​​// main.wesl:
 ​​​​import foo::bar;
@@ -275,6 +281,7 @@ Example:
 ```
 
 Example
+
 ```wgsl
 import foo::bar;
 
@@ -285,31 +292,29 @@ const a: u32 = bar::baz::hello;
 `const_assert`s inside functions are treated specially! They can get eliminated during dead-code elimination, which is an observable side-effect.
 [WESL deviates from WGSL here](https://github.com/wgsl-tooling-wg/wesl-spec/issues/93).
 
-
 ## Name Mangling
 
 See [Name Mangling](./NameMangling.md)
 
 ## Dead Code Elimination
 
-Linkers may choose to do dead code elimination, but it is a not-observable implementation detail. 
+Linkers may choose to do dead code elimination, but it is a not-observable implementation detail.
 
 `const_assert` statements inside of functions need special treatment, see relevant section.
 
 ## Visibility
 
-Everything is public by default. 
+Everything is public by default.
 
 Future proposals will introduce visibility (privacy) for items and/or modules.
-
 
 # Drawbacks
 
 Are there reasons as to why we should we not do this?
 
-- This introduces yet another importing syntax that developers have to learn, instead of using a standard syntax.
-- To implement the name mangling, one has to parse WGSL code! This is not trivial, and requires a partial WGSL parser.
-- Paths in import statements must consist of valid WGSL identifiers, which can be limiting. This limitation could be lifted by allowing arbitrary strings in import paths, but would make the implementation more complex.
+* This introduces yet another importing syntax that developers have to learn, instead of using a standard syntax.
+* To implement the name mangling, one has to parse WGSL code! This is not trivial, and requires a partial WGSL parser.
+* Paths in import statements must consist of valid WGSL identifiers, which can be limiting. This limitation could be lifted by allowing arbitrary strings in import paths, but would make the implementation more complex.
 
 # Rationale and alternatives
 
@@ -338,7 +343,7 @@ One drawback is that importing the same shader multiple times, which can also ha
 #include <math.wgsl>
 ```
 
-would not work, since anything defined in `math.wgsl` would be imported twice. In C-land, this is solved by using _include guards_.
+would not work, since anything defined in `math.wgsl` would be imported twice. In C-land, this is solved by using *include guards*.
 
 Another drawback is that using the same name twice is impossible. In C-land, this leads to pseudo-namespaces, where major libraries will prefix all of their functions with a few symbols. An example of this is the Vulkan API `vkBeginCommandBuffer` or `vkCmdDraw`.
 
@@ -349,13 +354,13 @@ In C-land, the workaround is using header files. In other languages, such as Pyt
 
 The Bevy team, with a large shader codebase, had a few wishes
 
-- A short syntax
-- Inline usage
+* A short syntax
+* Inline usage
 
 ## Rust-like imports
 
 To fully copy Rust's importing syntax, one needs something akin to a `mod` statement.
-The rules have carefully been architected to imitate the Rust style, while not requiring an explicit `mod` statement. 
+The rules have carefully been architected to imitate the Rust style, while not requiring an explicit `mod` statement.
 
 In Rust, `use foo::bar;` could either map to "import an item called `bar` from `foo.rs`" or it could map to "import the module `foo/bar.rs`". Rust uses the explicit `mod` statement to disambiguate. We instead check for the presence of an item.
 
@@ -368,7 +373,7 @@ This would have the advantage of letting some existing WGSL tools ignore the new
 There are multiple higher level shading languages, such as [slang](https://github.com/shader-slang/slang) or [Rust-GPU](https://github.com/EmbarkStudios/rust-gpu) which support imports. They also support more features that WGSL currently does not offer. For complex projects, this can very much pay off.
 
 The downside is using additional tooling, and dealing with an additional translation layer.
-An additonal translation layer could lock shader authors out of certain WGSL features.
+An additional translation layer could lock shader authors out of certain WGSL features.
 
 Also, higher level GPU languages are typically processed at build time,
 which precludes using language features to adapt to runtime conditions
@@ -409,8 +414,9 @@ We hope that namespaces will be added to WGSL itself. Then, the importing mechan
 ## Source maps
 
 We encourage tooling authors to also implement source maps when implementing imports. This aids
-- Error Reporting. When Naga or Tint report an error in the generated WGSL code, we want to map the error location back to the WESL code.
-- Debugging. Eventually we hope to have a full toolchain of WESL to WGSL to SPIR-V, with source maps at each step. In the end, it should be possible for RenderDoc to show the original WESL code.
+
+* Error Reporting. When Naga or Tint report an error in the generated WGSL code, we want to map the error location back to the WESL code.
+* Debugging. Eventually we hope to have a full toolchain of WESL to WGSL to SPIR-V, with source maps at each step. In the end, it should be possible for RenderDoc to show the original WESL code.
 
 ## Scoped imports
 

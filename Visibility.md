@@ -10,7 +10,7 @@ This section will describe WESL enhancements to control which WGSL elements are 
     choke on the unknown attribute as is and feels like having
     two export forms is a bit inconsistent.
 * Consider changing to public by default for imports within the package only.
-  * Matches semantics when importing from .wgsl code
+  * Matches semantics when importing from WGSL code
   * no annotation effort for tiny projects, everything public is fine.
   * (Private by default gives a gentle push to programmers to consider their api every time
     they add a public annotation.)
@@ -18,7 +18,6 @@ This section will describe WESL enhancements to control which WGSL elements are 
     which is safer from a maintenance point of view.)
   * (less consistent with package visibility.)
   * (unexpected if programmers are accustomed to e.g. JavaScript imports.)
-
 
 ## Export
 
@@ -70,7 +69,7 @@ A future export specification would include the minimal WGSL syntax that is nece
 
 ## Translating Source File Paths to Import Module Paths
 
-Tools that look at source code will refer to a `package_root` in `wgsl.toml` that defines
+Tools that look at source code will refer to a `package_root` in `wesl.toml` that defines
 the common prefix of `.wesl` and `.wgsl` files.
 
 Source directories and files under the `package_root` and map directly to module paths
@@ -78,11 +77,11 @@ under the package name as expected.
 e.g.
 
 * Source file `C:\Users\lee\myProj\wgpu\foo.wesl` contains `export fn bar() {}`
-* `wgpu` is the `project_root` in `wgsl.toml`.
+* `wgpu` is the `project_root` in `wesl.toml`.
 * The project as published as package `fooz`.
 * Other projects can write `import fooz/foo/bar;` to use `bar()`.
 
-### lib.wgsl
+### `lib.wgsl`
 
 If there is a file named `lib.wgsl` in the `package_root` directory,
 any public exports in `lib.wgsl` are visible at the root of the module.
@@ -108,6 +107,6 @@ The programmer needs to add an annotation to make them public, (i.e. available t
 The programmer can decide whether the element should be public within the package only
 or also public to importers from other packages. Perhaps `@export` and `@export(public)`.
 
-Importable elements from (unenhanced) .wgsl code may be imported from .wesl functions
-in the same package. Elements in .wgsl code are not public from other packages
-(.wesl code may reexport .wgsl element for package publishing).
+Importable elements from (unenhanced) WGSL code may be imported from WESL functions
+in the same package. Elements in WGSL code are not public from other packages
+(WESL code may reexport WGSL element for package publishing).

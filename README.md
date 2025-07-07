@@ -1,3 +1,4 @@
+<!-- markdownlint-disable first-line-h1 -->
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/logo/logo-square-dark.svg">
@@ -32,7 +33,7 @@ or [Discord](https://discord.gg/Ng5FWmHuSv) to help.
 ## Goals
 
 Our ambition is to create a modestly improved, practical variant of WGSL
-called WESL (**W**GSL **E**nhanced **S**hading **L**anguage, pronounced like 'weasel').
+called WESL (**W**GSL **E**nhanced **S**hading **L**anguage, pronounced like 'weasel'). <!-- spellchecker:disable-line -->
 
 WESL should feel like WGSL with a few useful things added.
 
@@ -43,15 +44,15 @@ We're aiming to prioritize WGSL enhancements that are: 1) important for communit
 and 3) not too difficult to integrate into community tools.
 
 The simple enhancements we want to find will take some time to stabilize.
-Adventerous projects will be able to opt in to experimental enhancements
+Adventurous projects will be able to opt in to experimental enhancements
 to try alongside stable features.
 
-Our first two WESL enhancments are:
+Our first two WESL enhancements are:
 
-- `import` statements
-to enable a module system so users can organize their shaders across mulitple file.
+* `import` statements
+to enable a module system so users can organize their shaders across multiple file.
 See spec draft here: **[imports]**.
-- conditional translation via `@if` statements
+* conditional translation via `@if` statements
 so shaders can be customized based on external flags.
 See spec draft here: **[Conditional Translation]**.
 
@@ -61,7 +62,7 @@ As a community project,
 we can iterate quickly on experimental WGSL features.
 
 Stabilized features will be grouped in periodic releases
-with backwards compatibilty with the aim of
+with backwards compatibility with the aim of
 nurturing an ecosystem of WESL/WGSL libraries.
 
 ## Filename extension
@@ -75,9 +76,9 @@ to distinguish them from vanilla W3C WGSL.
 
 WESL prioritized these features for its first release:
 
-- [Imports] for splitting shaders into modules
-- [Conditional Translation] for customizing shaders based on flags
-- [Packaging] for publishing shaders on npm/cargo.
+* [Imports] for splitting shaders into modules
+* [Conditional Translation] for customizing shaders based on flags
+* [Packaging] for publishing shaders on npm/cargo.
 
 What would you like to see next?
 
