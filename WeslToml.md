@@ -43,8 +43,10 @@ For example, wesl-js in the browser would be configured via a roughly equivalent
 ## Semantics
 
 A `wesl.toml` file is mandatory for libraries.
-For user applications, we allow it to be missing, and try to choose reasonable defaults.
-However, this can lead to different tools assuming different values. 
+
+For user applications, feel free to start without a `wesl.toml`. We'll assume reasonable defaults.
+
+As your application grows, we suggest adding a `wesl.toml` for better consistency.
 
 ### `edition` field
 
