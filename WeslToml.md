@@ -42,22 +42,29 @@ For example, wesl-js in the browser would be configured via a roughly equivalent
 
 ## Semantics
 
+A `wesl.toml` file is mandatory for libraries.
+For user applications, we allow it to be missing, and try to choose reasonable defaults.
+However, this can lead to different tools assuming different values. 
+
 ### `edition` field
 
-Mandatory field, all wesl editions can be used.
-Currently only `unstable_2025` is accepted, since we do not have an edition yet.
-No incompatible changes are planned for WESL, but we have not yet committed to stable version for long term support.
+Specifies which edition is used by wesl. All wesl editions can be used.
+
+- Mandatory
+  - Falls back to latest edition that tools know.
+- Currently only `unstable_2025` is accepted, since we do not have an edition yet.
+  - No incompatible changes are planned, but we have not committed to stable version for long term support.
 
 ### `package-manager` field
 
-Supports
+Which package manager is used for resolving wesl libraries.
 
-- `npm`
-- `cargo`
+- Optional, but encouraged.
+  - Can be inferred from the existence of certain files (`package.json` and `Cargo.toml`)
+- `npm` and `cargo are accepted.
 
-And it must be explicitly limited to one package manager to massively reduce implementation complexity.
-We also do not have any wesl implementations that would allow for mixing and matching packages from different package managers.
-
+It is limited to one package manager to reduce implementation complexity.
+We do not have any wesl implementations that would allow for mixing and matching packages from different package managers.
 For dual publishing, the expectation is that one would have a primary package manager, and then attempt to mirror the structure for other package managers.
 
 ## `include` and `exclude` fields
