@@ -9,8 +9,7 @@ The format looks as follows. As much of it is optional as possible.
 # Version of WESL used in the local shaders
 edition = "unstable_2025"
 
-# Optional, can be auto-inferred from the existence of a package.json.
-# Necessary when both a `package.json` and a `Cargo.toml` are present.
+# Optional, can be auto-inferred from the existence of a package manager file.
 # Inclusion of this field is encouraged.
 package-manager = "npm"
 
@@ -63,7 +62,8 @@ Which package manager is used for resolving wesl libraries.
 
 - Optional, but encouraged.
   - Can be inferred from the existence of certain files (`package.json` and `Cargo.toml`)
-- `npm` and `cargo are accepted.
+  - Necessary when both a `package.json` and a `Cargo.toml` are present.
+- `npm` and `cargo` are accepted.
 
 It is limited to one package manager to reduce implementation complexity.
 We do not have any wesl implementations that would allow for mixing and matching packages from different package managers.
