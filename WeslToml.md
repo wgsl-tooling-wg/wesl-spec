@@ -13,7 +13,7 @@ edition = "unstable_2025"
 # We watch this directory for changes.
 root = "./shaders"
 
-# Optional. Default value is all wesl and wgsl files in the root directory.
+# Optional
 include = [ "shaders/**/*.wesl", "shaders/**/*.wgsl" ]
 
 # Optional.
@@ -44,9 +44,9 @@ For example, wesl-js in the browser would be configured via a roughly equivalent
 
 A `wesl.toml` file is mandatory for libraries.
 
-For user applications, feel free to start without a `wesl.toml`. We'll assume reasonable defaults.
+For user applications, feel free to start without a `wesl.toml`. We'll assume reasonable defaults, which will evolve over time.
 
-As your application grows, we suggest adding a `wesl.toml` for better consistency.
+As your application grows, we suggest adding a `wesl.toml` for better consistency. This lets you pin down the exact behaviour of wesl.
 
 ### `edition` field
 
@@ -71,9 +71,17 @@ For dual publishing, the expectation is that one would have a primary package ma
 
 ## `include` and `exclude` fields
 
-The `include` and `exclude` fields support globs. The paths are relative to the `wesl.toml` file.
+Specifies an array of patterns where wesl files are located. They patterns are relative to the `wesl.toml` file.
 
+The default value of `include` is all wesl and wgsl files in the `root` directory, recursively.
 The default value of `exclude` is an empty array.
+
+The patterns are glob patterns, which support
+- `*` for zero or more characters in file/folder names
+- `?` for one character in a file/folder name
+- `**/` for any directory nested to any level
+
+The globs must match file names, and the last part of the patterns must contain a file extension.
 
 ### `dependencies` entry
 
