@@ -114,19 +114,10 @@ This is an ecosystem specific feature. It is supported by
 
 ## Q&A
 
-## Description and version fields
+### Description and version fields
 
 Description and version fields do not exist.
 Instead, we use thepackage.json/Cargo.toml.
 Semantics are "we are publishing a normal package that happens to also contain wesl code".
 This lets us support wesl packages that come with host code!
 
-### How does wesl resolve dependencies?
-
-Wesl implementations resolve the dependencies by running a build script.
-
-In Rust, this means running a `build.rs` or a proc macro.
-
-In Javascript, there are multiple flavours of build scripts. 
-- Vite/rollup/... plugins
-- A Node.js script in the user's project, which ends up having the same semantics for dependency resolution
