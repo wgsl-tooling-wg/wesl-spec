@@ -62,7 +62,7 @@ Which package manager is used for resolving wesl libraries.
 
 - Optional, but encouraged.
   - Can be inferred from the existence of certain files (`package.json` and `Cargo.toml`)
-  - Necessary when both a `package.json` and a `Cargo.toml` are present.
+  - Necessary when multiple such files are present.
 - `npm` and `cargo` are accepted.
 
 It is limited to one package manager to reduce implementation complexity.
