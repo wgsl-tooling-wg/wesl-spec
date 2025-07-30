@@ -9,6 +9,11 @@ The format looks as follows. As much of it is optional as possible.
 # Version of WESL used in the local shaders
 edition = "unstable_2025"
 
+# Optional, can be auto-inferred from the existence of a package.json.
+# Necessary when both a `package.json` and a `Cargo.toml` are present.
+# Inclusion of this field is encouraged.
+package-manager = "npm"
+
 # Where are the shaders located. This is the path of `package::`.
 # We watch this directory for changes.
 root = "./shaders"
@@ -19,11 +24,6 @@ include = [ "shaders/**/*.wesl", "shaders/**/*.wgsl" ]
 # Optional.
 # Some projects have large folders that we shouldn't react to. 
 exclude = [ "**/test" ]
-
-# Optional, can be auto-inferred from the existence of a package.json.
-# Necessary when both a `package.json` and a `Cargo.toml` are present.
-# Inclusion of this field is encouraged.
-package-manager = "npm"
 
 # Lists all used dependencies
 [dependencies]
@@ -68,6 +68,16 @@ Which package manager is used for resolving wesl libraries.
 It is limited to one package manager to reduce implementation complexity.
 We do not have any wesl implementations that would allow for mixing and matching packages from different package managers.
 For dual publishing, the expectation is that one would have a primary package manager, and then attempt to mirror the structure for other package managers.
+
+### `root` field
+
+Specifies the root folder or root file for the `package::` syntax.
+
+- Optional
+  - Defaults to `path of package manager file/shaders`
+ 
+ For ecosystems where there is no such package manager file, this is mandatory. 
+ Currently we do not have any such cases.
 
 ## `include` and `exclude` fields
 
@@ -120,16 +130,3 @@ In Rust, this means running a `build.rs` or a proc macro.
 In Javascript, there are multiple flavours of build scripts. 
 - Vite/rollup/... plugins
 - A Node.js script in the user's project, which ends up having the same semantics for dependency resolution
-
-
-## Defaults when `wesl.toml` is missing
-
-**Creating a `wesl.toml` is recommended.**
-
-However, we support having WESL shaders without a `wesl.toml`. In that case, we default to
-
-- All optional fields work as described above
-- `root` is undefined, therefore the `package::` syntax cannot be used. Only relative imports, like `super::foo` are supported
-- `edition` defaults to the latest wesl edition that *the tool* knows of.
-
-Not specifying an edition comes with the explicit risk of *tools no longer understanding your wesl code after an update*.
