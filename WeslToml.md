@@ -55,6 +55,7 @@ Specifies which edition is used by wesl. All wesl editions can be used.
   - Falls back to latest edition that tools know.
 - Currently only `unstable_2025` is accepted, since we do not have an edition yet.
   - No incompatible changes are planned, but we have not committed to stable version for long term support.
+- Dependencies are interpreted using the edition that they declared, not the edition of the consuming package.
 
 ### `package-manager` field
 
