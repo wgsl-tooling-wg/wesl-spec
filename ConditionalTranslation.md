@@ -1,18 +1,17 @@
 # Conditional Translation
 
 ## Overview
-
-> _This section is non-normative_
+> *This section is non-normative*
 
 Conditional translation is a mechanism to modify the output source code based on parameters passed to the *WESL translator*.
-This specificaton extends the [*attribute* syntax](https://www.w3.org/TR/WGSL/#attributes) with a new `@if` attribute.
+This specification extends the [*attribute* syntax](https://www.w3.org/TR/WGSL/#attributes) with a new `@if` attribute.
 This attribute indicates that the syntax node it decorates can be removed by the *WESL translator* based on feature flags.
 
-> _This implementation is similar to the `#[cfg(feature = "")]` syntax in Rust._
+> *This implementation is similar to the `#[cfg(feature = "")]` syntax in Rust.*
 
 ### Usage Example
 
-```rs
+```wesl
 // global variables and bindings...
 @if(textured)
 @group(0) @binding(0) var my_texture: texture_2d<f32>;
@@ -35,7 +34,8 @@ fn main() -> vec4 {
 ```
 
 Quirky examples
-```rs
+
+```wesl
 // attribute order does not matter.
 @compute @if(feature) fn main() { }
 // ... is equivalent to 
@@ -49,7 +49,6 @@ const feature1 = 10;
 ```
 
 ## Definitions
-
 * **Translate-time expression**: A *translate-time expression* is evaluated by the *WESL translator* and eliminated after translation.
   Its grammar is a subset of normal WGSL [expressions](https://www.w3.org/TR/WGSL/#expressions). it must be one of:
   * a *translate-time feature*,
@@ -57,15 +56,15 @@ const feature1 = 10;
   * a [parenthesized expression](https://www.w3.org/TR/WGSL/#parenthesized-expressions),
   * a boolean literal value (`true` or `false`).
 
-* **Translate-time scope**: The *translate-time scope* this is an independent scope from the [*module scope*](https://www.w3.org/TR/WGSL/#module-scope), meaning it cannot see any declarations from the source code, and its identifers are independent.
+* **Translate-time scope**: The *translate-time scope* this is an independent scope from the [*module scope*](https://www.w3.org/TR/WGSL/#module-scope), meaning it cannot see any declarations from the source code, and its identifiers are independent.
 
 * **Translate-time feature**: A *translate-time feature* is an identifier that evaluates to a boolean. It is set to `true` if the feature is *enabled* during the translation phase and `false` if the feature is *disabled*. It lives in the *Translate-time scope*.
 
 * **Translate-time attribute**: A *translate-time attribute* is parametrized by a *translate-time expression*. It is eliminated after translation but can affect the syntax node it decorates.
 
 ## Location of *Translate-time attributes*
-
 A *translate-time attribute* can appear before the following syntax nodes:
+
 * [directives](https://www.w3.org/TR/WGSL/#directives)
 * [variable and value declarations](https://www.w3.org/TR/WGSL/#var-and-value)
 * [type alias declarations](https://www.w3.org/TR/WGSL/#type-alias)
@@ -80,10 +79,10 @@ A *translate-time attribute* can appear before the following syntax nodes:
 * [const assertion statements](https://www.w3.org/TR/WGSL/#const-assert-statement)
 * [switch clauses](https://www.w3.org/TR/WGSL/#switch-statement)
 
-> _*Translate-time attributes* are not allowed in places where removal of the syntax node would lead to syntactically incorrect code. The current set of *translate-time attribute* locations guarantees that the code is syntactically correct after specialization. This is why *translate-time attributes* are not allowed before expressions._
+> [!TIP]
+> *Translate-time attributes* are not allowed in places where removal of the syntax node would lead to syntactically incorrect code. The current set of *translate-time attribute* locations guarantees that the code is syntactically correct after specialization. This is why *translate-time attributes* are not allowed before expressions.
 
 ### Update to the WGSL grammar
-
 The WGSL grammar allows attributes in several locations where *translate-time attribute* are not allowed (1). Conversely, the WGSL grammar does not allow attributes in several locations where *translate-time attribute* are allowed (2).
 
 Refer to the [updated grammar appendix](#appendix-updated-grammar) for the list of updated grammar non-terminals.
@@ -116,21 +115,21 @@ Refer to the [updated grammar appendix](#appendix-updated-grammar) for the list 
    * const assertion statements
 
 ## `@if` attribute
-
 The `@if` *translate-time attribute* is introduced. It takes a single parameter. It marks the decorated node for removal if the parameter evaluates to `false`.
 
 A syntax node may at most have a single `@if` attributes. This keeps the way open for a `@else` attribute introduction in the future.
 Checking for multiple features is done with an `&&`
-```rs
+
+```wesl
 @if(feature1 && feature2)   const decl: u32 = 0;
 ```
 
-> _See the [possible future extensions](#possible-future-extensions) for the attributes `@elif` and `@else`.
-> They may be introduced in the specification in a future version if deemed useful._
+> *See the [possible future extensions](#possible-future-extensions) for the attributes `@elif` and `@else`.
+> They may be introduced in the specification in a future version if deemed useful.*
 
-*Example*
+Example:
 
-```rs
+```wesl
 @if(feature_1 && (!feature_2 || feature_3))
 fn f() { ... }
 @if(!feature_1)                               // corresponds to @elif(!feature_1)
@@ -140,7 +139,6 @@ fn f() { ... }
 ```
 
 ## Execution of the conditional translation phase
-
 1. The *WESL translator* is invoked with the list of features to *enable* or *disable*.
 
 2. The source file is parsed.
@@ -157,29 +155,29 @@ fn f() { ... }
 
 ### Incremental translation
 In case some features can only be resolved at runtime, a *WESL translator* can *optionally* support feature specialization in multiple passes:
-* In the initial passes, the *WESL translator* is invoked with some of the feature flags. It replaces their occurences in *translate-time attributes* with either `true` or `false`.
+
+* In the initial passes, the *WESL translator* is invoked with some of the feature flags. It replaces their occurrences in *translate-time attributes* with either `true` or `false`.
   These passes return a partially-translated WESL code.
 * After the final pass, the resulting code must be valid WGSL. it is an *link-time error* if any used *Translate-time features* was not provided to the linker.
 
 If the *WESL translator* does not support incremental translation, it is an *link-time error* if any used *Translate-time features* was not provided to the linker.
 
-> _It is not an error to provide unused feature flags to the linker. However, an implementation may choose to display a warning in that case._
+> *It is not an error to provide unused feature flags to the linker. However, an implementation may choose to display a warning in that case.*
 
 ## Possible future extensions
-
-> _This section is non-normative_
+> *This section is non-normative*
 
 * `@else` and `@elif` attributes:
   * An `@elif` attribute decorates the next sibling of a syntax node decorated by a `@if` or an `@elif`. It takes one parameter.
      It marks the decorated node for removal if its parameter evaluates to `false` OR any of if the previous `@if` and `@elif` attribute parameters evaluate to `true`.
   * An `@else` attribute decorates the next sibling of a syntax node decorated by a `@if` or an `@elif`. It does not take any parameter.
      It marks the decorated node for removal if any of the previous `@if` and `@elif` attribute parameters evaluate to `true`.
-  
+
   The `@else` attribute has the nice property that all cases lead to generating a node, and *could* therefore be used in places where the node is required (e.g. expressions)
-  
-  *Example*
-  
-  ```rs
+
+  Example:
+
+  ```wesl
   @if(feature_1 && (!feature_2 || feature_3))
   fn f() { ... }
   @elif(!feature_1)
@@ -191,8 +189,8 @@ If the *WESL translator* does not support incremental translation, it is an *lin
 * High-complexity *translate-time expressions*: if we end up implementing other *translate-time attributes*, such as loops (e.g. `@for`, `@repeat`), or [translate-time-evaluable](https://zig.guide/language-basics/comptime/) expressions, then we would need to extend the grammar of *translate-time expressions*. It would also affect this proposal.
 
   *Example*
-  
-  ```rs
+
+  ```wesl
   @comptime
   fn response_to_the_ultimate_question() -> u32 {
     return 42;
@@ -205,8 +203,8 @@ If the *WESL translator* does not support incremental translation, it is an *lin
 * Decorating other WESL language extensions: import statements could be decorated with *translate-time attributes* too.
 
   *Example*
-  
-  ```rs
+
+  ```wesl
   @if(use_bvh)
   import accel/bvh_acceleration_structure as scene_struct;
   @else
@@ -214,9 +212,9 @@ If the *WESL translator* does not support incremental translation, it is an *lin
   ```
 
 ## Appendix: Updated grammar
-
 The following non-terminals are added or modified:
 
+```grammar
     diagnostic_directive :
      attribute * 'diagnostic' diagnostic_control ';'
 
@@ -318,3 +316,4 @@ The following non-terminals are added or modified:
 
     if_attr:
      '@' 'if' '(' expression ',' ? ')'
+```
