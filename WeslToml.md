@@ -61,7 +61,7 @@ Specifies which edition is used by wesl. All wesl editions can be used.
 
 Which package manager is used for resolving wesl libraries.
 
-- Optional, but encouraged.
+- Optional, but encouraged for IDE tools compatibility.
   - Can be inferred from the existence of certain files (`package.json` and `Cargo.toml`)
   - Necessary when multiple such files are present.
 - `npm` and `cargo` are accepted.
