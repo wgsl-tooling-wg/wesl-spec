@@ -6,7 +6,7 @@ The format looks as follows. As much of it is optional as possible.
 
 ```toml
 [package]
-# Version of WESL used in the local shaders
+# Version of WESL used in this project.
 edition = "unstable_2025"
 
 # Optional, can be auto-inferred from the existence of a package manager file.
