@@ -98,7 +98,10 @@ The globs must match file names, and the last part of the patterns must contain 
 
 All used dependencies are explicitly listed here.
 
-Its structure is `wesl_name = { package = "name_used_in_package_manager" }`
+Its structure is `wesl_name = { package = "name_used_in_package_manager" }`. It supports `package` or `path` specifications:
+
+ - `package` accepts the name of a library installed with npm or Cargo.
+ - `path` accepts a relative file path to a directory containing a `wesl.toml` file. The path is relative to the current `wesl.toml`.
 
 This lets us additionally deal with names that would be impossible to spell in WESL.
 e.g. `fun_shaders = { package = "@lorem/fun_shaders" }`
@@ -106,9 +109,9 @@ e.g. `fun_shaders = { package = "@lorem/fun_shaders" }`
 ### `dependencies = "auto"`
 
 Instead of specifying a list of dependencies, one can specify `dependencies = "auto"`.
-Then, the available dependencies are automatically inferred from the list of installed libraries. 
+Then, the available dependencies are automatically inferred from the list of libraries installed with npm or Cargo.
 
-This is an ecosystem specific feature. It is supported by
+This is an ecosystem specific feature. It is supported by:
 
 - npm: enabled by default. Exact semantics will be figured out.
 
