@@ -1,6 +1,6 @@
 # `wesl.toml` file format
 
-WESL shader projects have a standardized `wesl.toml` file, which describes the project setup. It is used by tools such as language servers and linkers[^1].
+WESL shader projects have a standardized `wesl.toml` file, which describes the project setup. It is used by tools such as language servers and linkers.
 
 The format looks as follows. As much of it is optional as possible.
 
@@ -32,10 +32,6 @@ cute_bevy = { package = "bevy" }
 # File path to a folder with a wesl.toml. Simplest kind of dependency.
 mylib = { path = "../mylib" }
 ```
-
-
-[^1]: Linkers are free to offer their own configuration, in addition to supporting the `wesl.toml` format.
-For example, wesl-js in the browser would be configured via a roughly equivalent JSON object. This lets wesl-js avoid bundling a whole toml file format parser.
 
 
 ## Semantics
