@@ -45,7 +45,7 @@ A `wesl.toml` file is mandatory for libraries.
 
 For user applications, feel free to start without a `wesl.toml`. We'll assume reasonable defaults, which will evolve over time.
 
-As your application grows, we suggest adding a `wesl.toml` for better consistency. This lets you pin down the exact behaviour of wesl.
+As your application grows, we suggest adding a `wesl.toml` for better consistency. This lets you pin down the exact behavior of wesl.
 
 ### `edition` field
 
