@@ -21,7 +21,7 @@ root = "./shaders"
 include = [ "shaders/**/*.wesl", "shaders/**/*.wgsl" ]
 
 # Optional.
-# Some projects have large folders that we shouldn't react to. 
+# Some projects have large folders that we shouldn't react to.
 exclude = [ "**/test" ]
 
 # Lists all used dependencies
@@ -92,7 +92,7 @@ The patterns are glob patterns, which support
 - `?` for one character in a file/folder name
 - `**/` for any directory nested to any level
 
-The globs must match file names, and the last part of the patterns must contain a file extension.
+If the last path segment does not contain a file extension or wildcard, then it is treated as a directory, and files with `.wesl` or `.wgsl` extensions inside that directory are included.
 
 ### `dependencies` entry
 
