@@ -93,7 +93,7 @@ All used dependencies are explicitly listed here.
 
 Its structure is `wesl_name = { package = "name_used_in_package_manager" }`. It supports `package` or `path` specifications:
 
- - `package` accepts the name of a library installed with npm or Cargo.
+ - `package` accepts the name of a library installed with npm[^1] or Cargo.
  - `path` accepts a relative file path to a directory containing a `wesl.toml` file. The path is relative to the current `wesl.toml`.
 
 This lets us additionally deal with names that would be impossible to spell in WESL.
@@ -102,12 +102,9 @@ e.g. `fun_shaders = { package = "@lorem/fun_shaders" }`
 ### `dependencies = "auto"`
 
 Instead of specifying a list of dependencies, one can specify `dependencies = "auto"`.
-Then, the available dependencies are automatically inferred from the list of libraries installed with npm or Cargo.
+Then, the available dependencies are automatically inferred from the list of libraries installed with npm[^1] or Cargo.
 
-This is an ecosystem specific feature. It is supported by:
-
-- npm: enabled by default. Exact semantics will be figured out.
-
+This is an optional, ecosystem-specific feature. See the documentation of the respective implementation for details.
 
 ## Q&A
 
@@ -118,3 +115,4 @@ Instead, we use thepackage.json/Cargo.toml.
 Semantics are "we are publishing a normal package that happens to also contain wesl code".
 This lets us support wesl packages that come with host code!
 
+[^1]: npm, pnpm, yarn... package managers with a `node_modules/` directory and `package.json` file.
