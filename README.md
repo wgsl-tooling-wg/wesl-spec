@@ -48,7 +48,7 @@ Our first two WESL enhancements are:
 
 * `import` statements
 to enable a module system so users can organize their shaders across multiple file.
-See spec draft here: **[imports]**.
+See spec draft here: **[Imports]**.
 * conditional translation via `@if` statements
 so shaders can be customized based on external flags.
 See spec draft here: **[Conditional Translation]**.
@@ -103,6 +103,6 @@ as defined in the Apache-2.0 license,
 shall be dual licensed as above,
 without any additional terms or conditions.
 
-[imports]: Imports
-[Conditional Translation]: ConditionalTranslation
+[Imports]: Imports.md
+[Conditional Translation]: ConditionalTranslation.md
 [Packaging]: https://wesl-lang.dev/docs/Publishing-Packages
