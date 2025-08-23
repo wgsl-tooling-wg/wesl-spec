@@ -14,7 +14,6 @@ edition = "unstable_2025"
 package-manager = "npm"
 
 # Where are the shaders located. This is the path of `package::`.
-# We watch this directory for changes.
 root = "./shaders"
 
 # Optional
@@ -73,13 +72,11 @@ For dual publishing, the expectation is that one would have a primary package ma
 ### `root` field
 
 Specifies the root folder or root file for the `package::` syntax.
+IDEs watch this directory for changes.
 
 - Optional
-  - Defaults to `path of package manager file/shaders`
+  - Defaults to the `shaders` directory adjacent to the `wesl.toml`.
  
- For ecosystems where there is no such package manager file, this is mandatory. 
- Currently we do not have any such cases.
-
 ## `include` and `exclude` fields
 
 Specifies an array of patterns where wesl files are located. They patterns are relative to the `wesl.toml` file.
