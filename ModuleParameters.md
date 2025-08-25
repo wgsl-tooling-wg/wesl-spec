@@ -78,7 +78,9 @@ Modules containing parameter declarations are called generic modules. Each usage
 NOTE: aliases referring to the same declaration do not produce different concretizations.
 
 NOTE: each module concretization forms a distinct module. Importing multiple concretizations of the same module is allowed. 
-Root Module: Shader Parameters
+
+### Root Module: Shader Parameters
+
 Module parameters defined or published (TODO: publish spec) in the Root Module are called Shader Parameters. Shader Parameters can be set from the host code with a linker-specific API.
 
 NOTE: root module declarations are not reachable from other modules (due to cyclic imports) so shader parameters can only be replaced from the host code. (TODO: should we allow import cycles?)
