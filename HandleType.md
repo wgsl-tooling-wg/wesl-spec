@@ -68,6 +68,13 @@ That `handle` type tracks the exact binding that the texture comes from. You can
 For typical textures, this means that at runtime, there's nothing left.
 For bindless textures, it desugars to a single integer for the slot.
 
+TODO:
+- Explain the type system changes
+- Consider using a function `handle()` for this, or using the `&` `*` operators.
+- Maybe overloads for textureSample and co. Adding more implicit conversions is terrible.
+- Consider just straight up changing the semantics of `ref<handle` and `ptr<handle`
+
+
 
 
 Explain the proposal as if it was already included in the language and you were teaching it to another Rust programmer. That generally means:
