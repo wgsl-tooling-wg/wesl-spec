@@ -71,9 +71,9 @@ Specifies the root folder or root file for the `package::` syntax.
 IDEs watch this directory for changes.
 
 - Optional
-  - Defaults to the `shaders` directory adjacent to the `wesl.toml`.
+  - Defaults to the `shaders` directory adjacent to the `wesl.toml`. (`"./shaders/"`)
  
-## `include` and `exclude` fields
+### `include` and `exclude` fields
 
 Specifies an array of patterns where wesl files are located. They patterns are relative to the `wesl.toml` file.
 
@@ -86,6 +86,10 @@ The patterns are glob patterns, which support
 - `**/` for any directory nested to any level
 
 If the last path segment does not contain a file extension or wildcard, then it is treated as a directory, and files with `.wesl` or `.wgsl` extensions inside that directory are included.
+
+### Path semantics
+
+File paths in the `root`, `include` and `exclude` fields are relative to the directory containing the `wesl.toml` file. Absolute paths (starting with `/` or `C:/`) are not allowed.
 
 ### `dependencies` entry
 
