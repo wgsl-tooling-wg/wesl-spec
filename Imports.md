@@ -78,7 +78,12 @@ import_collection:
 ```
 
 Where `translation_unit` and `ident` are defined in the WGSL grammar.
-`ident`s are subject to the usual restrictions, meaning they cannot be keywords or reserved words.
+`ident`s must not be current WGSL keywords. `ident`s also must not be 
+current WESL keywords: `as`, `import`, `package`, `super`, or `self`. 
+Reserved words that are
+not current keywords are allowed, 
+but not recommended.
+Lint tools may optionally warn when reserved words are used. 
 
 An item import imports a single item. The item can be renamed with the `as` keyword.
 
