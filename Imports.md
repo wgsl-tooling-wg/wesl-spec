@@ -10,7 +10,7 @@ We also should account for **importing shader from libraries**. Ideally, users c
 
 Finally, we want **multiple tools** which can compile WGSL-with-imports down to raw WGSL. Using WGSL-with-imports both in Rust projects and in web projects should be possible.
 
-## Guide-level explanation
+# Guide-level explanation
 The `import` statement extension brings items or entire modules into scope. Import statements map to files with minimal searching.
 
 ```wgsl
@@ -57,6 +57,8 @@ A WESL program is composed of a tree of WESL modules.
 
 Imports must appear as the first items in a WESL file. They can import entire modules or individual  "importable items" (see [GLOSSARY](GLOSSARY.md)).
 
+### Grammar
+
 An import statement is parsed with the following  grammar, with spaces and comments allowed between tokens:
 
 ```ebnf
@@ -89,6 +91,8 @@ An item import imports a single item. The item can be renamed with the `as` keyw
 
 An import collection imports multiple items, and allows for nested imports.
 
+### Import resolution algorithm
+
 To resolve the import, the recursive structure is flattened out. This means turning every `import_collection` into multiple separate imports, ending with the items.
 For instance, `import a::{b, c::{d, e as f}};` would be turned into
 
@@ -99,6 +103,7 @@ import a::c::e as f;
 ```
 
 Then, one iterates over each segment from left to right, and looks it up one by one.
+
 1. We start with the first segment.
     * `super` refers to the parent module. Can be repeated to go up multiple parent modules. Exiting the root is an error.
     * `package` refers to the top level module of the current package.
@@ -121,6 +126,9 @@ Once the import has been resolved, the last segment, or its alias, is brought in
 The order of the scopes is "user declarations and imported items > package names > predeclared items".
 This lets WGSL add more predeclared items without breaking existing WESL code. Package names can shadow predeclared items, but we recommend that authors avoid doing that.
 
+
+### Example
+
 For example
 
 ```wgsl
@@ -141,7 +149,11 @@ Assume that the current module lives at `shaders/lighting.wesl`. We first go to 
 After not finding it, we look for a module `shadowmapping` at `shaders/shadowmapping.wesl`.
 
 ## `wesl.toml`
-A `wesl.toml` file will be added later to help language servers discover libraries, and to help standardize linker configuration.
+The [`wesl.toml`](WeslToml.md) file provides linker configuration options affecting the import resolution algorithm. It can customize:
+
+* The root directory,
+* Available package dependencies,
+* A file whitelist and/or blacklist.
 
 ## Filesystem Resolution
 To resolve a module on a filesystem, one follows the algorithm above.
