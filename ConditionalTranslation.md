@@ -7,7 +7,8 @@
 Conditional translation and shader specializaton are two mechanisms to control the WGSL code produced based on parameters passed to the *WESL translator*.
 This specification extends the [*attribute* syntax](https://www.w3.org/TR/WGSL/#attributes) with new attributes: `@param` defines *module parameters* for shader specializaton via constant injection, while `@if`/`@elif`/`@else` control conditional translation.
 
-> *Compared to Rust, `@param const my_param = true` is analogous to a feature flag, while `@if(my_param)` is analogous to `#[cfg(feature = "my_param")]`.*
+> [!NOTE]
+> Compared to Rust, `@param const my_param = true` is analogous to a feature flag, while `@if(my_param)` is analogous to `#[cfg(feature = "my_param")]`.
 
 ### Usage Example
 
@@ -50,16 +51,16 @@ Quirky examples
 
 ## Definitions
 
-* A **Module parameter** is an module-scope const-declaration decorated with the `@param` attribute.
-* A **Condition expression** is evaluated by the *WESL translator* and eliminated after translation.
+* A **module parameter** is an module-scope const-declaration decorated with the `@param` attribute.
+* A **condition expression** is evaluated by the *WESL translator* and eliminated after translation.
   Its grammar is a subset of normal WGSL [expressions](https://www.w3.org/TR/WGSL/#expressions). it must be one of:
   * a boolean literal value (`true` or `false`).
   * a boolean *module parameter* in scope,
   * a [logical expression](https://www.w3.org/TR/WGSL/#logical-expr): logical not (`!`), short-circuiting AND (`&&`), short-circuiting OR (`||`),
   * a [parenthesized expression](https://www.w3.org/TR/WGSL/#parenthesized-expressions),
-* A **Condition attribute** (`@if`, `@elif` and `@else`) are eliminated after translation but can also eliminate the syntax node it attached to.
+* A **condition attribute** (`@if`, `@elif` and `@else`) are eliminated after translation but can also eliminate the syntax node it attached to.
 
-## Location of *Condition attributes*
+## Location of *condition attributes*
 
 A *condition attribute* can appear before the following syntax nodes:
 
@@ -77,7 +78,7 @@ A *condition attribute* can appear before the following syntax nodes:
 * [const assertion statements](https://www.w3.org/TR/WGSL/#const-assert-statement)
 * [switch clauses](https://www.w3.org/TR/WGSL/#switch-statement)
 
-> [!TIP]
+> [!NOTE]
 > *Condition attributes* are not allowed in places where removal of the syntax node would lead to syntactically incorrect code. The current set of *condition attribute* locations guarantees that the code is syntactically correct after specialization. This is why *condition attributes* are not allowed before expressions.
 
 ### Update to the WGSL grammar
@@ -122,10 +123,15 @@ A module-scope const-declaration can be decorated with the `@param` attribute to
 
 ## `@if`, `@elif` and `@else` attributes
 
-The `@if` *condition attribute* marks the decorated node for removal if its *condition expression* evaluates to `false`.
-An `@elif` attribute decorates the next sibling of a syntax node decorated by a `@if` or an `@elif`. 
+The `@if` attribute takes a single *condition expression* parameter. 
+It marks the decorated node for removal if its *condition expression* evaluates to `false`.
+
+The `@elif` attribute takes a single *condition expression* parameter. 
+It can only be attached to the next sibling of a syntax node decorated by a `@if` or an `@elif`. 
 It marks the decorated node for removal if its *condition expression* evaluates to `false` OR any of if the previous `@if` and `@elif` attribute parameters in the chain evaluate to `true`.
-An `@else` attribute decorates the next sibling of a syntax node decorated by a `@if` or an `@elif`.
+
+The `@else` attribute takes no parameter. 
+It can only be attached to the next sibling of a syntax node decorated by a `@if` or an `@elif`.
 It marks the decorated node for removal if any of the previous `@if` and `@elif` attribute *condition expressions* in the chain evaluate to `true`.
     
 A syntax node may at most have a single `@if`, `@elif` or `@else` attribute. Checking for multiple features is done with an AND (`&&`) expression.
@@ -146,9 +152,10 @@ fn f() { ... }
 ## Error cases
 
 It is a translate-time error if:
+
 * The *WESL linker* was invoked with a *shader parameter* override that does not exist;
-* A *shader parameter* override does not match the type of the declaration;
-* 
+* The type of a *shader parameter* override does not match the type of the declaration;
+* An identifier used in a *condition expression* does not reference a boolean shader parameter.
 
 ## Execution of the conditional translation phase
 
