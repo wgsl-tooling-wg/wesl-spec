@@ -72,6 +72,11 @@ IDEs watch this directory for changes.
 
 - Optional
   - Defaults to the `shaders` directory adjacent to the `wesl.toml`. (`"./shaders/"`)
+
+When the `wesl.toml` file does not exist, then tools should choose one of the following behaviours
+- Erroring out, for tools that rely on `wesl.toml` features. For example, an invocation `wesl fmt` would do this.
+- Accepting another way of configuring where the `root` is.
+- Assuming that a default `wesl.toml` file is right next to the `package.json`/`Cargo.toml`/`deno.json`. This is what the language server will do.
  
 ### `include` and `exclude` fields
 
@@ -115,8 +120,9 @@ This is an optional, ecosystem-specific feature. See the documentation of the re
 ### Description and version fields
 
 Description and version fields do not exist.
-Instead, we use thepackage.json/Cargo.toml.
-Semantics are "we are publishing a normal package that happens to also contain wesl code".
-This lets us support wesl packages that come with host code!
+Instead, we use the package.json/Cargo.toml.
+Semantics are: 
+We are publishing a normal package that also contain wesl code[^2]. This lets us support wesl packages that come with host code!
 
 [^1]: npm, pnpm, yarn... package managers with a `node_modules/` directory and `package.json` file.
+[^2]: In Rust land, this is necessary to comply with the [crates.io policy of being compatible with the cargo build tool](https://crates.io/policies).
