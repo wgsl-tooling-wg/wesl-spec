@@ -11,7 +11,7 @@ This attribute indicates that the syntax node it decorates can be removed by the
 
 ### Usage Example
 
-```wesl
+```wgsl
 // global variables and bindings...
 @if(textured)
 @group(0) @binding(0) var my_texture: texture_2d<f32>;
@@ -35,7 +35,7 @@ fn main() -> vec4 {
 
 Quirky examples
 
-```wesl
+```wgsl
 // attribute order does not matter.
 @compute @if(feature) fn main() { }
 // ... is equivalent to 
@@ -73,10 +73,7 @@ A *translate-time attribute* can appear before the following syntax nodes:
 * function formal parameter declarations
 * [structure declarations](https://www.w3.org/TR/WGSL/#struct-types)
 * structure member declarations
-* [compound statements](https://www.w3.org/TR/WGSL/#compound-statement-section)
-* [control flow statements](https://www.w3.org/TR/WGSL/#control-flow)
-* [function call statements](https://www.w3.org/TR/WGSL/#function-call-statement)
-* [const assertion statements](https://www.w3.org/TR/WGSL/#const-assert-statement)
+* [statements](https://www.w3.org/TR/WGSL/#statements)
 * [switch clauses](https://www.w3.org/TR/WGSL/#switch-statement)
 
 > [!TIP]
@@ -105,6 +102,8 @@ Refer to the [updated grammar appendix](#appendix-updated-grammar) for the list 
    * directives
    * struct declarations
    * switch clauses
+   * assignment statements
+   * increment and decrement statements
    * break statements
    * break-if statements
    * continue statements
@@ -114,13 +113,18 @@ Refer to the [updated grammar appendix](#appendix-updated-grammar) for the list 
    * function call statements
    * const assertion statements
 
+> [!WARNING]
+> We added attributes on assignment and increment/decrement statements. This change makes the WESL grammar no longer [LR(1)](https://en.wikipedia.org/wiki/LR_parser). See [`wesl-rs#162`](https://github.com/wgsl-tooling-wg/wesl-rs/issues/162) for details.
+>
+> Due to this limitation, *wesl-rs* does not allow attributes on assignment, increment and decrement statements starting with a `(`. Concretely, this is not supported by *wesl-rs*: `@if(FOO) (x)++`.
+
 ## `@if` attribute
 The `@if` *translate-time attribute* is introduced. It takes a single parameter. It marks the decorated node for removal if the parameter evaluates to `false`.
 
 A syntax node may at most have a single `@if` attributes. This keeps the way open for a `@else` attribute introduction in the future.
 Checking for multiple features is done with an `&&`
 
-```wesl
+```wgsl
 @if(feature1 && feature2)   const decl: u32 = 0;
 ```
 
@@ -129,7 +133,7 @@ Checking for multiple features is done with an `&&`
 
 Example:
 
-```wesl
+```wgsl
 @if(feature_1 && (!feature_2 || feature_3))
 fn f() { ... }
 @if(!feature_1)                               // corresponds to @elif(!feature_1)
@@ -177,7 +181,7 @@ If the *WESL translator* does not support incremental translation, it is an *lin
 
   Example:
 
-  ```wesl
+  ```wgsl
   @if(feature_1 && (!feature_2 || feature_3))
   fn f() { ... }
   @elif(!feature_1)
@@ -190,7 +194,7 @@ If the *WESL translator* does not support incremental translation, it is an *lin
 
   *Example*
 
-  ```wesl
+  ```wgsl
   @comptime
   fn response_to_the_ultimate_question() -> u32 {
     return 42;
@@ -204,7 +208,7 @@ If the *WESL translator* does not support incremental translation, it is an *lin
 
   *Example*
 
-  ```wesl
+  ```wgsl
   @if(use_bvh)
   import accel/bvh_acceleration_structure as scene_struct;
   @else
@@ -216,19 +220,19 @@ The following non-terminals are added or modified:
 
 ```grammar
     diagnostic_directive :
-     attribute * 'diagnostic' diagnostic_control ';'
+      attribute * 'diagnostic' diagnostic_control ';'
 
     enable_directive :
-     attribute * 'enable' enable_extension_list ';'
+      attribute * 'enable' enable_extension_list ';'
 
     requires_directive :
-     attribute * 'requires' software_extension_list ';'
+      attribute * 'requires' software_extension_list ';'
 
     struct_decl :
-     attribute * 'struct' ident struct_body_decl
+      attribute * 'struct' ident struct_body_decl
      
     type_alias_decl :
-     attribute * 'alias' ident '=' type_specifier
+      attribute * 'alias' ident '=' type_specifier
 
     variable_or_value_statement :
       variable_decl
@@ -237,44 +241,54 @@ The following non-terminals are added or modified:
     | attribute * 'const' optionally_typed_ident '=' expression
 
     variable_decl :
-     attribute * 'var' _disambiguate_template template_list ? optionally_typed_ident
+      attribute * 'var' _disambiguate_template template_list ? optionally_typed_ident
      
     global_variable_decl :
-     variable_decl ( '=' expression ) ?
+      variable_decl ( '=' expression ) ?
 
     global_value_decl :
       attribute * 'const' optionally_typed_ident '=' expression
     | attribute * 'override' optionally_typed_ident ( '=' expression ) ?
 
     case_clause :
-     attribute * 'case' case_selectors ':' ? compound_statement
+      attribute * 'case' case_selectors ':' ? compound_statement
 
     default_alone_clause :
-     attribute * 'default' ':' ? compound_statement
+      attribute * 'default' ':' ? compound_statement
+
+    assignment_statement :
+      attribute * lhs_expression ( '=' | compound_assignment_operator ) expression
+    | attribute * '_' '=' expression
+
+    increment_statement :
+      attribute * lhs_expression '++'
+
+    decrement_statement :
+      attribute * lhs_expression '--'
 
     break_statement :
-     attribute * 'break'
+      attribute * 'break'
 
     break_if_statement :
-     attribute * 'break' 'if' expression ';'
+      attribute * 'break' 'if' expression ';'
 
     continue_statement :
-     attribute * 'continue'
+      attribute * 'continue'
      
     continuing_statement :
-     attribute * 'continuing' continuing_compound_statement
+      attribute * 'continuing' continuing_compound_statement
 
     return_statement :
-     attribute * 'return' expression ?
+      attribute * 'return' expression ?
     
     discard_statement:
-     attribute * 'discard'
+      attribute * 'discard'
 
     func_call_statement :
-     attribute * call_phrase
+      attribute * call_phrase
 
     const_assert_statement :
-     attribute * 'const_assert' expression
+      attribute * 'const_assert' expression
 
     statement :
       ';'
@@ -315,5 +329,5 @@ The following non-terminals are added or modified:
     | if_attr
 
     if_attr:
-     '@' 'if' '(' expression ',' ? ')'
+      '@' 'if' '(' expression ',' ? ')'
 ```
