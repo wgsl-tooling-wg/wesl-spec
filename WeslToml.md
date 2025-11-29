@@ -73,7 +73,7 @@ IDEs watch this directory for changes.
 - Optional
   - Defaults to the `shaders` directory adjacent to the `wesl.toml`. (`"./shaders/"`)
 
-When the `wesl.toml` file does not exist, then tools should choose one of the following behaviours
+When the `wesl.toml` file does not exist, then tools should choose one of the following behaviors
 - Erroring out, for tools that rely on `wesl.toml` features. For example, an invocation `wesl fmt` would do this.
 - Accepting another way of configuring where the `root` is.
 - Assuming that a default `wesl.toml` file is right next to the `package.json`/`Cargo.toml`/`deno.json`. This is what the language server will do.
