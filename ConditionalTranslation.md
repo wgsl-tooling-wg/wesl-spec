@@ -12,7 +12,7 @@ This specification extends the [*attribute* syntax](https://www.w3.org/TR/WGSL/#
 
 ### Usage Example
 
-```wesl
+```wgsl
 // define module parameters with default values...
 @param const TEXTURED = true;
 @param const DEBUG = false;
@@ -42,7 +42,7 @@ fn main() -> vec4 {
 
 Quirky examples
 
-```wesl
+```wgsl
 // attribute order does not matter.
 @compute @if(FEATURE) fn main() { }
 // ... is equivalent to this (preferred)
@@ -51,14 +51,15 @@ Quirky examples
 
 ## Definitions
 
-* A **module parameter** is an module-scope const-declaration decorated with the `@param` attribute.
+* A **module parameter** is an module-scope const-declaration decorated with the `@param` attribute. Function-scope const-declarations cannot be module parameters*.
 * A **condition expression** is evaluated by the *WESL translator* and eliminated after translation.
   Its grammar is a subset of normal WGSL [expressions](https://www.w3.org/TR/WGSL/#expressions). it must be one of:
-  * a boolean literal value (`true` or `false`).
-  * a boolean *module parameter* in scope,
+  * a [literal value](https://www.w3.org/TR/WGSL/#literals) (boolean or numeric literal).
+  * an [identifier expression](https://www.w3.org/TR/WGSL/#value-identifier-expr) referring to a *module parameter* in scope,
   * a [logical expression](https://www.w3.org/TR/WGSL/#logical-expr): logical not (`!`), short-circuiting AND (`&&`), short-circuiting OR (`||`),
+  * a [comparison expression](https://www.w3.org/TR/WGSL/#comparison-expr): `==`, `!=`, `<`, `<=`, `>`, `>=`,
   * a [parenthesized expression](https://www.w3.org/TR/WGSL/#parenthesized-expressions),
-* A **condition attribute** (`@if`, `@elif` and `@else`) are eliminated after translation but can also eliminate the syntax node it attached to.
+* **condition attributes** (`@if`, `@elif` and `@else`) are eliminated after translation but can also eliminate the syntax node it attached to.
 
 ## Location of *condition attributes*
 
@@ -121,6 +122,24 @@ A module-scope const-declaration can be decorated with the `@param` attribute to
 * their value can be overriden by the *WESL translator*.
 * they can be used in *condition expressions* if they are of type boolean.
 
+(TODO)
+*Module parameter* overrides for direct dependencies can be set from the `wesl.toml` manifest file.
+The manifest file can override *module parameters* by providing either a literal automatically convertible to the *module parameter* type, or the *fully-qualified path* to a *module parameter* in the current package.
+Thus, the override in the dependency is "bound" to a new override in the current pacakge.
+
+(TODO)
+*Module parameter* overrides for the root package, whoever, are passed to the *WESL translator* at *shader-translation-time*.
+The *WESL translator* refers to a *module parameter* using the *fully-qualified path* of its declaration.
+It can override the value by providing a literal automatically convertible to the *module parameter* type.
+
+(TODO)
+> [!NOTE]
+> Shader libraries have no means of overriding their own *module parameters*.
+
+(TODO)
+If a dependency appears several times in the dependency graph, overrides several times the same *module parameter* (even if overriden with the same value), that dependency cannot be *unified*.
+Otherwise, the dependency can be unified, and all overrides apply to the unified version.
+
 ## `@if`, `@elif` and `@else` attributes
 
 The `@if` attribute takes a single *condition expression* parameter. 
@@ -138,7 +157,7 @@ A syntax node may at most have a single `@if`, `@elif` or `@else` attribute. Che
 
 Example:
 
-```wesl
+```wgsl
 @if(PARAM1 && PARAM2) const decl: u32 = 0;
 
 @if(PARAM1 && (!PARAM2 || PARAM3))
@@ -156,10 +175,12 @@ It is a translate-time error if:
 * The *WESL linker* was invoked with a *shader parameter* override that does not exist;
 * The type of a *shader parameter* override does not match the type of the declaration;
 * An identifier used in a *condition expression* does not reference a boolean shader parameter.
+* A syntax node has multiple `@param`, `@if`, `@elif` or `@else` attributes. There can be at most one of these four attributes per node.
+  In particular, a module parameter cannot be have a condition attribute.
 
 ## Execution of the conditional translation phase
 
-1. The *WESL translator* is invoked with a list of *module parameters* names and values to override.
+1. The *WESL translator* is invoked with a list of *module parameters* names and values to override *for each package*.
 2. The source file is parsed.
 3. For each overriden *module parameter*, the const-declaration initializer are replaced with the overridden value and the `@param` attribute is removed.
 4. *condition expressions* are evaluated in order.
@@ -178,7 +199,7 @@ In the initial passes, the *WESL translator* is invoked with some *shader parame
 * Arithmetic *condition expressions*: currently *condition expressions* only accept *shader parameters* of type boolean. In the future we may accept other types of constants and arithmetic expressions.
 
   Example:
-  ```wesl
+  ```wgsl
   @if(0x106 <= VERSION && VERSION <= 0x320)
   fn f() { ... }
   ```
@@ -186,12 +207,24 @@ In the initial passes, the *WESL translator* is invoked with some *shader parame
 * Decorating other WESL language extensions: import statements could be decorated with *condition attributes* too.
 
   Example:
-  ```wesl
+  ```wgsl
   @if(USE_BVH)
   import accel::bvh_acceleration_structure as scene_struct;
   @else
   import accel::default_acceleration_structure as scene_struct;
   ```
+
+## Appendix: Summary of constant declarations
+
+There are three types of so-called "constants" in WGSL. They are evaluated at
+different shader stages.
+
+| syntax | declaration kind | shader stage  | module-scope | function-scope | `@if` | array element count | 
+| ------ | ---------------- | ------------- | ------------ | -------------- | ----- | ------------------- |
+| `@param const x = 0;` | module parameter              | 1 shader-translation | yes | no  | no  | yes |
+| `const x = 0;`        | const-declaration             | 2 shader-creation    | yes | yes | yes | yes |
+| `override x = 0;`     | pipeline-overridable constant | 3 pipeline-creation  | yes | no  | yes | no  |
+
 
 ## Appendix: Updated grammar
 The following non-terminals are added or modified:
