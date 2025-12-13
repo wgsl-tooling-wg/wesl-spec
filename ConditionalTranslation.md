@@ -73,10 +73,7 @@ A *condition attribute* can appear before the following syntax nodes:
 * function formal parameter declarations
 * [structure declarations](https://www.w3.org/TR/WGSL/#struct-types)
 * structure member declarations
-* [compound statements](https://www.w3.org/TR/WGSL/#compound-statement-section)
-* [control flow statements](https://www.w3.org/TR/WGSL/#control-flow)
-* [function call statements](https://www.w3.org/TR/WGSL/#function-call-statement)
-* [const assertion statements](https://www.w3.org/TR/WGSL/#const-assert-statement)
+* [statements](https://www.w3.org/TR/WGSL/#statements)
 * [switch clauses](https://www.w3.org/TR/WGSL/#switch-statement)
 
 > [!NOTE]
@@ -106,6 +103,8 @@ Refer to the [updated grammar appendix](#appendix-updated-grammar) for the list 
    * directives
    * struct declarations
    * switch clauses
+   * assignment statements
+   * increment and decrement statements
    * break statements
    * break-if statements
    * continue statements
@@ -114,6 +113,11 @@ Refer to the [updated grammar appendix](#appendix-updated-grammar) for the list 
    * discard statements
    * function call statements
    * const assertion statements
+
+> [!WARNING]
+> We added attributes on assignment and increment/decrement statements. This change makes the WESL grammar no longer [LR(1)](https://en.wikipedia.org/wiki/LR_parser). See [`wesl-rs#162`](https://github.com/wgsl-tooling-wg/wesl-rs/issues/162) for details.
+>
+> Due to this limitation, *wesl-rs* does not allow attributes on assignment, increment and decrement statements starting with a `(`. Concretely, this is not supported by *wesl-rs*: `@if(FOO) (x)++`.
 
 ## `@param` attribute
 
@@ -196,14 +200,6 @@ In the initial passes, the *WESL translator* is invoked with some *shader parame
 ## Possible future extensions
 > *This section is non-normative*
 
-* Arithmetic *condition expressions*: currently *condition expressions* only accept *shader parameters* of type boolean. In the future we may accept other types of constants and arithmetic expressions.
-
-  Example:
-  ```wgsl
-  @if(0x106 <= VERSION && VERSION <= 0x320)
-  fn f() { ... }
-  ```
-
 * Decorating other WESL language extensions: import statements could be decorated with *condition attributes* too.
 
   Example:
@@ -225,25 +221,24 @@ different shader stages.
 | `const x = 0;`        | const-declaration             | 2 shader-creation    | yes | yes | yes | yes |
 | `override x = 0;`     | pipeline-overridable constant | 3 pipeline-creation  | yes | no  | yes | no  |
 
-
 ## Appendix: Updated grammar
 The following non-terminals are added or modified:
 
 ```grammar
     diagnostic_directive :
-     attribute * 'diagnostic' diagnostic_control ';'
+      attribute * 'diagnostic' diagnostic_control ';'
 
     enable_directive :
-     attribute * 'enable' enable_extension_list ';'
+      attribute * 'enable' enable_extension_list ';'
 
     requires_directive :
-     attribute * 'requires' software_extension_list ';'
+      attribute * 'requires' software_extension_list ';'
 
     struct_decl :
-     attribute * 'struct' ident struct_body_decl
+      attribute * 'struct' ident struct_body_decl
      
     type_alias_decl :
-     attribute * 'alias' ident '=' type_specifier
+      attribute * 'alias' ident '=' type_specifier
 
     variable_or_value_statement :
       variable_decl
@@ -252,44 +247,54 @@ The following non-terminals are added or modified:
     | attribute * 'const' optionally_typed_ident '=' expression
 
     variable_decl :
-     attribute * 'var' _disambiguate_template template_list ? optionally_typed_ident
+      attribute * 'var' _disambiguate_template template_list ? optionally_typed_ident
      
     global_variable_decl :
-     variable_decl ( '=' expression ) ?
+      variable_decl ( '=' expression ) ?
 
     global_value_decl :
       attribute * 'const' optionally_typed_ident '=' expression
     | attribute * 'override' optionally_typed_ident ( '=' expression ) ?
 
     case_clause :
-     attribute * 'case' case_selectors ':' ? compound_statement
+      attribute * 'case' case_selectors ':' ? compound_statement
 
     default_alone_clause :
-     attribute * 'default' ':' ? compound_statement
+      attribute * 'default' ':' ? compound_statement
+
+    assignment_statement :
+      attribute * lhs_expression ( '=' | compound_assignment_operator ) expression
+    | attribute * '_' '=' expression
+
+    increment_statement :
+      attribute * lhs_expression '++'
+
+    decrement_statement :
+      attribute * lhs_expression '--'
 
     break_statement :
-     attribute * 'break'
+      attribute * 'break'
 
     break_if_statement :
-     attribute * 'break' 'if' expression ';'
+      attribute * 'break' 'if' expression ';'
 
     continue_statement :
-     attribute * 'continue'
+      attribute * 'continue'
      
     continuing_statement :
-     attribute * 'continuing' continuing_compound_statement
+      attribute * 'continuing' continuing_compound_statement
 
     return_statement :
-     attribute * 'return' expression ?
+      attribute * 'return' expression ?
     
     discard_statement:
-     attribute * 'discard'
+      attribute * 'discard'
 
     func_call_statement :
-     attribute * call_phrase
+      attribute * call_phrase
 
     const_assert_statement :
-     attribute * 'const_assert' expression
+      attribute * 'const_assert' expression
 
     statement :
       ';'
@@ -330,5 +335,5 @@ The following non-terminals are added or modified:
     | if_attr
 
     if_attr:
-     '@' 'if' '(' expression ',' ? ')'
+      '@' 'if' '(' expression ',' ? ')'
 ```
