@@ -92,6 +92,11 @@ The patterns are glob patterns, which support
 
 If the last path segment does not contain a file extension or wildcard, then it is treated as a directory, and files with `.wesl` or `.wgsl` extensions inside that directory are included.
 
+To implement this, one starts at the `root` folder, and recursively goes over the children.
+1. If a `wesl.toml` file is present, that entire subtree is excluded, as it is under the purview of another `wesl.toml` file.
+2. If the file/folder path matches any exclusion, that entire subtree is excluded.
+3. If the file/folder path does *not* match the *prefix* of any of the inclusions, then that subtree is excluded.
+
 ### Path semantics
 
 File paths in the `root`, `include` and `exclude` fields are relative to the directory containing the `wesl.toml` file. Absolute paths (starting with `/` or `C:/`) are not allowed.
