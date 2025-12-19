@@ -1,57 +1,67 @@
 # Packaging
-(TBD)
 
-The section will discuss packaging WESL in reusable crates or npm packages.
+WESL enables shader packages for reusing shader code by other packages or applications. Shader packages are published to repositories such as [npm] or [crates.io].
 
-See also [Visibility](Visibility.md).
+## Using shader packages
 
-* What goes in `package.json`?
-  * at runtime in the browser, the linker needs
-    WESL strings and relative paths for every needed WESL file, from every every package.
-    * (this so the linker can resolve imports)
-  * something needs to tell javascript bundlers to include needed WESL files in the bundle:
-    * we could ask package publishers to produce a javascript file containing a map of relative paths and WESL strings
-    * perhaps better would be to have a vite/rollup plugin trace from the source WESL to the needed package WESL files (using the linker as a library to parse WESL)
-      * this would avoid requiring publishers to manually publish string maps of WESL text,
-        instead publishers would just publish files in dist.
-        * the consumer plugin tool would bundle files into strings.
-      * corner case issue: runtime conditional compilation could potentially change the imported
-        files required. Perhaps we'll need some workaround markers in this rare case, so tree shaking can still work.
-    * note that the WESL-linker already has this problem of bundling local WGSL files
-      and asks users to 'self package' WGSL using import.meta.glob
-      (which bundles files into [file path, WGSL string] pairs)
-  * what other metadata should be available to the linker?
-    * name of package.
-    * host visible bits from WGSL? e.g. entry points, runtime variables, overrides, binding groups, uniforms?
-      An IDE tool could use that data to typecheck/autocomplete host calls.
-      Things like entry points are computable from the WGSL,
-      but it's a lot to ask of a language server to parse through all the WGSL in advance to find them.
-      Probably better to put it into the metadata if we need it.
-      * these are parts of the API of the package as a whole and can reduce bugs by making them visible
-  * how do we handle packages with multiple entry points e.g. stoneberry/reduce stoneberry/prefixSum.
-* What goes in `cargo.toml`?
+Dependencies for your application are defined in the [`wesl.toml`] file. The WESL linker is responsible for finding and downloading dependencies: [wesl-js] will fetch packages from [npm] and [wesl-rs] will fetch them from [crates.io].
+Inside your shader modules, you can reach declarations in dependencies with import paths, as explained in [imports].
 
-## `wesl.toml` file
-The `wesl.toml` file is a configuration file that tells the language server where to find the packages. It is similar to a `Cargo.toml` file in that regard.
+## Creating and publishing shader packages
 
-```toml
-name = "my"
-edition = "2024"
+Any [`wesl.toml`] file declares a new shader package, which can be published by the linker's CLI.
+Publishing packages is implementation-specific, follow the instructions for your linker ([wesl-js] or [wesl-rs]).
 
-[dependencies]
-bevy_ui = { cargo = "bevy_ui" }
-shader_wiz = { path = "./node_modules/shader_wiz/src/main.wgsl" }
+### Package naming guidelines
+
+You can publish your package with whatever name you like. We however recommend following these recommendations so your package can be easily found by searching the package registry.
+
+* Use a name that is also a valid WGSL identifier. Otherwise, end-users will have to rename it in [`wesl.toml`].
+* Add the `_wgsl` suffix to the name: `mypackage_wgsl`.
+* Use snake_case (underscores to separate words): `my_great_package_wgsl`.
+* If your package is part of a larger project, or produced by a company, you can prefix it with that name: `mycompany_mypackage_wgsl`.
+  * For [wesl-js] specifically, you can use the common naming convention `@mycompany/mypackage_wgsl`
+* Look for packages with the same name in both [npm] and [crates.io].
+  * It is courtesy to leave the name free for the original author if they wish to publish to the other registry.
+  * It also avoids confusion for end-users who may think it is the same package.
+
+## Semver-compatibility and dependency unification
+
+(TODO: unification with param const?)
+
+If two packages in the dependency tree are [semver-compatible](https://semver.org/), the WESL linker will unify them, meaning it will include only one version of the package in its output (usually the highest semver-compatible version available).
+This unification can have observable side-effects that a user must be warry of. Module-scope declarations may, or may not be duplicated.
+
+### Example
+
+```wgsl
+// package random
+// --------------
+var<private> prng_state: f32 = 0;
+
+// return a random float in [0, 1]. Do not actually use this function, it is awful.
+fn rand() -> f32 {
+    prng_state = fract(sin(x)*12345.6789);
+    return prng_state;
+}
 ```
 
-We specify how to resolve the paths of packages instead of scanning folders for `*.wgsl` files.
-In the Javascript world, it is common to have a `node_modules` folder with 10k files, which is not practical for a language server to scan.
+Here, the `random::rand()` function has internal state represented by `prng_state`.
+If two packages depend on semver-compatible versions of `random`, then they would share that internal state.
+If however they depend on non-semver-compatible versions, two copies of the state and the `rand()` function will be used, suddenly producing different results.
 
-We are planning on taking advantage of existing package managers, such as `cargo` for Rust, and `npm` for Javascript. This makes it easier for users to consume shaders, and makes sense for ecosystem-specific tools.
+## Visibility
 
-### Unresolved questions
-* Is .toml the best file format for the `wesl.toml`? Some alternatives would be JSON/JSON5 and StrictYAML.
-* do we need to put paths for every package's WGSL in `wesl.toml`?
-  * Fine to get started that way if need be, but its a maintenance burden every user..
-  * Better if we could get the language servers to find the WGSL in packages in node_modules.
-* Do we need to list the WGSL package names in `wesl.toml`?
-  They'll already be listed in as `cargo.toml` / `package.json`..
+All declarations reachable from a direct dependency's root module can be accessed from the parent package.
+Declarations in indirect dependencies (i.e., dependencies of dependencies) are never reachable.
+
+Future iterations of WESL may introduce a re-export and/or visibility control mechanism. See [visibility].
+
+
+[npm]: https://www.npmjs.com/
+[crates.io]: https://crates.io/
+[`wesl.toml`]: WeslToml.md
+[imports]: Imports.md
+[visibility]: Visibility.md
+[wesl-js]: https://github.com/wgsl-tooling-wg/wesl-js
+[wesl-rs]: https://github.com/wgsl-tooling-wg/wesl-rs
