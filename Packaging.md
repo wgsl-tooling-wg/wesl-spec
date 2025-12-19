@@ -4,17 +4,18 @@ WESL enables shader packages for reusing shader code by other packages or applic
 
 ## Using shader packages
 
-Dependencies for your application are defined in the [`wesl.toml`] file. The WESL linker is responsible for finding and downloading dependencies: [wesl-js] will fetch packages from [npm] and [wesl-rs] will fetch them from [crates.io].
+Dependencies for your application are defined in the [`wesl.toml`] file.
+The WESL linker is responsible for finding and downloading dependencies: [wesl-js] will fetch packages from [npm], while [wesl-rs] will fetch them from [crates.io].
 Inside your shader modules, you can reach declarations in dependencies with import paths, as explained in [imports].
 
 ## Creating and publishing shader packages
 
-Any [`wesl.toml`] file declares a new shader package, which can be published by the linker's CLI.
+Any [`wesl.toml`] file declares a new shader package, which can be published using the linker's CLI.
 Publishing packages is implementation-specific, follow the instructions for your linker ([wesl-js] or [wesl-rs]).
 
 ### Package naming guidelines
 
-You can publish your package with whatever name you like. We however recommend following these recommendations so your package can be easily found by searching the package registry.
+You can publish your package with whatever name you like. We however recommend following these guidelines so your package can be easily found and consumed by end users.
 
 * Use a name that is also a valid WGSL identifier. Otherwise, end-users will have to rename it in [`wesl.toml`].
 * Add the `_wgsl` suffix to the name: `mypackage_wgsl`.
