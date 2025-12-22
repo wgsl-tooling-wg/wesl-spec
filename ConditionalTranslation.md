@@ -9,6 +9,7 @@ This specification extends the [*attribute* syntax](https://www.w3.org/TR/WGSL/#
 
 > [!NOTE]
 > Compared to Rust, `@param const my_param = true` is analogous to a feature flag, while `@if(my_param)` is analogous to `#[cfg(feature = "my_param")]`.
+> In JavaScript world, param consts are similar to environment variables, but there is no equivalent for conditional translation.
 
 ### Usage Example
 
@@ -51,7 +52,7 @@ Quirky examples
 
 ## Definitions
 
-* A **module parameter** is an module-scope const-declaration decorated with the `@param` attribute. Function-scope const-declarations cannot be module parameters*.
+* A **module parameter** is an module-scope const-declaration decorated with the `@param` attribute, defined in a root module[^1]. Function-scope const-declarations cannot be module parameters*.
 * A **condition expression** is evaluated by the *WESL translator* and eliminated after translation.
   Its grammar is a subset of normal WGSL [expressions](https://www.w3.org/TR/WGSL/#expressions). it must be one of:
   * a [literal value](https://www.w3.org/TR/WGSL/#literals) (boolean or numeric literal).
@@ -121,39 +122,33 @@ Refer to the [updated grammar appendix](#appendix-updated-grammar) for the list 
 
 ## `@param` attribute
 
-A module-scope const-declaration can be decorated with the `@param` attribute to turn it into a *module parameter*.
+A module-scope const-declaration in the root module[^1] can be decorated with the `@param` attribute to turn it into a *module parameter*.
 *Module parameters* work like any other const declarations, but also provide two advantages:
 * their value can be overriden by the *WESL translator*.
-* they can be used in *condition expressions* if they are of type boolean.
+* they can be used in *condition expressions* for conditional translation.
 
-(TODO)
-*Module parameter* overrides for direct dependencies can be set from the `wesl.toml` manifest file.
-The manifest file can override *module parameters* by providing either a literal automatically convertible to the *module parameter* type, or the *fully-qualified path* to a *module parameter* in the current package.
-Thus, the override in the dependency is "bound" to a new override in the current pacakge.
+Override values for *module parameters* can be provided in two places:
+* For the application's root module: they are passed to the *WESL translator* at *shader-translation-time*.
+* For direct dependencies: they are specified in the `wesl.toml` manifest file.
+  (TODO: this is likely not what we want. We want to provide values from the host code! How do we do that for dependencies, without publish?)
 
-(TODO)
-*Module parameter* overrides for the root package, whoever, are passed to the *WESL translator* at *shader-translation-time*.
-The *WESL translator* refers to a *module parameter* using the *fully-qualified path* of its declaration.
-It can override the value by providing a literal automatically convertible to the *module parameter* type.
-
-(TODO)
 > [!NOTE]
-> Shader libraries have no means of overriding their own *module parameters*.
+> Currently, shader packages have no means of overriding their own *module parameters*.
+> Later iterations of this mechanism may allow overriding *module parameters* from shader code.
 
-(TODO)
-If a dependency appears several times in the dependency graph, overrides several times the same *module parameter* (even if overriden with the same value), that dependency cannot be *unified*.
+If a dependency appears several times in the dependency graph and overrides several times the same *module parameter* (even if overriden with the same value), that dependency cannot be *unified*.
 Otherwise, the dependency can be unified, and all overrides apply to the unified version.
 
 ## `@if`, `@elif` and `@else` attributes
 
-The `@if` attribute takes a single *condition expression* parameter. 
+The `@if` attribute takes a single *condition expression* parameter.
 It marks the decorated node for removal if its *condition expression* evaluates to `false`.
 
-The `@elif` attribute takes a single *condition expression* parameter. 
-It can only be attached to the next sibling of a syntax node decorated by a `@if` or an `@elif`. 
+The `@elif` attribute takes a single *condition expression* parameter.
+It can only be attached to the next sibling of a syntax node decorated by a `@if` or an `@elif`.
 It marks the decorated node for removal if its *condition expression* evaluates to `false` OR any of if the previous `@if` and `@elif` attribute parameters in the chain evaluate to `true`.
 
-The `@else` attribute takes no parameter. 
+The `@else` attribute takes no parameter.
 It can only be attached to the next sibling of a syntax node decorated by a `@if` or an `@elif`.
 It marks the decorated node for removal if any of the previous `@if` and `@elif` attribute *condition expressions* in the chain evaluate to `true`.
     
@@ -176,11 +171,14 @@ fn f() { ... }
 
 It is a translate-time error if:
 
+* an module parameter was declared outside of the root module[^1]; 
 * The *WESL linker* was invoked with a *shader parameter* override that does not exist;
 * The type of a *shader parameter* override does not match the type of the declaration;
 * An identifier used in a *condition expression* does not reference a boolean shader parameter.
 * A syntax node has multiple `@param`, `@if`, `@elif` or `@else` attributes. There can be at most one of these four attributes per node.
   In particular, a module parameter cannot be have a condition attribute.
+
+[^1]: Currently only root module declarations can be parameters. This is due to the lack of publish/re-export mechanism, see #65. This limitation will be lifted soon.
 
 ## Execution of the conditional translation phase
 
