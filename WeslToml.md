@@ -7,7 +7,7 @@ The format looks as follows. As much of it is optional as possible.
 ```toml
 [package]
 # Version of WESL used in this project.
-edition = "unstable_2025"
+edition = "2026_pre"
 
 # Optional, can be auto-inferred from the existence of a package manager file.
 # Inclusion of this field is encouraged.
@@ -47,9 +47,8 @@ As your application grows, we suggest adding a `wesl.toml`. This lets you pin do
 Specifies which edition is used by wesl. All wesl editions can be used.
 
 - Mandatory
-  - Falls back to latest edition that tools know.
-- Currently only `unstable_2025` is accepted, since we do not have an edition yet.
-  - No incompatible changes are planned, but we have not committed to stable version for long term support.
+  - If `wesl.toml` is not present, the default is the latest edition.
+  - WESL tools will provide long-term support for stable LTS editions, ensuring forwards compatibility.
 - Dependencies are interpreted using the edition that they declared, not the edition of the consuming package.
 
 ### `package-manager` field
