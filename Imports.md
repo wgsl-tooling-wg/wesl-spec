@@ -2,7 +2,7 @@
 We propose adding an importing mechanism to the WGSL shading language as an extension.
 
 # Motivation
-When writing bigger WGSL shaders, one tends to **split the code into reusable pieces**. Examples are re-using a set of lighting calculation functions and sharing a struct between two compute shaders and.
+When writing bigger WGSL shaders, one tends to **split the code into reusable pieces**. Examples are re-using a set of lighting calculation functions and sharing a struct between two compute shaders.
 
 However, current WGSL tooling is not built for this. The official language purposefully does not include this feature, nor does it provide adjacent features like namespaces, and there is no standardized extension yet.
 
@@ -55,11 +55,11 @@ Proceeding left to right through the path segments, consider the segments `prev`
 # Reference-level explanation
 A WESL program is composed of a tree of WESL modules.
 
-Imports must appear as the first items in a WESL file. They can import entire modules or individual  "importable items" (see [GLOSSARY](GLOSSARY.md)).
+Imports must appear as the first items in a WESL file. They can import entire modules or individual "importable items" (see [GLOSSARY](GLOSSARY.md)).
 
 ### Grammar
 
-An import statement is parsed with the following  grammar, with spaces and comments allowed between tokens:
+An import statement is parsed with the following grammar, with spaces and comments allowed between tokens:
 
 ```ebnf
 translation_unit:
@@ -162,7 +162,7 @@ The root folder, or the root module, needs to be provided to the linker. This is
 Linkers should fall back to `.wgsl` files when a `.wesl` file cannot be found.
 
 Due to filesystem limitations, it can happen that WESL idents are invalid file or folder names.
-Notable examples are `CON, PRN, AUX, NUL, COM1 - COM9, LPT1 - LPT9` on Windows, and Windows being case-insensitive
+Notable examples are `CON, PRN, AUX, NUL, COM1 - COM9, LPT1 - LPT9` on Windows, and Windows being case-insensitive.
 We do not take these restrictions into account, instead we just recommend that WESL programmers avoid these special names.
 
 ## Inline Usage
@@ -299,7 +299,7 @@ const a: u32 = bar::baz::hello;
 See [Name Mangling](./NameMangling.md)
 
 ## Dead Code Elimination
-Linkers may choose to do dead code elimination, but it is a not-observable implementation detail.
+Linkers may choose to do dead code elimination, but it is a non-observable implementation detail.
 
 `const_assert` statements inside of functions need special treatment, see relevant section.
 
@@ -309,7 +309,7 @@ Everything is public by default.
 Future proposals will introduce visibility (privacy) for items and/or modules.
 
 # Drawbacks
-Are there reasons as to why we should we not do this?
+Are there reasons as to why we should not do this?
 
 * This introduces yet another importing syntax that developers have to learn, instead of using a standard syntax.
 * To implement the name mangling, one has to parse WGSL code! This is not trivial, and requires a partial WGSL parser.

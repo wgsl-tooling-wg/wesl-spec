@@ -25,6 +25,6 @@
   * (Maybe `const_assert`?)
 * **Package**: A publishable body of WESL code containing multiple files. Akin to a JavaScript npm package or a Rust crate.
 * **Package Root**: The root directory containing WESL files
-* **Visibility**: Whether a importable item is visible to
+* **Visibility**: Whether an importable item is visible to
   * other modules
   * other packages

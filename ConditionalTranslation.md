@@ -25,7 +25,7 @@ struct Ray {
 }
 
 // function declarations, parameters and statements...
-fn main() -> vec4 {
+fn main() -> vec4f {
   @if(legacy_implementation || (is_web_version && xyz_not_supported))
   let result = legacy_impl();
   @if(!legacy_implementation && !(is_web_version && xyz_not_supported))
@@ -50,13 +50,13 @@ const feature1 = 10;
 
 ## Definitions
 * **Translate-time expression**: A *translate-time expression* is evaluated by the *WESL translator* and eliminated after translation.
-  Its grammar is a subset of normal WGSL [expressions](https://www.w3.org/TR/WGSL/#expressions). it must be one of:
+  Its grammar is a subset of normal WGSL [expressions](https://www.w3.org/TR/WGSL/#expressions). It must be one of:
   * a *translate-time feature*,
   * a [logical expression](https://www.w3.org/TR/WGSL/#logical-expr): logical not (`!`), short-circuiting AND (`&&`), short-circuiting OR (`||`),
   * a [parenthesized expression](https://www.w3.org/TR/WGSL/#parenthesized-expressions),
   * a boolean literal value (`true` or `false`).
 
-* **Translate-time scope**: The *translate-time scope* this is an independent scope from the [*module scope*](https://www.w3.org/TR/WGSL/#module-scope), meaning it cannot see any declarations from the source code, and its identifiers are independent.
+* **Translate-time scope**: The *translate-time scope* is an independent scope from the [*module scope*](https://www.w3.org/TR/WGSL/#module-scope), meaning it cannot see any declarations from the source code, and its identifiers are independent.
 
 * **Translate-time feature**: A *translate-time feature* is an identifier that evaluates to a boolean. It is set to `true` if the feature is *enabled* during the translation phase and `false` if the feature is *disabled*. It lives in the *Translate-time scope*.
 
@@ -80,7 +80,7 @@ A *translate-time attribute* can appear before the following syntax nodes:
 > *Translate-time attributes* are not allowed in places where removal of the syntax node would lead to syntactically incorrect code. The current set of *translate-time attribute* locations guarantees that the code is syntactically correct after specialization. This is why *translate-time attributes* are not allowed before expressions.
 
 ### Update to the WGSL grammar
-The WGSL grammar allows attributes in several locations where *translate-time attribute* are not allowed (1). Conversely, the WGSL grammar does not allow attributes in several locations where *translate-time attribute* are allowed (2).
+The WGSL grammar allows attributes in several locations where *translate-time attributes* are not allowed (1). Conversely, the WGSL grammar does not allow attributes in several locations where *translate-time attributes* are allowed (2).
 
 Refer to the [updated grammar appendix](#appendix-updated-grammar) for the list of updated grammar non-terminals.
 
@@ -121,7 +121,7 @@ Refer to the [updated grammar appendix](#appendix-updated-grammar) for the list 
 ## `@if` attribute
 The `@if` *translate-time attribute* is introduced. It takes a single parameter. It marks the decorated node for removal if the parameter evaluates to `false`.
 
-A syntax node may at most have a single `@if` attributes. This keeps the way open for a `@else` attribute introduction in the future.
+A syntax node may at most have a single `@if` attribute. This keeps the way open for a `@else` attribute introduction in the future.
 Checking for multiple features is done with an `&&`
 
 ```wgsl
@@ -162,9 +162,9 @@ In case some features can only be resolved at runtime, a *WESL translator* can *
 
 * In the initial passes, the *WESL translator* is invoked with some of the feature flags. It replaces their occurrences in *translate-time attributes* with either `true` or `false`.
   These passes return a partially-translated WESL code.
-* After the final pass, the resulting code must be valid WGSL. it is an *link-time error* if any used *Translate-time features* was not provided to the linker.
+* After the final pass, the resulting code must be valid WGSL. It is a *link-time error* if any used *translate-time feature* was not provided to the linker.
 
-If the *WESL translator* does not support incremental translation, it is an *link-time error* if any used *Translate-time features* was not provided to the linker.
+If the *WESL translator* does not support incremental translation, it is a *link-time error* if any used *translate-time feature* was not provided to the linker.
 
 > *It is not an error to provide unused feature flags to the linker. However, an implementation may choose to display a warning in that case.*
 
@@ -173,7 +173,7 @@ If the *WESL translator* does not support incremental translation, it is an *lin
 
 * `@else` and `@elif` attributes:
   * An `@elif` attribute decorates the next sibling of a syntax node decorated by a `@if` or an `@elif`. It takes one parameter.
-     It marks the decorated node for removal if its parameter evaluates to `false` OR any of if the previous `@if` and `@elif` attribute parameters evaluate to `true`.
+     It marks the decorated node for removal if its parameter evaluates to `false` OR if any of the previous `@if` and `@elif` attribute parameters evaluate to `true`.
   * An `@else` attribute decorates the next sibling of a syntax node decorated by a `@if` or an `@elif`. It does not take any parameter.
      It marks the decorated node for removal if any of the previous `@if` and `@elif` attribute parameters evaluate to `true`.
 

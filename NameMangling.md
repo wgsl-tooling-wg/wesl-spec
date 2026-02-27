@@ -35,7 +35,7 @@ For name mangling, we introduce the concept of a **fully qualified path**.
 This is the absolute path to the module, plus the item. e.g. `bevy_pbr::lighting::main`
 1. `_` is the path separator
 2. Split into segments (`bevy_pbr`, `lighting`, `main`)
-3. If a segment contains `_`, prefix it with `_n` where `n`  the number of underscores it contains. (`_1bevy_pbr`, `lighting`, `main`)
+3. If a segment contains `_`, prefix it with `_n` where `n` is the number of underscores it contains. (`_1bevy_pbr`, `lighting`, `main`)
 4. The result is joined with `_`. (`_1bevy_pbr_lighting_main`)
 
 ## Only-conflict mangling

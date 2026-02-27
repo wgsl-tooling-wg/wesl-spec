@@ -23,7 +23,7 @@ we can build common tools.
 Better tooling benefits everyone,
 including smaller projects that can't afford to build
 their own enhancements and associated tools.
-And a shared standard can enable resusable WGSL libraries
+And a shared standard can enable reusable WGSL libraries
 on npm and crates.io.
 
 Join us on [GitHub](https://github.com/wgsl-tooling-wg/wesl-spec)
@@ -31,7 +31,7 @@ or [Discord](https://discord.gg/Ng5FWmHuSv) to help.
 
 ## Goals
 Our ambition is to create a modestly improved, practical variant of WGSL
-called WESL (**W**GSL **E**nhanced **S**hading **L**anguage, pronounced like 'weasel'). <!-- spellchecker:disable-line -->
+called WESL (**W**ebGPU **E**nhanced **S**hading **L**anguage, pronounced like 'weasel'). <!-- spellchecker:disable-line -->
 
 WESL should feel like WGSL with a few useful things added.
 
@@ -47,7 +47,7 @@ to try alongside stable features.
 Our first two WESL enhancements are:
 
 * `import` statements
-to enable a module system so users can organize their shaders across multiple file.
+to enable a module system so users can organize their shaders across multiple files.
 See spec draft here: **[Imports]**.
 * conditional translation via `@if` statements
 so shaders can be customized based on external flags.
@@ -77,16 +77,13 @@ WESL prioritized these features for its first release:
 What would you like to see next?
 
 ## Relationship to W3C WGSL and WebGPU
-WESL enhancements features are invisible to WebGPU engines
+WESL enhancements are invisible to WebGPU engines
 like Dawn and wgpu.
 All WESL enhancements are translated to vanilla WGSL
 before being passed to WebGPU calls
 such as [`createShaderModule()`](https://developer.mozilla.org/en-US/docs/Web/API/GPUDevice/createShaderModule).
 
-Hopefully community WESL enhancements will
-help inform future versions of W3C standard WGSL.
-But designing changes to W3C standard WGSL is
-beyond the scope of this project.
+Most WESL enhancements are intended as proposals for future versions of W3C standard WGSL.
 
 ## License
 Except where noted (below and/or in individual files), all code in this repository is dual-licensed under either:

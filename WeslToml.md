@@ -79,7 +79,7 @@ When the `wesl.toml` file does not exist, then tools should choose one of the fo
  
 ### `include` and `exclude` fields
 
-Specifies an array of patterns where wesl files are located. They patterns are relative to the `wesl.toml` file.
+Specifies an array of patterns where wesl files are located. The patterns are relative to the `wesl.toml` file.
 
 The default value of `include` is all wesl and wgsl files in the `root` directory, recursively.
 The default value of `exclude` is an empty array.

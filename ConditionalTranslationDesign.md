@@ -4,7 +4,7 @@
 ## Initial reflections
 * `#if #else #endif` (or perhaps `#ifdef`) in the style of a C preprocessor
   is the approach that comes first to mind.
-* conditional compilation runs after simple templating but before import processing..
+* conditional compilation runs after simple templating but before import processing.
   * (note that we may want to disable code that may not be correct so parsing first is iffy)
 * best to define default values in the WGSL for all conditionals
   * IDE tools can't assume any definitions that aren't in the WGSL.
@@ -13,7 +13,7 @@
     * Perhaps some optimization potential..
       * For example could parse/lower certain functions ahead of
         time and easily remove them from the IR vs #if #else which operates on a source level.
-    * Is it an WGSL attribute? syntax makes sense but WGSL
+    * Is it a WGSL attribute? syntax makes sense but WGSL
 * what are some examples of things to conditionally compile?
   * function variants e.g. select which function variant to use based on condition
   * struct fields e.g. include fields only if condition is set
@@ -50,7 +50,7 @@ Whatever design choice we make now, is potentially a burden in the future. There
 
 ### Argument 2: structured is better for IDEs and human readers, and is closer to WGSL design choices
 `#ifdef`s are not very readable. They don't match the language syntax style, they don't respect the structure (indentation etc), they are more verbose (require `#endif`) and error-prone.
-WGSL takes inspiration from Rust (all its keywords were borrowed from Rust, and some elements of its strong safety guarantees, such as making dangling pointer impossible).
+WGSL takes inspiration from Rust (all its keywords were borrowed from Rust, and some elements of its strong safety guarantees, such as making dangling pointers impossible).
 Rust uses structured conditional compilation too, with the `#[cfg()]` attribute, which works very similarly to the `@if` attribute.
 
 Structured is great for IDEs too: with a structured `@if`, one can always generate a unified syntax tree

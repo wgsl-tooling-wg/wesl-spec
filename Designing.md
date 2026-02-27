@@ -1,4 +1,4 @@
-# Designing Enhancemnents for WESL
+# Designing Enhancements for WESL
 This section discusses some general design guidelines for creating new shader language enhancements.
 
 ## Goals
@@ -39,7 +39,7 @@ other than WGSL.
 ### Syntax from Rust and TypeScript?
 Avoid trying to imitate a TypeScript or Rust language feature syntactically
 unless it can fully match the source language semantics.
-If it *looks just like* a Rust or TypeScript feature, programmers will expect it
+If it *looks just like* a Rust or TypeScript feature, programmers will expect it to
 *work like* the source language.
 
 But fully matching the source language will often be impossible
@@ -62,21 +62,20 @@ will be a good base to build out new enhancement ideas.
 It should be easy to implement and try out new WESL enhancements on
 local WESL projects.
 
-Experimental enhancements aren't intended be supported across tools,
+Experimental enhancements aren't intended to be supported across tools,
 and don't need to be compatible with other experiments.
 As experiments move toward stability
 we'll move experimental enhancements into more tools behind a feature flag
 so more projects can try them.
 
 ## Words and Reserved Words in WGSL
-We'll typically want to avoid using keywords used in current WGSL, unless
-the meaning is consistent and additive to the keyword's use in WGSL.
+WESL features use reserved words from WGSL (e.g. `import`) so that
+they can serve as true proposals for WGSL adoption.
+WESL maintainers are technical advisors to the W3C WebGPU committee,
+and we design features with the goal of minimal divergence
+from a possible future WGSL.
 
-Any differences we introduce in WESL will
-will be erased during transpilation to WGSL.
-But we don't want to confuse our programmers by
+We avoid changing the meaning of existing WGSL keywords.
+Any differences WESL introduces are erased during transpilation to WGSL,
+and we don't want to confuse programmers by
 unexpectedly changing the meaning of a keyword.
-
-Some WESL enhancements may serve as prototypes for future
-WGSL features. We'll work with the W3C team
-to be supportive of future WGSL evolution.
