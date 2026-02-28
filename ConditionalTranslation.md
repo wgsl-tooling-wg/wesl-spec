@@ -1,34 +1,42 @@
-# Conditional Translation
+# Conditional Translation and Shader Specialization
 
 ## Overview
+
 > *This section is non-normative*
 
-Conditional translation is a mechanism to modify the output source code based on parameters passed to the *WESL translator*.
-This specification extends the [*attribute* syntax](https://www.w3.org/TR/WGSL/#attributes) with a new `@if` attribute.
-This attribute indicates that the syntax node it decorates can be removed by the *WESL translator* based on feature flags.
+Conditional translation and shader specializaton are two mechanisms to control the WGSL code produced based on parameters passed to the *WESL translator*.
+This specification extends the [*attribute* syntax](https://www.w3.org/TR/WGSL/#attributes) with new attributes: `@param` defines *module parameters* for shader specializaton via constant injection, while `@if`/`@elif`/`@else` control conditional translation.
 
-> *This implementation is similar to the `#[cfg(feature = "")]` syntax in Rust.*
+> [!NOTE]
+> Compared to Rust, `@param const my_param = true` is analogous to a feature flag, while `@if(my_param)` is analogous to `#[cfg(feature = "my_param")]`.
+> In JavaScript world, param consts are similar to environment variables, but there is no equivalent for conditional translation.
 
 ### Usage Example
 
 ```wgsl
+// define module parameters with default values...
+@param const TEXTURED = true;
+@param const DEBUG = false;
+@param const RAYTRACING_ENABLED = false;
+@param const LEGACY_COMPAT = false;
+
 // global variables and bindings...
-@if(textured)
+@if(TEXTURED)
 @group(0) @binding(0) var my_texture: texture_2d<f32>;
 
 // structs declarations and struct members...
 struct Ray {
   position: vec4f,
   direction: vec4f,
-  @if(debug_mode && raytracing_enabled)
+  @if(DEBUG && RAYTRACING_ENABLED)
   ray_steps: u32,
 }
 
 // function declarations, parameters and statements...
 fn main() -> vec4 {
-  @if(legacy_implementation || (is_web_version && xyz_not_supported))
+  @if(LEGACY_COMPAT)
   let result = legacy_impl();
-  @if(!legacy_implementation && !(is_web_version && xyz_not_supported))
+  @else
   let result = modern_impl();
 }
 ```
@@ -37,33 +45,26 @@ Quirky examples
 
 ```wgsl
 // attribute order does not matter.
-@compute @if(feature) fn main() { }
-// ... is equivalent to 
-@if(feature) @compute fn main() { }
-
-// feature names live in their own namespace, i.e. they cannot shadow, or be shadowed by declarations.
-const feature1 = 10;
-@if(feature1) fn main() -> u32 { // 'feature1' in @if does not refer to the const-declaration.
-    return feature1*2;           // 'feature1' in return statement does not refer to the feature flag.
-}
+@compute @if(FEATURE) fn main() { }
+// ... is equivalent to this (preferred)
+@if(FEATURE) @compute fn main() { }
 ```
 
 ## Definitions
-* **Translate-time expression**: A *translate-time expression* is evaluated by the *WESL translator* and eliminated after translation.
+
+* A **module parameter** is an module-scope const-declaration decorated with the `@param` attribute, defined in a root module[^1]. Function-scope const-declarations cannot be module parameters*.
+* A **condition expression** is evaluated by the *WESL translator* and eliminated after translation.
   Its grammar is a subset of normal WGSL [expressions](https://www.w3.org/TR/WGSL/#expressions). it must be one of:
-  * a *translate-time feature*,
+  * a [literal value](https://www.w3.org/TR/WGSL/#literals) (boolean or numeric literal).
+  * an [identifier expression](https://www.w3.org/TR/WGSL/#value-identifier-expr) referring to a *module parameter* in scope,
   * a [logical expression](https://www.w3.org/TR/WGSL/#logical-expr): logical not (`!`), short-circuiting AND (`&&`), short-circuiting OR (`||`),
+  * a [comparison expression](https://www.w3.org/TR/WGSL/#comparison-expr): `==`, `!=`, `<`, `<=`, `>`, `>=`,
   * a [parenthesized expression](https://www.w3.org/TR/WGSL/#parenthesized-expressions),
-  * a boolean literal value (`true` or `false`).
+* **condition attributes** (`@if`, `@elif` and `@else`) are eliminated after translation but can also eliminate the syntax node it attached to.
 
-* **Translate-time scope**: The *translate-time scope* this is an independent scope from the [*module scope*](https://www.w3.org/TR/WGSL/#module-scope), meaning it cannot see any declarations from the source code, and its identifiers are independent.
+## Location of *condition attributes*
 
-* **Translate-time feature**: A *translate-time feature* is an identifier that evaluates to a boolean. It is set to `true` if the feature is *enabled* during the translation phase and `false` if the feature is *disabled*. It lives in the *Translate-time scope*.
-
-* **Translate-time attribute**: A *translate-time attribute* is parametrized by a *translate-time expression*. It is eliminated after translation but can affect the syntax node it decorates.
-
-## Location of *Translate-time attributes*
-A *translate-time attribute* can appear before the following syntax nodes:
+A *condition attribute* can appear before the following syntax nodes:
 
 * [directives](https://www.w3.org/TR/WGSL/#directives)
 * [variable and value declarations](https://www.w3.org/TR/WGSL/#var-and-value)
@@ -76,15 +77,16 @@ A *translate-time attribute* can appear before the following syntax nodes:
 * [statements](https://www.w3.org/TR/WGSL/#statements)
 * [switch clauses](https://www.w3.org/TR/WGSL/#switch-statement)
 
-> [!TIP]
-> *Translate-time attributes* are not allowed in places where removal of the syntax node would lead to syntactically incorrect code. The current set of *translate-time attribute* locations guarantees that the code is syntactically correct after specialization. This is why *translate-time attributes* are not allowed before expressions.
+> [!NOTE]
+> *Condition attributes* are not allowed in places where removal of the syntax node would lead to syntactically incorrect code. The current set of *condition attribute* locations guarantees that the code is syntactically correct after specialization. This is why *condition attributes* are not allowed before expressions.
 
 ### Update to the WGSL grammar
-The WGSL grammar allows attributes in several locations where *translate-time attribute* are not allowed (1). Conversely, the WGSL grammar does not allow attributes in several locations where *translate-time attribute* are allowed (2).
+
+The WGSL grammar allows attributes in several locations where *condition attributes* are not allowed (1). Conversely, the WGSL grammar does not allow attributes in several locations where *condition attribute* are allowed (2).
 
 Refer to the [updated grammar appendix](#appendix-updated-grammar) for the list of updated grammar non-terminals.
 
-1. A *translate-time attribute* CANNOT decorate the following syntax nodes, even if the WGSL grammar allows attributes before these syntax nodes:
+1. A *condition attribute* CANNOT decorate the following syntax nodes, even if the WGSL grammar allows attributes before these syntax nodes:
    * function return types
    * the body (part surrounded by curly braces) of:
      * function declarations
@@ -96,7 +98,7 @@ Refer to the [updated grammar appendix](#appendix-updated-grammar) for the list 
      * if/else statements
      * continuing statements
 
-2. The grammar is extended to allow *translate-time attributes* before the following syntax nodes:
+2. The grammar is extended to allow *condition attributes* before the following syntax nodes:
    * const value declarations
    * variable declarations
    * directives
@@ -118,102 +120,104 @@ Refer to the [updated grammar appendix](#appendix-updated-grammar) for the list 
 >
 > Due to this limitation, *wesl-rs* does not allow attributes on assignment, increment and decrement statements starting with a `(`. Concretely, this is not supported by *wesl-rs*: `@if(FOO) (x)++`.
 
-## `@if` attribute
-The `@if` *translate-time attribute* is introduced. It takes a single parameter. It marks the decorated node for removal if the parameter evaluates to `false`.
+## `@param` attribute
 
-A syntax node may at most have a single `@if` attributes. This keeps the way open for a `@else` attribute introduction in the future.
-Checking for multiple features is done with an `&&`
+A module-scope const-declaration in the root module[^1] can be decorated with the `@param` attribute to turn it into a *module parameter*.
+*Module parameters* work like any other const declarations, but also provide two advantages:
+* their value can be overriden by the *WESL translator*.
+* they can be used in *condition expressions* for conditional translation.
 
-```wgsl
-@if(feature1 && feature2)   const decl: u32 = 0;
-```
+Override values for *module parameters* can be provided in two places:
+* For the application's root module: they are passed to the *WESL translator* at *shader-translation-time*.
+* For direct dependencies: they are specified in the `wesl.toml` manifest file.
+  (TODO: this is likely not what we want. We want to provide values from the host code! How do we do that for dependencies, without publish?)
 
-> *See the [possible future extensions](#possible-future-extensions) for the attributes `@elif` and `@else`.
-> They may be introduced in the specification in a future version if deemed useful.*
+> [!NOTE]
+> Currently, shader packages have no means of overriding their own *module parameters*.
+> Later iterations of this mechanism may allow overriding *module parameters* from shader code.
+
+If a dependency appears several times in the dependency graph and overrides several times the same *module parameter* (even if overriden with the same value), that dependency cannot be *unified*.
+Otherwise, the dependency can be unified, and all overrides apply to the unified version.
+
+## `@if`, `@elif` and `@else` attributes
+
+The `@if` attribute takes a single *condition expression* parameter.
+It marks the decorated node for removal if its *condition expression* evaluates to `false`.
+
+The `@elif` attribute takes a single *condition expression* parameter.
+It can only be attached to the next sibling of a syntax node decorated by a `@if` or an `@elif`.
+It marks the decorated node for removal if its *condition expression* evaluates to `false` OR any of if the previous `@if` and `@elif` attribute parameters in the chain evaluate to `true`.
+
+The `@else` attribute takes no parameter.
+It can only be attached to the next sibling of a syntax node decorated by a `@if` or an `@elif`.
+It marks the decorated node for removal if any of the previous `@if` and `@elif` attribute *condition expressions* in the chain evaluate to `true`.
+    
+A syntax node may at most have a single `@if`, `@elif` or `@else` attribute. Checking for multiple features is done with an AND (`&&`) expression.
 
 Example:
 
 ```wgsl
-@if(feature_1 && (!feature_2 || feature_3))
+@if(PARAM1 && PARAM2) const decl: u32 = 0;
+
+@if(PARAM1 && (!PARAM2 || PARAM3))
 fn f() { ... }
-@if(!feature_1)                               // corresponds to @elif(!feature_1)
+@elif(!PARAM1)   // identical to @if(!PARAM1)
 fn f() { ... }
-@if(feature_1 && !(!feature_2 || feature_3))  // corresponds to @else
+@else            // identical to @if(!(!PARAM2 || PARAM3))
 fn f() { ... }
 ```
 
+## Error cases
+
+It is a translate-time error if:
+
+* an module parameter was declared outside of the root module[^1]; 
+* The *WESL linker* was invoked with a *shader parameter* override that does not exist;
+* The type of a *shader parameter* override does not match the type of the declaration;
+* An identifier used in a *condition expression* does not reference a boolean shader parameter.
+* A syntax node has multiple `@param`, `@if`, `@elif` or `@else` attributes. There can be at most one of these four attributes per node.
+  In particular, a module parameter cannot be have a condition attribute.
+
+[^1]: Currently only root module declarations can be parameters. This is due to the lack of publish/re-export mechanism, see #65. This limitation will be lifted soon.
+
 ## Execution of the conditional translation phase
-1. The *WESL translator* is invoked with the list of features to *enable* or *disable*.
 
+1. The *WESL translator* is invoked with a list of *module parameters* names and values to override *for each package*.
 2. The source file is parsed.
-
-3. The *translate-time features* in *translate-time expressions* are resolved:
-   * If the feature is *enabled*, the identifier is replaced with `true`.
-   * If the feature is *disabled*, the identifier is replaced with `false`.
-
-4. *Translate-time attributes* are evaluated:
-   * If the decorated syntax node is marked for removal: it is eliminated from the source code along with the attribute.
-   * Otherwise, only the attribute is eliminated from the source code.
-
-5. The updated source code is passed to the next translation phase. (e.g. import resolution)
+3. For each overriden *module parameter*, the const-declaration initializer are replaced with the overridden value and the `@param` attribute is removed.
+4. *condition expressions* are evaluated in order.
+  * If it evaluates to `false`, the decorated syntax node is eliminated from the source code along with the attribute.
+  * If it evaluates to `true`, the attribute is removed and subsequent nodes decorated with `@elif` or `@else` are eliminated.
+6. The updated source code is passed to the next translation phase. (e.g. import resolution)
 
 ### Incremental translation
-In case some features can only be resolved at runtime, a *WESL translator* can *optionally* support feature specialization in multiple passes:
 
-* In the initial passes, the *WESL translator* is invoked with some of the feature flags. It replaces their occurrences in *translate-time attributes* with either `true` or `false`.
-  These passes return a partially-translated WESL code.
-* After the final pass, the resulting code must be valid WGSL. it is an *link-time error* if any used *Translate-time features* was not provided to the linker.
-
-If the *WESL translator* does not support incremental translation, it is an *link-time error* if any used *Translate-time features* was not provided to the linker.
-
-> *It is not an error to provide unused feature flags to the linker. However, an implementation may choose to display a warning in that case.*
+In case some features can only be resolved at runtime, a *WESL translator* can *optionally* support specialization in multiple passes.
+In the initial passes, the *WESL translator* is invoked with some *shader parameters* marked explicitly to be preserved.
 
 ## Possible future extensions
 > *This section is non-normative*
 
-* `@else` and `@elif` attributes:
-  * An `@elif` attribute decorates the next sibling of a syntax node decorated by a `@if` or an `@elif`. It takes one parameter.
-     It marks the decorated node for removal if its parameter evaluates to `false` OR any of if the previous `@if` and `@elif` attribute parameters evaluate to `true`.
-  * An `@else` attribute decorates the next sibling of a syntax node decorated by a `@if` or an `@elif`. It does not take any parameter.
-     It marks the decorated node for removal if any of the previous `@if` and `@elif` attribute parameters evaluate to `true`.
-
-  The `@else` attribute has the nice property that all cases lead to generating a node, and *could* therefore be used in places where the node is required (e.g. expressions)
+* Decorating other WESL language extensions: import statements could be decorated with *condition attributes* too.
 
   Example:
-
   ```wgsl
-  @if(feature_1 && (!feature_2 || feature_3))
-  fn f() { ... }
-  @elif(!feature_1)
-  fn f() { ... }
+  @if(USE_BVH)
+  import accel::bvh_acceleration_structure as scene_struct;
   @else
-  fn f() { ... }
+  import accel::default_acceleration_structure as scene_struct;
   ```
 
-* High-complexity *translate-time expressions*: if we end up implementing other *translate-time attributes*, such as loops (e.g. `@for`, `@repeat`), or [translate-time-evaluable](https://zig.guide/language-basics/comptime/) expressions, then we would need to extend the grammar of *translate-time expressions*. It would also affect this proposal.
+## Appendix: Summary of constant declarations
 
-  *Example*
+There are three types of so-called "constants" in WGSL. They are evaluated at
+different shader stages.
 
-  ```wgsl
-  @comptime
-  fn response_to_the_ultimate_question() -> u32 {
-    return 42;
-  }
-  
-  @if(response_to_the_ultimate_question() == 42)
-  fn f() { ... }
-  ```
-
-* Decorating other WESL language extensions: import statements could be decorated with *translate-time attributes* too.
-
-  *Example*
-
-  ```wgsl
-  @if(use_bvh)
-  import accel/bvh_acceleration_structure as scene_struct;
-  @else
-  import accel/default_acceleration_structure as scene_struct;
-  ```
+| syntax | declaration kind | shader stage  | module-scope | function-scope | `@if` | array element count | 
+| ------ | ---------------- | ------------- | ------------ | -------------- | ----- | ------------------- |
+| `@param const x = 0;` | module parameter              | 1 shader-translation | yes | no  | no  | yes |
+| `const x = 0;`        | const-declaration             | 2 shader-creation    | yes | yes | yes | yes |
+| `override x = 0;`     | pipeline-overridable constant | 3 pipeline-creation  | yes | no  | yes | no  |
 
 ## Appendix: Updated grammar
 The following non-terminals are added or modified:
