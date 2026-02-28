@@ -1,4 +1,4 @@
-.# Packaging
+# Packaging
 
 WESL enables shader packages for reusing shader code by other packages or applications. Shader packages are published to repositories such as [npm] or [crates.io].
 
