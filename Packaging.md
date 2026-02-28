@@ -31,7 +31,7 @@ You can publish your package with whatever name you like. We however recommend f
 (TODO: unification with param const?)
 
 If two packages in the dependency tree are [semver-compatible](https://semver.org/), npm or Cargo will likely unify them, meaning it will include only one version of the package in its output (often the highest semver-compatible version available).
-This unification can have observable side-effects that a user must be warry of. Module-scope declarations may, or may not be duplicated.
+This unification can have observable side-effects that a user must be wary of. Module-scope declarations may, or may not be duplicated.
 
 ### Example
 
