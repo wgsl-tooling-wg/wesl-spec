@@ -1,4 +1,4 @@
-# Packaging
+.# Packaging
 
 WESL enables shader packages for reusing shader code by other packages or applications. Shader packages are published to repositories such as [npm] or [crates.io].
 
@@ -30,7 +30,7 @@ You can publish your package with whatever name you like. We however recommend f
 
 (TODO: unification with param const?)
 
-If two packages in the dependency tree are [semver-compatible](https://semver.org/), the WESL linker will unify them, meaning it will include only one version of the package in its output (usually the highest semver-compatible version available).
+If two packages in the dependency tree are [semver-compatible](https://semver.org/), npm or Cargo will likely unify them, meaning it will include only one version of the package in its output (often the highest semver-compatible version available).
 This unification can have observable side-effects that a user must be warry of. Module-scope declarations may, or may not be duplicated.
 
 ### Example
@@ -49,7 +49,7 @@ fn rand() -> f32 {
 
 Here, the `random::rand()` function has internal state represented by `prng_state`.
 If two packages depend on semver-compatible versions of `random`, then they would share that internal state.
-If however they depend on non-semver-compatible versions, two copies of the state and the `rand()` function will be used, suddenly producing different results.
+If however they depend on non-semver-compatible versions, two copies of the state and the `rand()` function can be used, suddenly producing different results.
 
 ## Visibility
 
