@@ -22,6 +22,9 @@ import my::geom::sphere::{ draw, default_radius as foobar };
 
 // Imports a whole module. Use it with `bevy_ui::name`
 import bevy_ui;
+
+// Import all items defined in the bevy prelude
+import bevy::prelude::*;
 ```
 
 These can then be used anywhere in the source code.
@@ -74,6 +77,7 @@ import_relative:
 import_path_or_item:
 | ident '::' (import_collection | import_path_or_item) 
 | ident ('as' ident)?
+| '*'
 
 import_collection:
 | '{' (import_path_or_item) (',' (import_path_or_item))* ','? '}'
@@ -90,6 +94,8 @@ Lint tools may optionally warn when reserved words are used.
 An item import imports a single item. The item can be renamed with the `as` keyword.
 
 An import collection imports multiple items, and allows for nested imports.
+
+A wildcard import imports all items from a module, but does not import further modules.
 
 ### Import resolution algorithm
 
@@ -111,8 +117,9 @@ Then, one iterates over each segment from left to right, and looks it up one by 
 2. We take that as the "current module".
 3. We repeatedly look at the next segment.
     1. Item in current module: Take that item. We must be at the last segment, otherwise it's an error.
-    2. (Else if re-exported or inline module in current module: We continue with that module.)
-    3. Else go to `current module path/ident.wesl`
+    2. Wildcard import: Take all items in the current module.
+    3. (Else if re-exported or inline module in current module: We continue with that module.)
+    4. Else go to `current module path/ident.wesl`
        * File found: We take that file as the current module.
        * File not found: We assume an empty module as the current module, and continue with that.
        * (Re-exporting changes the path.)
@@ -123,7 +130,7 @@ The absolute path of the `super` module is always known, since the first loaded 
 
 Once the import has been resolved, the last segment, or its alias, is brought into scope.
 
-The order of the scopes is "user declarations and imported items > package names > predeclared items".
+The order of the scopes is "user declarations and imported items > wildcard import > package names > predeclared items".
 This lets WGSL add more predeclared items without breaking existing WESL code. Package names can shadow predeclared items, but we recommend that authors avoid doing that.
 
 
@@ -244,6 +251,53 @@ const b = a + 1;
 (a depends on b which depends on a)
 
 Basic linker implementations do not need to check for this. Generating broken code and letting the underlying shader compiler throw an error is fine.
+
+## Wildcard Imports
+
+Wildcard imports are used to import a whole set of items into the current module. They are lower priority than local names and explicit imports to reduce the chance of breaking changes if the wildcard-imported module changes. Wildcard imported modules are eagerly loaded, since they need to be checked before accessing any predeclared items.
+
+When multiple wildcard imports are used, name clashes are possible.
+
+```wesl
+import foo::*; // exports clashing_name
+import bar::*; // exports clashing_name
+```
+
+The name clash is ignored until the item is used.
+TODO: Or should it immediately result in a warning, even if the variables are unused?
+
+### Wildcard imports from libraries 
+
+For libraries, we distinguish between modules that were designed for wildcard imports and modules that were not.
+Library authors generally expect that adding a new item is not a breaking change. Wildcard imports are a surprising edge case.
+
+WESL detects the edge cases and will emit a diagnostic. This makes upholding semver guarantees significantly easier. 
+
+When the library module is called `prelude`, it is a module designed for wildcards. Adding a new item to it is a semver breaking change.
+Wildcard importing from it is always allowed. (When we add exports, we will make this controllable instead of only giving special treatment to the `prelude`.)
+
+Other library modules are not designed for wildcards. If another wildcard import exists, then an `wildcard_import` [diagnostic](https://www.w3.org/TR/WGSL/#diagnostics) at the error level will be emitted.
+
+Modules in the same package can always be wildcard imported. Changing your own code has no impact on semver.
+
+Examples
+
+```wesl
+// Allowed, since it is the only import in the current module
+import lygia::math::*; 
+```
+
+```wesl
+// Allowed, since it is designed for wildcards
+import bevy::color::prelude::*; 
+
+// Allowed, same package
+import package::utils::*; 
+
+// Requires opt-in
+@diagnostic(off, wildcard_import) 
+import lygia::math::*; 
+```
 
 ## Directives
 Under discussion, see: <https://github.com/wgsl-tooling-wg/wesl-spec/issues/71>
