@@ -5,7 +5,6 @@ WESL shader projects have a standardized `wesl.toml` file, which describes the p
 The format looks as follows. As much of it is optional as possible.
 
 ```toml
-[package]
 # Version of WESL used in this project.
 edition = "2026_pre"
 
@@ -46,6 +45,10 @@ As your application grows, we suggest adding a `wesl.toml`. This lets you pin do
 
 Specifies which edition is used by wesl. All wesl editions can be used.
 
+Supported editions are
+- `WGSL` for pure WGSL
+- `2026_pre` for the current WESL version
+
 - Mandatory
   - If `wesl.toml` is not present, the default is the latest edition.
   - WESL tools will provide long-term support for stable LTS editions, ensuring forwards compatibility.
@@ -84,12 +87,18 @@ Specifies an array of patterns where wesl files are located. The patterns are re
 The default value of `include` is all wesl and wgsl files in the `root` directory, recursively.
 The default value of `exclude` is an empty array.
 
-The patterns are glob patterns, which support
+The patterns are glob patterns, made up of the following components
+- file and folder names
 - `*` for zero or more characters in file/folder names
 - `?` for one character in a file/folder name
 - `**/` for any directory nested to any level
 
 If the last path segment does not contain a file extension or wildcard, then it is treated as a directory, and files with `.wesl` or `.wgsl` extensions inside that directory are included.
+
+To implement this, one starts at the `root` folder, and recursively goes over the children.
+1. If a `wesl.toml` file is present, that entire subtree is excluded, as it is under the purview of another `wesl.toml` file.
+2. If the file/folder path matches any exclusion, that entire subtree is excluded.
+3. If the file/folder path does *not* match the *prefix* of any of the inclusions, then that subtree is excluded.
 
 ### Path semantics
 
