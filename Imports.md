@@ -131,7 +131,6 @@ The absolute path of the `super` module is always known, since the first loaded 
 Once the import has been resolved, the last segment, or its alias, is brought into scope.
 
 The order of the scopes is "user declarations and imported items > wildcard import > package names > predeclared items".
-This lets WGSL add more predeclared items without breaking existing WESL code. Package names can shadow predeclared items, but we recommend that authors avoid doing that.
 
 
 ### Example
@@ -266,17 +265,34 @@ import bar::*; // exports clashing_name
 The name clash is ignored until the item is used.
 TODO: Or should it immediately result in a warning, even if the variables are unused?
 
-### Wildcard imports from libraries 
+### Diagnostics for best practices
 
-For libraries, we distinguish between modules that were designed for wildcard imports and modules that were not.
-Library authors generally expect that adding a new item is not a breaking change. Wildcard imports are a surprising edge case.
+Many ecosystems rely on semantic versioning for updating libraries. This applies to both direct and transitive dependencies. Updating to the latest patch releases should be easy and safe. 
 
-WESL detects the edge cases and will emit a diagnostic. This makes upholding semver guarantees significantly easier. 
+Library authors generally expect that adding a new item is not a breaking change. Wildcard imports that result in name clashes are a surprising edge case. Therefore, we want to reduce the risk of accidental name clashes.
 
-When the library module is called `prelude`, it is a module designed for wildcards. Adding a new item to it is a semver breaking change.
-Wildcard importing from it is always allowed. (When we add exports, we will make this controllable instead of only giving special treatment to the `prelude`.)
+Name clashes can happen either in user code or in library code. If it happens in library code, it can be significantly harder to resolve the issue. 
 
-Other library modules are not designed for wildcards. If another wildcard import exists, then an `wildcard_import` [diagnostic](https://www.w3.org/TR/WGSL/#diagnostics) at the error level will be emitted.
+A secondary, similar issue is that wildcards can result in accidental shadowing of predeclared identifiers. 
+One especially insideous scenario is when user code targets an unstable Naga feature.
+
+```wesl
+import my_lib::*;
+
+const x = unstable_thing();
+```
+
+Then, a library which does not know about the Naga feature could add an item with the same name. 
+
+To reduce the odds of these cases, we recommend the following diagnostics.
+
+1. Emit a warning [diagnostic](https://www.w3.org/TR/WGSL/#diagnostics) named `builtin_shadowing` if an top level item is declared that is known to conflict with a predeclared identifier. This also helps in the non-library case.
+
+2. Emit a warning [diagnostic](https://www.w3.org/TR/WGSL/#diagnostics) named `wildcard_import` if there are multiple wildcard imports from libraries and at least one is not designed for wildcards.
+
+For this, we distinguish between modules that were designed for wildcard imports and modules that were not. When the library module is called `prelude`, it is a module designed for wildcards. Adding a new item to it is a semver breaking change. Therefore, wildcard importing from it is always allowed. (When we add exports, we will make this controllable instead of only giving special treatment to the `prelude`.)
+
+Other library modules may cause issues and should not be combined with other wildcard imports.
 
 Modules in the same package can always be wildcard imported. Changing your own code has no impact on semver.
 
@@ -298,6 +314,18 @@ import package::utils::*;
 @diagnostic(off, wildcard_import) 
 import lygia::math::*; 
 ```
+
+### Modeling the WGSL predeclared identifiers
+
+One mental model for WGSL predeclared identifiers is that they're a wildcard import, which is implicitly added to every WGSL file. 
+
+```wesl
+// imports all the predeclared identifiers
+import all_wgsl_items::*;
+```
+
+This wildcard import has a strictly lower priority than all other wildcard imports. This lets WGSL add more predeclared items without breaking existing WESL code. Package names can also shadow predeclared items, but we recommend that authors avoid doing that.
+
 
 ## Directives
 Under discussion, see: <https://github.com/wgsl-tooling-wg/wesl-spec/issues/71>
