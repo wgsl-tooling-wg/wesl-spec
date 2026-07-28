@@ -23,10 +23,12 @@
 
 * **Module**: A unit of WESL or WGSL code with its own top-level scope, stored in a single module source.
 * **Module Source**: The stored text of a module, typically in a WESL or WGSL file.
-* **Main module**: The WESL module from which translation starts. It defines the **pipeline-visible API**, i.e. the set of items which are visible to the host (CPU-side), and therefore are not mangled. A single application can have many main modules.
-* **Module Path**: A `::`-separated path naming a module; equivalently, a declaration path minus its final segment.
-* **Declaration Path**: A `::`-separated path whose final segment names a declared item.
-* **Canonical Path**: A fully qualified module/ declaration path (which does not contain any `super::`). There is exactly one canonical path per module or declaration within a package.
+* **Main module**: The WESL module from which translation starts. It defines the Pipeline-visible API. A single application can have many main modules.
+* **Pipeline-visible API**, The set of items which are visible to the host (CPU-side). Pipeline-visible item names are not mangled.
+* **Import Path**: A `::`-separated path written in an import statement or inline import. It may start with `super::` segments. In import statements, it may be suffixed with an import collection (`{}`), which flattens into separate imports paths.
+* **Canonical Path**: The unique fully qualified import path naming a module or declaration. It does not contain `super::`. import paths can be canonicalized.
+* **Module Path**: A canonical path naming a module; equivalently, a declaration path minus its final segment.
+* **Declaration Path**: A canonical path whose final segment names a declared item.
 * **Importable item**: Items that can be imported by other modules.
   * Structs
   * Functions
