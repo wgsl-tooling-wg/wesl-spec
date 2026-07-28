@@ -26,7 +26,7 @@
 ## Structured VS. Unstructured
 Conditional compilation is a mechanism to modify the source code based on parameters passed to the compiler. We distinguish two kinds:
 
-* **unstructured**: arbitrary code sections can be injected or conditionally included. This is what the C preprocessor and macros do, and a lesser version of that is proposed in [`simple templating`](SimpleTemplating.md).
+* **unstructured**: arbitrary code sections can be injected or conditionally included. This is what the C preprocessor and macros do.
 * **structured**: only structural elements of the syntax can be manipulated, e.g. a whole declaration, a member, etc. Rust uses this approach with the `#[cfg]` attribute.
 
 We think that *structured* is the way to go. It leads to clearer and safer code, which is more important than implementation complexity in our eyes.
