@@ -274,7 +274,7 @@ shown).
 
 The *package root module* is the optional module that the bare `package`
 module path maps to. In filesystem resolution, it corresponds to a special file
-named `package.json` in the package root directory.
+named `package.wesl` in the package root directory.
 
 A declaration `foo` in the package root module is addressable from outside the
 package as `my_pkg::foo`, and from within the package as `package::foo`.
@@ -287,20 +287,20 @@ module named `package` anywhere else.
 On a filesystem, a module path maps directly to a single file, following
 [Resolving a declaration path](#resolving-a-declaration-path).
 
-The resolution starts with a filesystem root directory, typically in a
+The resolution starts with a package root directory, typically in a
 [`wesl.toml`](WeslToml.md#root-field) file, user-provided through the linker's API,
 or defaulted by the linker.
 
 > [!NOTE]
-> Linkers may apply heuristics to find the default filesystem root directory, such as
+> Linkers may apply heuristics to find the default package root directory, such as
 > looking for a `shaders` directory at the project root, or using the parent directory
 > of the main module.
 
 The package root module path is mapped to a file named `package.wesl` or `package.wgsl`
 in the package root directory.
 
-Other module paths are mapped as follows: each intermediate segment after `package`
- name a subdirectory from the package root directory, and the last segment names
+Other module paths are mapped as follows: each intermediate segment after `package`s
+ names a subdirectory from the package root directory, and the last segment names
 a `.wesl` or `.wgsl` file within the subdirectory.
 
 The `.wesl` extension takes priority over `.wgsl` in case both files are present.
@@ -327,8 +327,8 @@ The filesystem resolution maps:
 
 * `package` to `shaders/package.wesl`
 * `package::main` to `shaders/main.wesl`
-* `package::util` to `shaders/package/util.wgsl`
-* `package::util::noise` to `shaders/package/util/noise.wesl`
+* `package::util` to `shaders/util.wgsl`
+* `package::util::noise` to `shaders/util/noise.wesl`
 * `package::data` is an invalid module path, because there is no file named
   `data.wesl` or `data.wgsl` in `shaders/`.
 

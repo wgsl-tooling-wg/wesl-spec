@@ -94,7 +94,7 @@ requires an explicit visibility marker. Encapsulation discipline by default is
 handy for larger teams working on larger codebases. But private by default
 wouldn't work as well for WESL for a few reasons:
 
-* **Module entry points would need explicit markers.** The main module's
+* **Main module entry points would need explicit markers.** The main module's
   entry points, resource variables, and overrides reach the host only when
   non-private (see [Visibility.md](Visibility.md)). With private as the default,
   every one would need a visibility marker. With package as the default,
