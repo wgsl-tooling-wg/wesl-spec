@@ -1,6 +1,6 @@
 # Module Parameters: Design Notes
 
-Companion to [ModuleParameters.md](ModuleParameters.md).
+Companion to [ModuleParameters.md](222-ModuleParameters.md).
 
 ## Comparison with WGSL override
 

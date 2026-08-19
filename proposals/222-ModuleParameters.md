@@ -1,12 +1,12 @@
 # Module Parameters
 
 - **Status**: Proposal
-- **Discussion**: [wesl-spec#222](https://github.com/webgpu-tools/wesl-spec/issues/222)
+- **Discussion**: [#222](https://github.com/webgpu-tools/wesl-spec/issues/222)
 - **Extension marker**: `wesl_module_parameters`
 - **Implementations**: none
-- **Replaces / extends**: #146, #164; supersedes the unspec'd `constants::` virtual module
+- **Replaces / extends**: [#146](https://github.com/webgpu-tools/wesl-spec/issues/146), [#164](https://github.com/webgpu-tools/wesl-spec/issues/164); supersedes the unspec'd `constants::` virtual module
 
-See also [ModuleParametersDesign.md](ModuleParametersDesign.md) (design background).
+See also [ModuleParametersDesign.md](222-ModuleParametersDesign.md) (design background).
 
 ## Declaring module parameters
 
@@ -74,7 +74,7 @@ Details:
 - implementations can optionally reduce emitted code size by identifying declarations
   that don't need to be forked (e.g. functions that don't transitively reference
   a parameter or a forked `var` needn't be duplicated)
-- [ModuleParametersDesign](./ModuleParametersDesign.md) has more examples.
+- [ModuleParametersDesign](./222-ModuleParametersDesign.md) has more examples.
 
 ## Module parameters in the main module
 
