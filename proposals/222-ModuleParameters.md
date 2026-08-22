@@ -28,7 +28,7 @@ fn push(l: Light) { list[count] = l; count += 1u; }
 - params with no defaults must be set from host code or via import.
 
 Details
-- multiple parameters can be separated by commas, or multiple `module` statements are allowed, both are equivalent. 
+- multiple parameters can be separated by commas. 
 - `module` statements may not be inside an `@if` condition.
 - `public` marks a parameter as settable from other packages; unmarked parameters are package-internal.
 
