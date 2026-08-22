@@ -156,7 +156,8 @@ Sanity checking vs other languages..
   the sketch is pretty close to Zig, where struct identity keys on the parameters captured by the comptime declaration. 
   The sketch is finer grained than C++ or D templates (or Slang generics), which fork types on unused parameters too. 
   But a template wraps one struct where a module header covers a whole file. 
-  OCaml functors are analogous to templates for types, AFAICT.
+  OCaml applicative functors are similar in this respect: types produced
+  by a functor are the same when the functor arguments are the same. 
   Anyway, I don't see much upside in emitting more distinct types than strictly necessary. 
 - _vars unique per parameter set_: same as C++/D template statics (one static per concretization, program-wide), or Slang. 
   Zig is finer grained due to their comptime approach, the SEED would be accidentally shared unless you write it differently. (Or maybe our parameterized modules are each one comptime block..)
