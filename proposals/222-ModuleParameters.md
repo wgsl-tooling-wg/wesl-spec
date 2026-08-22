@@ -105,7 +105,11 @@ await link({ ..., params: { DEBUG: true, MAX_LIGHTS: 16 } });
 ## Laziness and cycles
 
 - imports remain lazy, unused imports are not instantiated.
-- import cycles are still allowed as now, but a referenced import cycle whose arguments don't stabilize around the loop is an error. (a module importing a fixed instantiation of itself is fine)
+- instantiations are memoized: keyed by the module and its const-eval'd parameter arguments,
+  so `bar<N = 7>` and `bar<N = 4 + 3>` name the same instantiation.
+- import cycles are still allowed as now. A module importing a fixed instantiation of itself
+  is fine (the keys match). But a referenced import cycle that re-enters a module with
+  different parameter arguments is an error.
 - Conditions and consts evaluate on demand, not in separate passes (so that conditions can depend on consts in other conditions)
 
 ```wgsl
